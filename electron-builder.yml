@@ -1,0 +1,60 @@
+appId: com.kommit.app
+productName: Kommit
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!tests/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintrc,.prettierrc,tsconfig*.json}'
+  - '!{PLAN.md,README.md}'
+asarUnpack:
+  - resources/**
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icon.ico
+  executableName: Kommit
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: Kommit
+  uninstallDisplayName: Kommit
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: resources/icon.icns
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    - NSDocumentsFolderUsageDescription: Kommit needs access to your files to manage Git repositories.
+    - NSDownloadsFolderUsageDescription: Kommit needs access to your downloads to clone repositories.
+  notarize: false
+dmg:
+  artifactName: ${name}-${version}.${ext}
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+  icon: resources/icon.png
+  maintainer: kommit-app
+  category: Development
+  executableName: kommit
+appImage:
+  artifactName: ${name}-${version}.${ext}
+publish:
+  provider: github
+  owner: kommit-app
+  repo: kommit
