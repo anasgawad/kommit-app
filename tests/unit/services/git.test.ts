@@ -12,7 +12,7 @@ vi.mock('node:util', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:util')>()
   return {
     ...actual,
-    promisify: (fn: Function) => {
+    promisify: (fn: (...args: unknown[]) => void) => {
       return (...args: unknown[]) => {
         return new Promise((resolve, reject) => {
           fn(...args, (error: Error | null, stdout?: string, stderr?: string) => {
@@ -32,28 +32,34 @@ import { execFile } from 'node:child_process'
 
 const mockExecFile = vi.mocked(execFile)
 
+type ExecFileCallback = (error: Error | null, stdout?: string, stderr?: string) => void
+
 function mockExecSuccess(stdout: string, stderr = '') {
-  mockExecFile.mockImplementation((_file, _args, _opts, callback?: Function) => {
-    const cb = typeof _opts === 'function' ? _opts : callback
-    if (cb) {
-      process.nextTick(() => cb(null, stdout, stderr))
+  mockExecFile.mockImplementation(
+    (_file, _args, _opts, callback?: ExecFileCallback | undefined) => {
+      const cb = typeof _opts === 'function' ? (_opts as ExecFileCallback) : callback
+      if (cb) {
+        process.nextTick(() => cb(null, stdout, stderr))
+      }
+      return {} as ReturnType<typeof execFile>
     }
-    return {} as ReturnType<typeof execFile>
-  })
+  )
 }
 
 function mockExecFailure(stderr: string, exitCode = 1, code?: string) {
-  mockExecFile.mockImplementation((_file, _args, _opts, callback?: Function) => {
-    const error: Record<string, unknown> = new Error(stderr)
-    error.stderr = stderr
-    error.exitCode = exitCode
-    if (code) error.code = code
-    const cb = typeof _opts === 'function' ? _opts : callback
-    if (cb) {
-      process.nextTick(() => cb(error))
+  mockExecFile.mockImplementation(
+    (_file, _args, _opts, callback?: ExecFileCallback | undefined) => {
+      const error: Record<string, unknown> = new Error(stderr)
+      error.stderr = stderr
+      error.exitCode = exitCode
+      if (code) error.code = code
+      const cb = typeof _opts === 'function' ? (_opts as ExecFileCallback) : callback
+      if (cb) {
+        process.nextTick(() => cb(error))
+      }
+      return {} as ReturnType<typeof execFile>
     }
-    return {} as ReturnType<typeof execFile>
-  })
+  )
 }
 
 describe('GitService', () => {
@@ -343,8 +349,8 @@ describe('GitService', () => {
     it('should handle detached HEAD', async () => {
       // First call for local branches, second call for remote branches
       mockExecFile
-        .mockImplementationOnce((_file, _args, _opts, callback?: Function) => {
-          const cb = typeof _opts === 'function' ? _opts : callback
+        .mockImplementationOnce((_file, _args, _opts, callback?: ExecFileCallback | undefined) => {
+          const cb = typeof _opts === 'function' ? (_opts as ExecFileCallback) : callback
           if (cb) {
             process.nextTick(() =>
               cb(null, '(HEAD detached at abc123)\x00abc123\x00\x00\x00*\x00Commit\n', '')
@@ -352,8 +358,8 @@ describe('GitService', () => {
           }
           return {} as ReturnType<typeof execFile>
         })
-        .mockImplementationOnce((_file, _args, _opts, callback?: Function) => {
-          const cb = typeof _opts === 'function' ? _opts : callback
+        .mockImplementationOnce((_file, _args, _opts, callback?: ExecFileCallback | undefined) => {
+          const cb = typeof _opts === 'function' ? (_opts as ExecFileCallback) : callback
           if (cb) {
             process.nextTick(() => cb(null, '', ''))
           }

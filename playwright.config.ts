@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -9,12 +9,12 @@ export default defineConfig({
   reporter: 'html',
   timeout: 30000,
   use: {
-    trace: 'on-first-retry',
+    trace: 'on-first-retry'
   },
   projects: [
     {
       name: 'electron',
-      testMatch: '**/*.spec.ts',
+      testMatch: '**/*.spec.ts'
     }
   ]
 })

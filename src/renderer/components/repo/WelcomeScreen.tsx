@@ -28,7 +28,7 @@ export function WelcomeScreen() {
       try {
         await window.api.repo.init(path)
         await openRepo(path)
-      } catch (err) {
+      } catch {
         // Error handled by store
       }
     }
@@ -67,7 +67,9 @@ export function WelcomeScreen() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-kommit-text mb-2">Kommit</h1>
-          <p className="text-kommit-text-secondary">A powerful Git GUI for experienced developers</p>
+          <p className="text-kommit-text-secondary">
+            A powerful Git GUI for experienced developers
+          </p>
         </div>
 
         {/* Error display */}
@@ -136,9 +138,7 @@ export function WelcomeScreen() {
               </button>
             </div>
 
-            {cloneError && (
-              <div className="mb-2 text-sm text-kommit-danger">{cloneError}</div>
-            )}
+            {cloneError && <div className="mb-2 text-sm text-kommit-danger">{cloneError}</div>}
 
             <button
               onClick={handleClone}
@@ -167,9 +167,7 @@ export function WelcomeScreen() {
                   <div className="text-sm font-medium text-kommit-text group-hover:text-kommit-accent">
                     {repo.name}
                   </div>
-                  <div className="text-xs text-kommit-text-secondary truncate">
-                    {repo.path}
-                  </div>
+                  <div className="text-xs text-kommit-text-secondary truncate">{repo.path}</div>
                 </button>
               ))}
             </div>

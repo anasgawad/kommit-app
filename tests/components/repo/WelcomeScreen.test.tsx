@@ -3,7 +3,7 @@
 // ============================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { WelcomeScreen } from '../../../src/renderer/components/repo/WelcomeScreen'
 
 // Mock the window.api
@@ -85,9 +85,7 @@ describe('WelcomeScreen', () => {
   it('should call openRepo when selecting a recent repository', () => {
     const mockOpenRepo = vi.fn()
     mockUseRepoStore.mockReturnValue({
-      recentRepos: [
-        { path: '/home/user/project', name: 'project', lastOpened: Date.now() }
-      ],
+      recentRepos: [{ path: '/home/user/project', name: 'project', lastOpened: Date.now() }],
       openRepo: mockOpenRepo,
       isLoading: false,
       error: null,
