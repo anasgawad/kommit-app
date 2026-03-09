@@ -132,9 +132,12 @@ export function parseStatus(raw: string): GitStatus {
 
     // Renamed/copied entries (type "2")
     if (line.startsWith('2 ')) {
-      const parts = line.split(/\s+/)
+      // Split by spaces (not tabs) to preserve tab between newPath and oldPath
+      const parts = line.split(/ +/)
       const xy = parts[1]
-      const pathPart = parts.slice(8).join(' ')
+      // parts[8] is the X<score> field (e.g., R100, C095)
+      // parts[9] onward is "newPath\toldPath"
+      const pathPart = parts.slice(9).join(' ')
       const [newPath, oldPath] = pathPart.split('\t')
       const indexStatus = xy[0] as FileStatusCode | '.'
       const workTreeStatus = xy[1] as FileStatusCode | '.'
@@ -172,7 +175,11 @@ export function parseStatus(raw: string): GitStatus {
     unstaged,
     untracked,
     conflicted,
-    isClean: staged.length === 0 && unstaged.length === 0 && untracked.length === 0 && conflicted.length === 0
+    isClean:
+      staged.length === 0 &&
+      unstaged.length === 0 &&
+      untracked.length === 0 &&
+      conflicted.length === 0
   }
 }
 
@@ -186,15 +193,24 @@ export function parseLog(raw: string): Commit[] {
     return []
   }
 
-  const records = raw.split('\0\0').filter((r) => r.trim().length > 0)
+  // Split by NUL bytes
+  const parts = raw.split('\0')
 
-  return records.map((record) => {
-    const fields = record.replace(/^\n/, '').split('\0')
+  // Group into records of 8 fields each
+  // Format: hash, abbrevHash, parents, author, email, date, subject, refs
+  // After refs, there's an empty string (from trailing \0\0 record separator)
+  const commits: Commit[] = []
+
+  for (let i = 0; i + 7 < parts.length; i += 9) {
+    // Skip if this looks like an empty record separator
+    if (parts[i].trim().length === 0) {
+      continue
+    }
 
     const [hash, abbreviatedHash, parents, author, authorEmail, authorDateStr, subject, refsStr] =
-      fields
+      parts.slice(i, i + 8)
 
-    return {
+    commits.push({
       hash: hash ?? '',
       abbreviatedHash: abbreviatedHash ?? '',
       parents: parents && parents.trim().length > 0 ? parents.trim().split(' ') : [],
@@ -202,11 +218,17 @@ export function parseLog(raw: string): Commit[] {
       authorEmail: authorEmail ?? '',
       authorDate: new Date(authorDateStr ?? 0),
       subject: subject ?? '',
-      refs: refsStr && refsStr.trim().length > 0
-        ? refsStr.split(',').map((r) => r.trim()).filter(Boolean)
-        : []
-    }
-  })
+      refs:
+        refsStr && refsStr.trim().length > 0
+          ? refsStr
+              .split(',')
+              .map((r) => r.trim())
+              .filter(Boolean)
+          : []
+    })
+  }
+
+  return commits
 }
 
 /**

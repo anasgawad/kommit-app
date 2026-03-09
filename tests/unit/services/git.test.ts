@@ -6,11 +6,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GitService } from '../../../src/main/services/git'
 import { GitError, GitNotFoundError, NotARepositoryError } from '../../../src/shared/types'
 
-// Mock child_process
-vi.mock('node:child_process', () => ({
-  execFile: vi.fn(),
-  spawn: vi.fn()
-}))
+// Mock the entire node:child_process module and node:util
+vi.mock('node:child_process')
+vi.mock('node:util', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:util')>()
+  return {
+    ...actual,
+    promisify: (fn: Function) => {
+      return (...args: unknown[]) => {
+        return new Promise((resolve, reject) => {
+          fn(...args, (error: Error | null, stdout?: string, stderr?: string) => {
+            if (error) {
+              reject(error)
+            } else {
+              resolve({ stdout, stderr })
+            }
+          })
+        })
+      }
+    }
+  }
+})
 
 import { execFile } from 'node:child_process'
 
@@ -18,12 +34,9 @@ const mockExecFile = vi.mocked(execFile)
 
 function mockExecSuccess(stdout: string, stderr = '') {
   mockExecFile.mockImplementation((_file, _args, _opts, callback?: Function) => {
-    // promisify wraps execFile so it returns { stdout, stderr }
-    // but the mock needs to handle the promisified version
-    if (typeof _opts === 'function') {
-      _opts(null, stdout, stderr)
-    } else if (callback) {
-      callback(null, stdout, stderr)
+    const cb = typeof _opts === 'function' ? _opts : callback
+    if (cb) {
+      process.nextTick(() => cb(null, stdout, stderr))
     }
     return {} as ReturnType<typeof execFile>
   })
@@ -35,10 +48,9 @@ function mockExecFailure(stderr: string, exitCode = 1, code?: string) {
     error.stderr = stderr
     error.exitCode = exitCode
     if (code) error.code = code
-    if (typeof _opts === 'function') {
-      _opts(error)
-    } else if (callback) {
-      callback(error)
+    const cb = typeof _opts === 'function' ? _opts : callback
+    if (cb) {
+      process.nextTick(() => cb(error))
     }
     return {} as ReturnType<typeof execFile>
   })
@@ -71,15 +83,15 @@ describe('GitService', () => {
       mockExecSuccess('')
       await git.exec(['status'], '/repo')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['status'],
-        expect.objectContaining({
-          env: expect.objectContaining({
-            GIT_TERMINAL_PROMPT: '0'
-          })
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['status'])
+      expect(callArgs[2]).toMatchObject({
+        env: expect.objectContaining({
+          GIT_TERMINAL_PROMPT: '0'
         })
-      )
+      })
     })
 
     it('should throw GitNotFoundError when git is not installed', async () => {
@@ -91,13 +103,13 @@ describe('GitService', () => {
       mockExecSuccess('')
       await git.exec(['log'], '/repo', 50 * 1024 * 1024)
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['log'],
-        expect.objectContaining({
-          maxBuffer: 50 * 1024 * 1024
-        })
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['log'])
+      expect(callArgs[2]).toMatchObject({
+        maxBuffer: 50 * 1024 * 1024
+      })
     })
 
     it('should throw NotARepositoryError for non-repo paths', async () => {
@@ -145,9 +157,7 @@ describe('GitService', () => {
   // -------------------------------------------------------
   describe('status()', () => {
     it('should parse clean working tree', async () => {
-      mockExecSuccess(
-        '# branch.oid abc123\n# branch.head main\n'
-      )
+      mockExecSuccess('# branch.oid abc123\n# branch.head main\n')
       const status = await git.status('/repo')
       expect(status.branch).toBe('main')
       expect(status.isClean).toBe(true)
@@ -177,9 +187,7 @@ describe('GitService', () => {
     })
 
     it('should parse untracked files', async () => {
-      mockExecSuccess(
-        '# branch.head main\n? newfile.ts\n'
-      )
+      mockExecSuccess('# branch.head main\n? newfile.ts\n')
       const status = await git.status('/repo')
       expect(status.untracked).toHaveLength(1)
       expect(status.untracked[0].path).toBe('newfile.ts')
@@ -205,9 +213,7 @@ describe('GitService', () => {
     })
 
     it('should parse branch tracking info', async () => {
-      mockExecSuccess(
-        '# branch.head main\n# branch.upstream origin/main\n# branch.ab +3 -1\n'
-      )
+      mockExecSuccess('# branch.head main\n# branch.upstream origin/main\n# branch.ab +3 -1\n')
       const status = await git.status('/repo')
       expect(status.tracking).not.toBeNull()
       expect(status.tracking!.ahead).toBe(3)
@@ -217,9 +223,7 @@ describe('GitService', () => {
     })
 
     it('should handle detached HEAD state', async () => {
-      mockExecSuccess(
-        '# branch.oid abc123\n# branch.head (detached)\n'
-      )
+      mockExecSuccess('# branch.oid abc123\n# branch.head (detached)\n')
       const status = await git.status('/repo')
       expect(status.isDetachedHead).toBe(true)
     })
@@ -257,9 +261,9 @@ describe('GitService', () => {
       mockExecSuccess(logOutput)
       const commits = await git.log('/repo')
 
-      expect(commits[0].parents).toEqual([])      // root
-      expect(commits[1].parents).toEqual(['parent1'])  // normal
-      expect(commits[2].parents).toEqual(['parent1', 'parent2'])  // merge
+      expect(commits[0].parents).toEqual([]) // root
+      expect(commits[1].parents).toEqual(['parent1']) // normal
+      expect(commits[2].parents).toEqual(['parent1', 'parent2']) // merge
     })
 
     it('should parse ref decorations', async () => {
@@ -284,11 +288,10 @@ describe('GitService', () => {
       mockExecSuccess('')
       await git.log('/repo', { maxCount: 50 })
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        expect.arrayContaining(['--max-count=50']),
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(expect.arrayContaining(['--max-count=50']))
     })
 
     it('should parse commits with special characters in subject', async () => {
@@ -329,9 +332,7 @@ describe('GitService', () => {
     })
 
     it('should parse tracking info for branches', async () => {
-      mockExecSuccess(
-        'main\x00abc123\x00origin/main\x00[ahead 2, behind 1]\x00*\x00Commit\n'
-      )
+      mockExecSuccess('main\x00abc123\x00origin/main\x00[ahead 2, behind 1]\x00*\x00Commit\n')
       const branches = await git.branches('/repo')
 
       expect(branches[0].tracking).toBeDefined()
@@ -340,9 +341,24 @@ describe('GitService', () => {
     })
 
     it('should handle detached HEAD', async () => {
-      mockExecSuccess(
-        '(HEAD detached at abc123)\x00abc123\x00\x00\x00*\x00Commit\n'
-      )
+      // First call for local branches, second call for remote branches
+      mockExecFile
+        .mockImplementationOnce((_file, _args, _opts, callback?: Function) => {
+          const cb = typeof _opts === 'function' ? _opts : callback
+          if (cb) {
+            process.nextTick(() =>
+              cb(null, '(HEAD detached at abc123)\x00abc123\x00\x00\x00*\x00Commit\n', '')
+            )
+          }
+          return {} as ReturnType<typeof execFile>
+        })
+        .mockImplementationOnce((_file, _args, _opts, callback?: Function) => {
+          const cb = typeof _opts === 'function' ? _opts : callback
+          if (cb) {
+            process.nextTick(() => cb(null, '', ''))
+          }
+          return {} as ReturnType<typeof execFile>
+        })
       const branches = await git.branches('/repo')
       expect(branches).toHaveLength(1)
     })
@@ -366,22 +382,20 @@ describe('GitService', () => {
       mockExecSuccess('')
       await git.stageFile('/repo', 'src/file.ts')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['add', '--', 'src/file.ts'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['add', '--', 'src/file.ts'])
     })
 
     it('should handle paths with spaces', async () => {
       mockExecSuccess('')
       await git.stageFile('/repo', 'path with spaces/file.ts')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['add', '--', 'path with spaces/file.ts'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['add', '--', 'path with spaces/file.ts'])
     })
   })
 
@@ -399,11 +413,10 @@ describe('GitService', () => {
       mockExecSuccess('[main abc1234] Amended message')
       await git.commit('/repo', 'Amended message', { amend: true })
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['commit', '-m', 'Amended message', '--amend'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['commit', '-m', 'Amended message', '--amend'])
     })
   })
 
@@ -415,22 +428,20 @@ describe('GitService', () => {
       mockExecSuccess('')
       await git.createBranch('/repo', 'feature-x')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['branch', 'feature-x'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['branch', 'feature-x'])
     })
 
     it('should create branch from specific commit', async () => {
       mockExecSuccess('')
       await git.createBranch('/repo', 'feature-x', 'abc123')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['branch', 'feature-x', 'abc123'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['branch', 'feature-x', 'abc123'])
     })
   })
 
@@ -442,22 +453,20 @@ describe('GitService', () => {
       mockExecSuccess("Switched to branch 'main'")
       await git.checkout('/repo', 'main')
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['checkout', 'main'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['checkout', 'main'])
     })
 
     it('should create and switch to new branch with -b', async () => {
       mockExecSuccess("Switched to a new branch 'new-branch'")
       await git.checkout('/repo', 'new-branch', { createBranch: true })
 
-      expect(mockExecFile).toHaveBeenCalledWith(
-        'git',
-        ['checkout', '-b', 'new-branch'],
-        expect.anything()
-      )
+      expect(mockExecFile).toHaveBeenCalled()
+      const callArgs = mockExecFile.mock.calls[0]
+      expect(callArgs[0]).toBe('git')
+      expect(callArgs[1]).toEqual(['checkout', '-b', 'new-branch'])
     })
   })
 })
