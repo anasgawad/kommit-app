@@ -12,8 +12,7 @@ const api = {
     status: (repoPath: string): Promise<GitStatus> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_STATUS, repoPath),
 
-    isRepo: (path: string): Promise<boolean> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GIT_IS_REPO, path),
+    isRepo: (path: string): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.GIT_IS_REPO, path),
 
     log: (repoPath: string, options?: LogOptions): Promise<Commit[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_LOG, repoPath, options),
@@ -30,8 +29,11 @@ const api = {
     renameBranch: (repoPath: string, oldName: string, newName: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_RENAME_BRANCH, repoPath, oldName, newName),
 
-    checkout: (repoPath: string, ref: string, options?: { createBranch?: boolean }): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GIT_CHECKOUT, repoPath, ref, options),
+    checkout: (
+      repoPath: string,
+      ref: string,
+      options?: { createBranch?: boolean }
+    ): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.GIT_CHECKOUT, repoPath, ref, options),
 
     stage: (repoPath: string, filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_STAGE, repoPath, filePath),
@@ -53,14 +55,12 @@ const api = {
   },
 
   repo: {
-    init: (dir: string): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.REPO_INIT, dir),
+    init: (dir: string): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.REPO_INIT, dir),
 
-    clone: (url: string, targetDir: string): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.REPO_CLONE, url, targetDir),
+    clone: (url: string, parentDir: string): Promise<string> =>
+      ipcRenderer.invoke(IPC_CHANNELS.REPO_CLONE, url, parentDir),
 
-    getRecent: (): Promise<RepoInfo[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.REPO_GET_RECENT),
+    getRecent: (): Promise<RepoInfo[]> => ipcRenderer.invoke(IPC_CHANNELS.REPO_GET_RECENT),
 
     addRecent: (path: string, name: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.REPO_ADD_RECENT, path, name),
@@ -76,7 +76,8 @@ const api = {
 
   // Listen for events pushed from main process
   on: (channel: string, callback: (...args: unknown[]) => void) => {
-    const subscription = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args)
+    const subscription = (_event: Electron.IpcRendererEvent, ...args: unknown[]) =>
+      callback(...args)
     ipcRenderer.on(channel, subscription)
     return () => {
       ipcRenderer.removeListener(channel, subscription)

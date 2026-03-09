@@ -25,15 +25,12 @@ export function registerGitHandlers(): void {
   })
 
   // --- Log ---
-  ipcMain.handle(
-    IPC_CHANNELS.GIT_LOG,
-    async (_event, repoPath: string, options?: LogOptions) => {
-      if (typeof repoPath !== 'string' || repoPath.length === 0) {
-        throw new Error('repoPath must be a non-empty string')
-      }
-      return gitService.log(repoPath, options)
+  ipcMain.handle(IPC_CHANNELS.GIT_LOG, async (_event, repoPath: string, options?: LogOptions) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
     }
-  )
+    return gitService.log(repoPath, options)
+  })
 
   // --- Branches ---
   ipcMain.handle(IPC_CHANNELS.GIT_BRANCHES, async (_event, repoPath: string) => {
@@ -72,19 +69,13 @@ export function registerGitHandlers(): void {
   )
 
   // --- Staging & Commit ---
-  ipcMain.handle(
-    IPC_CHANNELS.GIT_STAGE,
-    async (_event, repoPath: string, filePath: string) => {
-      return gitService.stageFile(repoPath, filePath)
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.GIT_STAGE, async (_event, repoPath: string, filePath: string) => {
+    return gitService.stageFile(repoPath, filePath)
+  })
 
-  ipcMain.handle(
-    IPC_CHANNELS.GIT_UNSTAGE,
-    async (_event, repoPath: string, filePath: string) => {
-      return gitService.unstageFile(repoPath, filePath)
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.GIT_UNSTAGE, async (_event, repoPath: string, filePath: string) => {
+    return gitService.unstageFile(repoPath, filePath)
+  })
 
   ipcMain.handle(
     IPC_CHANNELS.GIT_COMMIT,
@@ -93,12 +84,9 @@ export function registerGitHandlers(): void {
     }
   )
 
-  ipcMain.handle(
-    IPC_CHANNELS.GIT_DIFF,
-    async (_event, repoPath: string, filePath?: string) => {
-      return gitService.diff(repoPath, filePath)
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.GIT_DIFF, async (_event, repoPath: string, filePath?: string) => {
+    return gitService.diff(repoPath, filePath)
+  })
 
   ipcMain.handle(
     IPC_CHANNELS.GIT_DIFF_STAGED,
@@ -107,24 +95,18 @@ export function registerGitHandlers(): void {
     }
   )
 
-  ipcMain.handle(
-    IPC_CHANNELS.GIT_DISCARD,
-    async (_event, repoPath: string, filePath: string) => {
-      return gitService.discardChanges(repoPath, filePath)
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.GIT_DISCARD, async (_event, repoPath: string, filePath: string) => {
+    return gitService.discardChanges(repoPath, filePath)
+  })
 
   // --- Repository operations ---
   ipcMain.handle(IPC_CHANNELS.REPO_INIT, async (_event, dir: string) => {
     return gitService.init(dir)
   })
 
-  ipcMain.handle(
-    IPC_CHANNELS.REPO_CLONE,
-    async (_event, url: string, targetDir: string) => {
-      return gitService.clone(url, targetDir)
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.REPO_CLONE, async (_event, url: string, parentDir: string) => {
+    return gitService.clone(url, parentDir)
+  })
 
   // --- Dialog helpers ---
   ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async () => {
@@ -135,6 +117,6 @@ export function registerGitHandlers(): void {
       properties: ['openDirectory']
     })
 
-    return result.canceled ? null : result.filePaths[0] ?? null
+    return result.canceled ? null : (result.filePaths[0] ?? null)
   })
 }

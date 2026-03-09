@@ -43,8 +43,8 @@ These must pass before any other testing can begin.
 
 | #     | Test Case             | Steps                      | Expected Result                            | Pass |
 | ----- | --------------------- | -------------------------- | ------------------------------------------ | ---- |
-| 1.4.1 | Lint passes           | Run `npm run lint`         | No ESLint errors (warnings are acceptable) | [ ]  |
-| 1.4.2 | Formatting is correct | Run `npm run format:check` | All files are properly formatted           | [ ]  |
+| 1.4.1 | Lint passes           | Run `npm run lint`         | No ESLint errors (warnings are acceptable) | [✅]  |
+| 1.4.2 | Formatting is correct | Run `npm run format:check` | All files are properly formatted           | [✅]  |
 
 ---
 
@@ -54,18 +54,18 @@ These must pass before any other testing can begin.
 
 | #     | Test Case           | Steps                                     | Expected Result                                                      | Pass |
 | ----- | ------------------- | ----------------------------------------- | -------------------------------------------------------------------- | ---- |
-| 2.1.1 | App starts          | Run `npm run dev`                         | Electron window opens without crash or error in terminal             | [ ]  |
-| 2.1.2 | Default window size | Observe window dimensions                 | Window opens at approximately 1280x800 pixels                        | [ ]  |
-| 2.1.3 | Minimum window size | Try to resize window smaller than 800x600 | Window cannot be resized below 800x600                               | [ ]  |
-| 2.1.4 | Dark background     | Observe window background                 | Background is dark (Catppuccin Mocha `#1e1e2e`) before content loads | [ ]  |
-| 2.1.5 | No console errors   | Open DevTools (Ctrl+Shift+I / Cmd+Opt+I)  | No errors in the console on initial load                             | [ ]  |
+| 2.1.1 | App starts          | Run `npm run dev`                         | Electron window opens without crash or error in terminal             | [✅]  |
+| 2.1.2 | Default window size | Observe window dimensions                 | Window opens at approximately 1280x800 pixels                        | [✅]  |
+| 2.1.3 | Minimum window size | Try to resize window smaller than 800x600 | Window cannot be resized below 800x600                               | [✅]  |
+| 2.1.4 | Dark background     | Observe window background                 | Background is dark (Catppuccin Mocha `#1e1e2e`) before content loads | [✅]  |
+| 2.1.5 | No console errors   | Open DevTools (Ctrl+Shift+I / Cmd+Opt+I)  | No errors in the console on initial load                             | [✅]  |
 
 ### 2.2 Window State Persistence
 
 | #     | Test Case            | Steps                                                                                               | Expected Result                                    | Pass |
 | ----- | -------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---- |
-| 2.2.1 | Size is restored     | 1. Resize window to a non-default size (e.g., 1000x700) 2. Close the app 3. Run `npm run dev` again | Window opens at the previously set size (1000x700) | [ ]  |
-| 2.2.2 | Position is restored | 1. Move window to a different position on screen 2. Close the app 3. Run `npm run dev` again        | Window opens at the previously set position        | [ ]  |
+| 2.2.1 | Size is restored     | 1. Resize window to a non-default size (e.g., 1000x700) 2. Close the app 3. Run `npm run dev` again | Window opens at the previously set size (1000x700) | [✅]  |
+| 2.2.2 | Position is restored | 1. Move window to a different position on screen 2. Close the app 3. Run `npm run dev` again        | Window opens at the previously set position        | [✅]  |
 
 ---
 
@@ -75,9 +75,9 @@ These must pass before any other testing can begin.
 
 | #     | Test Case            | Steps                        | Expected Result                                                                  | Pass |
 | ----- | -------------------- | ---------------------------- | -------------------------------------------------------------------------------- | ---- |
-| 3.1.1 | Heading displayed    | Observe the welcome screen   | "Kommit" heading is visible and prominently displayed                            | [ ]  |
-| 3.1.2 | Tagline displayed    | Observe below the heading    | A tagline/description text is visible                                            | [ ]  |
-| 3.1.3 | Open button present  | Look for action buttons      | "Open Repository" button is visible and clickable                                | [ ]  |
+| 3.1.1 | Heading displayed    | Observe the welcome screen   | "Kommit" heading is visible and prominently displayed                            | [✅]  |
+| 3.1.2 | Tagline displayed    | Observe below the heading    | A tagline/description text is visible                                            | [✅]  |
+| 3.1.3 | Open button present  | Look for action buttons      | "Open Repository" button is visible and clickable                                | [✅]  |
 | 3.1.4 | Clone button present | Look for action buttons      | "Clone Repository" button is visible and clickable                               | [ ]  |
 | 3.1.5 | Init button present  | Look for action buttons      | "Init Repository" button is visible and clickable                                | [ ]  |
 | 3.1.6 | Empty recent list    | First launch with no history | Recent repositories section is either empty or shows a "no recent repos" message | [ ]  |

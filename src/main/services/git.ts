@@ -5,6 +5,7 @@
 
 import { execFile, spawn, ChildProcess } from 'node:child_process'
 import { promisify } from 'node:util'
+import { join } from 'node:path'
 import {
   GitStatus,
   Commit,
@@ -183,17 +184,11 @@ export class GitService {
       '%(subject)' // last commit subject
     ].join('%x00')
 
-    const localRaw = await this.exec(
-      ['branch', `--format=${format}`, '--list'],
-      repoPath
-    )
+    const localRaw = await this.exec(['branch', `--format=${format}`, '--list'], repoPath)
 
     let remoteRaw = ''
     try {
-      remoteRaw = await this.exec(
-        ['branch', '-r', `--format=${format}`, '--list'],
-        repoPath
-      )
+      remoteRaw = await this.exec(['branch', '-r', `--format=${format}`, '--list'], repoPath)
     } catch {
       // No remotes is fine
     }
@@ -240,9 +235,28 @@ export class GitService {
 
   /**
    * Clone a repository (simple, waits for completion).
+   * Clones into a subdirectory named after the repository.
+   * @param url - Git repository URL
+   * @param parentDir - Parent directory where the repo folder will be created
+   * @returns The full path to the cloned repository
    */
-  async clone(url: string, targetDir: string): Promise<void> {
-    await this.exec(['clone', url, targetDir], process.cwd(), 500 * 1024 * 1024)
+  async clone(url: string, parentDir: string): Promise<string> {
+    // Extract repository name from URL
+    // Examples:
+    // https://github.com/user/repo.git -> repo
+    // https://github.com/user/repo -> repo
+    // git@github.com:user/repo.git -> repo
+    const repoName =
+      url
+        .split('/')
+        .pop()
+        ?.replace(/\.git$/, '') || 'repository'
+
+    // Clone into parent directory - git will create the repo folder
+    await this.exec(['clone', url], parentDir, 500 * 1024 * 1024)
+
+    // Return the full path to the cloned repo
+    return join(parentDir, repoName)
   }
 
   /**
@@ -281,11 +295,7 @@ export class GitService {
   /**
    * Create a new commit.
    */
-  async commit(
-    repoPath: string,
-    message: string,
-    options?: { amend?: boolean }
-  ): Promise<string> {
+  async commit(repoPath: string, message: string, options?: { amend?: boolean }): Promise<string> {
     const args = ['commit', '-m', message]
     if (options?.amend) {
       args.push('--amend')
@@ -324,7 +334,11 @@ export class GitService {
   /**
    * Checkout a branch or commit.
    */
-  async checkout(repoPath: string, ref: string, options?: { createBranch?: boolean }): Promise<void> {
+  async checkout(
+    repoPath: string,
+    ref: string,
+    options?: { createBranch?: boolean }
+  ): Promise<void> {
     const args = ['checkout']
     if (options?.createBranch) {
       args.push('-b')

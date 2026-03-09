@@ -41,8 +41,8 @@ export function WelcomeScreen() {
     setCloneError(null)
 
     try {
-      await window.api.repo.clone(cloneUrl.trim(), cloneTarget.trim())
-      await openRepo(cloneTarget.trim())
+      const clonedRepoPath = await window.api.repo.clone(cloneUrl.trim(), cloneTarget.trim())
+      await openRepo(clonedRepoPath)
     } catch (err) {
       setCloneError(err instanceof Error ? err.message : 'Clone failed')
     } finally {
