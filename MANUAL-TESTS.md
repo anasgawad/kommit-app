@@ -29,15 +29,15 @@ These must pass before any other testing can begin.
 
 | #     | Test Case           | Steps                              | Expected Result                                                                            | Pass |
 | ----- | ------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ | ---- |
-| 1.2.1 | TypeScript compiles | Run `npm run build`                | Build completes with no TypeScript errors. Output files are generated in `out/` directory. | [ ]  |
-| 1.2.2 | No type errors      | Check build output for type errors | Zero type errors across all three processes (main, preload, renderer)                      | [ ]  |
+| 1.2.1 | TypeScript compiles | Run `npm run build`                | Build completes with no TypeScript errors. Output files are generated in `out/` directory. | [✅]  |
+| 1.2.2 | No type errors      | Check build output for type errors | Zero type errors across all three processes (main, preload, renderer)                      | [✅]  |
 
 ### 1.3 Automated Tests
 
 | #     | Test Case        | Steps              | Expected Result                                       | Pass |
 | ----- | ---------------- | ------------------ | ----------------------------------------------------- | ---- |
-| 1.3.1 | Unit tests pass  | Run `npm test`     | All unit and component tests pass (86 tests expected) | [ ]  |
-| 1.3.2 | No test failures | Review test output | 0 failures, 0 errors                                  | [ ]  |
+| 1.3.1 | Unit tests pass  | Run `npm test`     | All unit and component tests pass (86 tests expected) | [✅]  |
+| 1.3.2 | No test failures | Review test output | 0 failures, 0 errors                                  | [✅]  |
 
 ### 1.4 Code Quality
 
