@@ -62,8 +62,8 @@ export function WelcomeScreen() {
   }
 
   return (
-    <div className="h-full flex items-center justify-center bg-kommit-bg">
-      <div className="max-w-2xl w-full p-8">
+    <div className="h-full flex items-center justify-center bg-kommit-bg overflow-hidden">
+      <div className="max-w-2xl w-full p-8 max-h-full overflow-y-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-kommit-text mb-2">Kommit</h1>
@@ -156,7 +156,13 @@ export function WelcomeScreen() {
             <h2 className="text-sm font-medium text-kommit-text-secondary mb-3 uppercase tracking-wider">
               Recent Repositories
             </h2>
-            <div className="space-y-1">
+            <div
+              className="space-y-1 max-h-80 overflow-y-auto pr-2"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'var(--color-border) var(--color-bg-secondary)'
+              }}
+            >
               {recentRepos.map((repo) => (
                 <button
                   key={repo.path}
