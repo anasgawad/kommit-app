@@ -78,9 +78,9 @@ These must pass before any other testing can begin.
 | 3.1.1 | Heading displayed    | Observe the welcome screen   | "Kommit" heading is visible and prominently displayed                            | [✅]  |
 | 3.1.2 | Tagline displayed    | Observe below the heading    | A tagline/description text is visible                                            | [✅]  |
 | 3.1.3 | Open button present  | Look for action buttons      | "Open Repository" button is visible and clickable                                | [✅]  |
-| 3.1.4 | Clone button present | Look for action buttons      | "Clone Repository" button is visible and clickable                               | [ ]  |
-| 3.1.5 | Init button present  | Look for action buttons      | "Init Repository" button is visible and clickable                                | [ ]  |
-| 3.1.6 | Empty recent list    | First launch with no history | Recent repositories section is either empty or shows a "no recent repos" message | [ ]  |
+| 3.1.4 | Clone button present | Look for action buttons      | "Clone Repository" button is visible and clickable                               | [✅]  |
+| 3.1.5 | Init button present  | Look for action buttons      | "Init Repository" button is visible and clickable                                | [✅]  |
+| 3.1.6 | Empty recent list    | First launch with no history | Recent repositories section is either empty or shows a "no recent repos" message | [✅]  |
 
 ---
 
@@ -92,16 +92,16 @@ These must pass before any other testing can begin.
 
 | #      | Test Case                   | Steps                                     | Expected Result                                                                                            | Pass |
 | ------ | --------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---- |
-| 4.1.1  | Dialog opens                | Click "Open Repository"                   | Native OS directory picker dialog appears                                                                  | [ ]  |
-| 4.1.2  | Repo loads successfully     | Select a valid git repository directory   | App transitions from Welcome Screen to the main App Layout                                                 | [ ]  |
-| 4.1.3  | Title bar shows             | After opening repo                        | Title bar at top displays "Kommit" and is visible                                                          | [ ]  |
-| 4.1.4  | Sidebar shows repo name     | After opening repo                        | Sidebar displays the repository name (directory name)                                                      | [ ]  |
-| 4.1.5  | Sidebar shows branch        | After opening repo                        | Sidebar shows the current branch name                                                                      | [ ]  |
-| 4.1.6  | Sidebar shows branches list | After opening repo                        | Sidebar lists local branches, with current branch highlighted (accent color, `*` prefix)                   | [ ]  |
-| 4.1.7  | Remote branches shown       | Open a repo with remote tracking branches | Sidebar shows a "Remote Branches" section listing remote branches                                          | [ ]  |
-| 4.1.8  | Main panel shows info       | After opening repo                        | Main panel displays repo name, branch, and status information                                              | [ ]  |
-| 4.1.9  | Status bar populated        | After opening repo                        | Status bar shows: branch name, upstream info (if tracking), clean/dirty status, repo path, "Kommit v0.1.0" | [ ]  |
-| 4.1.10 | Phase 2 placeholder         | After opening repo                        | Main panel shows "Graph view coming in Phase 2" placeholder text                                           | [ ]  |
+| 4.1.1  | Dialog opens                | Click "Open Repository"                   | Native OS directory picker dialog appears                                                                  | [✅]  |
+| 4.1.2  | Repo loads successfully     | Select a valid git repository directory   | App transitions from Welcome Screen to the main App Layout                                                 | [✅]  |
+| 4.1.3  | Title bar shows             | After opening repo                        | Title bar at top displays "Kommit" and is visible                                                          | [✅]  |
+| 4.1.4  | Sidebar shows repo name     | After opening repo                        | Sidebar displays the repository name (directory name)                                                      | [✅]  |
+| 4.1.5  | Sidebar shows branch        | After opening repo                        | Sidebar shows the current branch name                                                                      | [✅]  |
+| 4.1.6  | Sidebar shows branches list | After opening repo                        | Sidebar lists local branches, with current branch highlighted (accent color, `*` prefix)                   | [✅]  |
+| 4.1.7  | Remote branches shown       | Open a repo with remote tracking branches | Sidebar shows a "Remote Branches" section listing remote branches                                          | [✅]  |
+| 4.1.8  | Main panel shows info       | After opening repo                        | Main panel displays repo name, branch, and status information                                              | [✅]  |
+| 4.1.9  | Status bar populated        | After opening repo                        | Status bar shows: branch name, upstream info (if tracking), clean/dirty status, repo path, "Kommit v0.1.0" | [✅]  |
+| 4.1.10 | Phase 2 placeholder         | After opening repo                        | Main panel shows "Graph view coming in Phase 2" placeholder text                                           | [✅]  |
 
 ### 4.2 Non-Git Directory
 
@@ -109,15 +109,15 @@ These must pass before any other testing can begin.
 
 | #     | Test Case               | Steps                                                    | Expected Result                                                          | Pass |
 | ----- | ----------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------ | ---- |
-| 4.2.1 | Error displayed         | 1. Click "Open Repository" 2. Select a non-git directory | Error message appears indicating it is not a git repository              | [ ]  |
-| 4.2.2 | Stays on welcome screen | After the error in 4.2.1                                 | App remains on the Welcome Screen, does not navigate away                | [ ]  |
-| 4.2.3 | Error is visible        | After the error in 4.2.1                                 | Error message is displayed in a visible error area (red/warning styling) | [ ]  |
+| 4.2.1 | Error displayed         | 1. Click "Open Repository" 2. Select a non-git directory | Error message appears indicating it is not a git repository              | [✅]  |
+| 4.2.2 | Stays on welcome screen | After the error in 4.2.1                                 | App remains on the Welcome Screen, does not navigate away                | [✅]  |
+| 4.2.3 | Error is visible        | After the error in 4.2.1                                 | Error message is displayed in a visible error area (red/warning styling) | [✅]  |
 
 ### 4.3 Cancel Dialog
 
 | #     | Test Case      | Steps                                                              | Expected Result                                         | Pass |
 | ----- | -------------- | ------------------------------------------------------------------ | ------------------------------------------------------- | ---- |
-| 4.3.1 | Cancel is safe | 1. Click "Open Repository" 2. Click Cancel in the directory picker | Nothing happens. No error. App stays on Welcome Screen. | [ ]  |
+| 4.3.1 | Cancel is safe | 1. Click "Open Repository" 2. Click Cancel in the directory picker | Nothing happens. No error. App stays on Welcome Screen. | [✅]  |
 
 ---
 
@@ -127,12 +127,12 @@ These must pass before any other testing can begin.
 
 | #     | Test Case        | Steps                      | Expected Result                                                                   | Pass |
 | ----- | ---------------- | -------------------------- | --------------------------------------------------------------------------------- | ---- |
-| 5.1.1 | Dialog opens     | Click "Init Repository"    | Native OS directory picker dialog appears                                         | [ ]  |
-| 5.1.2 | Repo initialized | Select the empty directory | `git init` is executed. A `.git` folder is created inside the selected directory. | [ ]  |
-| 5.1.3 | App transitions  | After initialization       | App transitions from Welcome Screen to App Layout showing the new repository      | [ ]  |
-| 5.1.4 | Branch shown     | After initialization       | Default branch name is displayed (likely "main" or "master")                      | [ ]  |
-| 5.1.5 | Clean status     | After initialization       | Status shows clean working tree (no staged, unstaged, or untracked files)         | [ ]  |
-| 5.1.6 | Added to recent  | Close and reopen the app   | The initialized repository appears in the Recent Repositories list                | [ ]  |
+| 5.1.1 | Dialog opens     | Click "Init Repository"    | Native OS directory picker dialog appears                                         | [✅]  |
+| 5.1.2 | Repo initialized | Select the empty directory | `git init` is executed. A `.git` folder is created inside the selected directory. | [✅]  |
+| 5.1.3 | App transitions  | After initialization       | App transitions from Welcome Screen to App Layout showing the new repository      | [✅]  |
+| 5.1.4 | Branch shown     | After initialization       | Default branch name is displayed (likely "main" or "master")                      | [✅]  |
+| 5.1.5 | Clean status     | After initialization       | Status shows clean working tree (no staged, unstaged, or untracked files)         | [✅]  |
+| 5.1.6 | Added to recent  | Close and reopen the app   | The initialized repository appears in the Recent Repositories list                | [✅]  |
 
 ---
 
@@ -142,12 +142,12 @@ These must pass before any other testing can begin.
 
 | #     | Test Case                       | Steps                                 | Expected Result                                                              | Pass |
 | ----- | ------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------- | ---- |
-| 6.1.1 | Form toggle                     | Click "Clone Repository"              | Clone form appears with URL input, target directory input, and Browse button | [ ]  |
-| 6.1.2 | URL input present               | Observe clone form                    | Text input for repository URL is visible and editable                        | [ ]  |
-| 6.1.3 | Directory input present         | Observe clone form                    | Text input for target directory is visible                                   | [ ]  |
-| 6.1.4 | Browse button present           | Observe clone form                    | Browse button is next to the directory input                                 | [ ]  |
-| 6.1.5 | Clone button disabled           | Leave both fields empty               | Clone button is disabled / not clickable                                     | [ ]  |
-| 6.1.6 | Clone button disabled (partial) | Enter only URL, leave directory empty | Clone button remains disabled                                                | [ ]  |
+| 6.1.1 | Form toggle                     | Click "Clone Repository"              | Clone form appears with URL input, target directory input, and Browse button | [✅]  |
+| 6.1.2 | URL input present               | Observe clone form                    | Text input for repository URL is visible and editable                        | [✅]  |
+| 6.1.3 | Directory input present         | Observe clone form                    | Text input for target directory is visible                                   | [✅]  |
+| 6.1.4 | Browse button present           | Observe clone form                    | Browse button is next to the directory input                                 | [✅]  |
+| 6.1.5 | Clone button disabled           | Leave both fields empty               | Clone button is disabled / not clickable                                     | [✅]  |
+| 6.1.6 | Clone button disabled (partial) | Enter only URL, leave directory empty | Clone button remains disabled                                                | [✅]  |
 
 ### 6.2 Clone Operation
 
@@ -155,19 +155,19 @@ These must pass before any other testing can begin.
 
 | #     | Test Case             | Steps                                 | Expected Result                                                           | Pass |
 | ----- | --------------------- | ------------------------------------- | ------------------------------------------------------------------------- | ---- |
-| 6.2.1 | Clone button enabled  | Fill in both URL and target directory | Clone button becomes enabled / clickable                                  | [ ]  |
-| 6.2.2 | Browse sets directory | Click Browse, select a directory      | Target directory input is populated with the selected path                | [ ]  |
-| 6.2.3 | Cloning state         | Click Clone with valid inputs         | Button text changes to "Cloning..." and buttons are disabled during clone | [ ]  |
-| 6.2.4 | Clone succeeds        | Wait for clone to complete            | App transitions to App Layout showing the cloned repository               | [ ]  |
-| 6.2.5 | Cloned repo content   | After successful clone                | Sidebar shows branches and status for the cloned repository               | [ ]  |
+| 6.2.1 | Clone button enabled  | Fill in both URL and target directory | Clone button becomes enabled / clickable                                  | [✅]  |
+| 6.2.2 | Browse sets directory | Click Browse, select a directory      | Target directory input is populated with the selected path                | [✅]  |
+| 6.2.3 | Cloning state         | Click Clone with valid inputs         | Button text changes to "Cloning..." and buttons are disabled during clone | [✅]  |
+| 6.2.4 | Clone succeeds        | Wait for clone to complete            | App transitions to App Layout showing the cloned repository               | [✅]  |
+| 6.2.5 | Cloned repo content   | After successful clone                | Sidebar shows branches and status for the cloned repository               | [✅]  |
 
 ### 6.3 Clone Error Handling
 
 | #     | Test Case               | Steps                                                                                        | Expected Result                                                                             | Pass |
 | ----- | ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---- |
-| 6.3.1 | Invalid URL error       | Enter an invalid URL (e.g., `not-a-url`) and a valid directory, click Clone                  | Error message is displayed after clone attempt fails                                        | [ ]  |
-| 6.3.2 | Non-existent repo error | Enter a valid-looking but non-existent URL (e.g., `https://github.com/nonexistent/repo.git`) | Error message is displayed                                                                  | [ ]  |
-| 6.3.3 | Error stays on form     | After a clone error                                                                          | App stays on the Welcome Screen with the clone form visible. User can fix inputs and retry. | [ ]  |
+| 6.3.1 | Invalid URL error       | Enter an invalid URL (e.g., `not-a-url`) and a valid directory, click Clone                  | Error message is displayed after clone attempt fails                                        | [✅]  |
+| 6.3.2 | Non-existent repo error | Enter a valid-looking but non-existent URL (e.g., `https://github.com/nonexistent/repo.git`) | Error message is displayed                                                                  | [✅]  |
+| 6.3.3 | Error stays on form     | After a clone error                                                                          | App stays on the Welcome Screen with the clone form visible. User can fix inputs and retry. | [✅]  |
 
 ---
 
@@ -177,24 +177,24 @@ These must pass before any other testing can begin.
 
 | #     | Test Case            | Steps                                                                           | Expected Result                                                              | Pass |
 | ----- | -------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---- |
-| 7.1.1 | Repo added to recent | Open a repository using "Open Repository"                                       | The repository appears in the Recent Repositories list on the Welcome Screen | [ ]  |
-| 7.1.2 | Name and path shown  | After adding a repo to recent                                                   | Each entry shows the repository name and full path                           | [ ]  |
-| 7.1.3 | Click to reopen      | 1. Return to Welcome Screen (close and reopen app) 2. Click a recent repo entry | The clicked repository opens and app transitions to App Layout               | [ ]  |
-| 7.1.4 | Most recent first    | Open multiple repos (A, then B, then C)                                         | Recent list shows: C, B, A (most recently opened first)                      | [ ]  |
+| 7.1.1 | Repo added to recent | Open a repository using "Open Repository"                                       | The repository appears in the Recent Repositories list on the Welcome Screen | [✅]  |
+| 7.1.2 | Name and path shown  | After adding a repo to recent                                                   | Each entry shows the repository name and full path                           | [✅]  |
+| 7.1.3 | Click to reopen      | 1. Return to Welcome Screen (close and reopen app) 2. Click a recent repo entry | The clicked repository opens and app transitions to App Layout               | [✅]  |
+| 7.1.4 | Most recent first    | Open multiple repos (A, then B, then C)                                         | Recent list shows: C, B, A (most recently opened first)                      | [✅]  |
 
 ### 7.2 Persistence
 
 | #     | Test Case            | Steps                                                                                                     | Expected Result                                                              | Pass |
 | ----- | -------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ---- |
-| 7.2.1 | Survives restart     | 1. Open a few repos 2. Close the app completely 3. Restart the app                                        | Recent repositories list is preserved with all previously opened repos       | [ ]  |
-| 7.2.2 | Duplicate handling   | Open the same repository twice                                                                            | Only one entry exists in the recent list (timestamp updated, not duplicated) | [ ]  |
-| 7.2.3 | Reopen updates order | 1. Have repos A, B, C in recent (C most recent) 2. Click on repo A to open it 3. Return to Welcome Screen | Repo A is now first in the list (order: A, C, B)                             | [ ]  |
+| 7.2.1 | Survives restart     | 1. Open a few repos 2. Close the app completely 3. Restart the app                                        | Recent repositories list is preserved with all previously opened repos       | [✅]  |
+| 7.2.2 | Duplicate handling   | Open the same repository twice                                                                            | Only one entry exists in the recent list (timestamp updated, not duplicated) | [✅]  |
+| 7.2.3 | Reopen updates order | 1. Have repos A, B, C in recent (C most recent) 2. Click on repo A to open it 3. Return to Welcome Screen | Repo A is now first in the list (order: A, C, B)                             | [✅]  |
 
 ### 7.3 Limits
 
 | #     | Test Case          | Steps                                    | Expected Result                                                   | Pass |
 | ----- | ------------------ | ---------------------------------------- | ----------------------------------------------------------------- | ---- |
-| 7.3.1 | Maximum 20 entries | Open more than 20 different repositories | Recent list never exceeds 20 entries. Oldest entries are removed. | [ ]  |
+| 7.3.1 | Maximum 20 entries | Open more than 20 different repositories | Recent list never exceeds 20 entries. Oldest entries are removed. | [✅]  |
 
 ---
 
@@ -204,11 +204,11 @@ These must pass before any other testing can begin.
 
 | #     | Test Case           | Steps                                                | Expected Result                                                                | Pass |
 | ----- | ------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ---- |
-| 8.1.1 | Switch from sidebar | 1. Open repo A 2. Click the repo name in the Sidebar | A native directory picker dialog appears                                       | [ ]  |
-| 8.1.2 | UI updates          | Select a different repo (B) from the dialog          | Sidebar, main panel, and status bar all update to reflect repo B's information | [ ]  |
-| 8.1.3 | Branch list updates | After switching to repo B                            | Branch list in sidebar shows repo B's branches, not repo A's                   | [ ]  |
-| 8.1.4 | Status updates      | After switching to repo B                            | Status counts (staged, unstaged, etc.) reflect repo B's state                  | [ ]  |
-| 8.1.5 | Cancel switch       | 1. Click repo name in Sidebar 2. Cancel the dialog   | App remains showing the current repo. No error.                                | [ ]  |
+| 8.1.1 | Switch from sidebar | 1. Open repo A 2. Click the repo name in the Sidebar | A native directory picker dialog appears                                       | [✅]  |
+| 8.1.2 | UI updates          | Select a different repo (B) from the dialog          | Sidebar, main panel, and status bar all update to reflect repo B's information | [✅]  |
+| 8.1.3 | Branch list updates | After switching to repo B                            | Branch list in sidebar shows repo B's branches, not repo A's                   | [✅]  |
+| 8.1.4 | Status updates      | After switching to repo B                            | Status counts (staged, unstaged, etc.) reflect repo B's state                  | [✅]  |
+| 8.1.5 | Cancel switch       | 1. Click repo name in Sidebar 2. Cancel the dialog   | App remains showing the current repo. No error.                                | [✅]  |
 
 ---
 
@@ -220,38 +220,38 @@ These must pass before any other testing can begin.
 
 | #     | Test Case    | Steps                       | Expected Result                                                                              | Pass |
 | ----- | ------------ | --------------------------- | -------------------------------------------------------------------------------------------- | ---- |
-| 9.1.1 | Clean status | Open a repo with no changes | Status shows clean (checkmark or "Working tree clean"). No staged/unstaged/untracked counts. | [ ]  |
+| 9.1.1 | Clean status | Open a repo with no changes | Status shows clean (checkmark or "Working tree clean"). No staged/unstaged/untracked counts. | [✅]  |
 
 ### 9.2 Unstaged Changes
 
 | #     | Test Case              | Steps                                                                       | Expected Result                                                       | Pass |
 | ----- | ---------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---- |
-| 9.2.1 | Modified file detected | 1. Modify a tracked file externally 2. Reopen or refresh the repo in Kommit | Unstaged/modified count increases by 1. Status bar shows dirty state. | [ ]  |
-| 9.2.2 | Multiple modifications | Modify 3 tracked files externally, refresh                                  | Unstaged count shows 3                                                | [ ]  |
+| 9.2.1 | Modified file detected | 1. Modify a tracked file externally 2. Reopen or refresh the repo in Kommit | Unstaged/modified count increases by 1. Status bar shows dirty state. | [✅]  |
+| 9.2.2 | Multiple modifications | Modify 3 tracked files externally, refresh                                  | Unstaged count shows 3                                                | [✅]  |
 
 ### 9.3 Staged Changes
 
 | #     | Test Case            | Steps                                                           | Expected Result                                                             | Pass |
 | ----- | -------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------- | ---- |
-| 9.3.1 | Staged file detected | 1. Stage a file externally (`git add <file>`) 2. Refresh Kommit | Staged count increases. Status shows staged count separately from unstaged. | [ ]  |
+| 9.3.1 | Staged file detected | 1. Stage a file externally (`git add <file>`) 2. Refresh Kommit | Staged count increases. Status shows staged count separately from unstaged. | [✅]  |
 
 ### 9.4 Untracked Files
 
 | #     | Test Case               | Steps                                                                   | Expected Result                | Pass |
 | ----- | ----------------------- | ----------------------------------------------------------------------- | ------------------------------ | ---- |
-| 9.4.1 | Untracked file detected | 1. Create a new file in the repo (don't `git add` it) 2. Refresh Kommit | Untracked count increases by 1 | [ ]  |
+| 9.4.1 | Untracked file detected | 1. Create a new file in the repo (don't `git add` it) 2. Refresh Kommit | Untracked count increases by 1 | [✅]  |
 
 ### 9.5 Conflicted Files
 
 | #     | Test Case         | Steps                                                               | Expected Result               | Pass |
 | ----- | ----------------- | ------------------------------------------------------------------- | ----------------------------- | ---- |
-| 9.5.1 | Conflict detected | 1. Create a merge conflict in the repo externally 2. Refresh Kommit | Conflicted count is displayed | [ ]  |
+| 9.5.1 | Conflict detected | 1. Create a merge conflict in the repo externally 2. Refresh Kommit | Conflicted count is displayed | [✅]  |
 
 ### 9.6 Combined Status
 
 | #     | Test Case   | Steps                                                   | Expected Result                                                    | Pass |
 | ----- | ----------- | ------------------------------------------------------- | ------------------------------------------------------------------ | ---- |
-| 9.6.1 | Mixed state | Have staged + unstaged + untracked files simultaneously | All three counts are displayed correctly in status bar and sidebar | [ ]  |
+| 9.6.1 | Mixed state | Have staged + unstaged + untracked files simultaneously | All three counts are displayed correctly in status bar and sidebar | [✅]  |
 
 ---
 
