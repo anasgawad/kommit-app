@@ -73,7 +73,8 @@ describe('parseStatus()', () => {
   })
 
   it('should parse renamed files', () => {
-    const raw = '# branch.head main\n2 R. N... 100644 100644 100644 abc1234 def5678 R100 new-name.ts\told-name.ts\n'
+    const raw =
+      '# branch.head main\n2 R. N... 100644 100644 100644 abc1234 def5678 R100 new-name.ts\told-name.ts\n'
     const status = parseStatus(raw)
 
     expect(status.staged).toHaveLength(1)
@@ -83,7 +84,8 @@ describe('parseStatus()', () => {
   })
 
   it('should parse merge conflicts (UU)', () => {
-    const raw = '# branch.head main\nu UU N... 100644 100644 100644 100644 abc1234 def5678 ghi9012 conflicted.ts\n'
+    const raw =
+      '# branch.head main\nu UU N... 100644 100644 100644 100644 abc1234 def5678 ghi9012 conflicted.ts\n'
     const status = parseStatus(raw)
 
     expect(status.conflicted).toHaveLength(1)
@@ -163,7 +165,8 @@ describe('parseLog()', () => {
   })
 
   it('should handle root commit (no parents)', () => {
-    const raw = 'hash1\x00h1\x00\x00Author\x00a@b.com\x002024-01-01T00:00:00Z\x00Root commit\x00\x00\x00'
+    const raw =
+      'hash1\x00h1\x00\x00Author\x00a@b.com\x002024-01-01T00:00:00Z\x00Root commit\x00\x00\x00'
     const commits = parseLog(raw)
     expect(commits[0].parents).toEqual([])
   })
@@ -193,7 +196,8 @@ describe('parseLog()', () => {
   })
 
   it('should handle commit with no refs', () => {
-    const raw = 'hash1\x00h1\x00parent\x00Author\x00a@b.com\x002024-01-01T00:00:00Z\x00Commit\x00\x00\x00'
+    const raw =
+      'hash1\x00h1\x00parent\x00Author\x00a@b.com\x002024-01-01T00:00:00Z\x00Commit\x00\x00\x00'
     const commits = parseLog(raw)
     expect(commits[0].refs).toEqual([])
   })
@@ -213,7 +217,8 @@ describe('parseLog()', () => {
 
 describe('parseBranches()', () => {
   it('should parse local branches', () => {
-    const localRaw = 'main\x00abc123\x00origin/main\x00\x00*\x00Latest commit\nfeature\x00def456\x00\x00\x00 \x00Feature work\n'
+    const localRaw =
+      'main\tabc123\torigin/main\t\t*\tLatest commit\nfeature\tdef456\t\t\t \tFeature work\n'
     const branches = parseBranches(localRaw, '')
     const local = branches.filter((b) => !b.isRemote)
 
@@ -223,7 +228,7 @@ describe('parseBranches()', () => {
   })
 
   it('should parse remote branches', () => {
-    const remoteRaw = 'origin/main\x00abc123\x00\x00\x00 \x00Latest\norigin/develop\x00def456\x00\x00\x00 \x00Dev\n'
+    const remoteRaw = 'origin/main\tabc123\t\t\t \tLatest\norigin/develop\tdef456\t\t\t \tDev\n'
     const branches = parseBranches('', remoteRaw)
     const remote = branches.filter((b) => b.isRemote)
 
@@ -233,7 +238,7 @@ describe('parseBranches()', () => {
   })
 
   it('should identify current branch with * marker', () => {
-    const localRaw = 'main\x00abc123\x00\x00\x00*\x00Commit\nother\x00def456\x00\x00\x00 \x00Commit\n'
+    const localRaw = 'main\tabc123\t\t\t*\tCommit\nother\tdef456\t\t\t \tCommit\n'
     const branches = parseBranches(localRaw, '')
 
     expect(branches[0].isCurrent).toBe(true)
@@ -241,7 +246,7 @@ describe('parseBranches()', () => {
   })
 
   it('should parse tracking info (ahead/behind)', () => {
-    const localRaw = 'main\x00abc123\x00origin/main\x00[ahead 3, behind 2]\x00*\x00Commit\n'
+    const localRaw = 'main\tabc123\torigin/main\t[ahead 3, behind 2]\t*\tCommit\n'
     const branches = parseBranches(localRaw, '')
 
     expect(branches[0].tracking).toBeDefined()
@@ -250,14 +255,14 @@ describe('parseBranches()', () => {
   })
 
   it('should parse upstream reference', () => {
-    const localRaw = 'main\x00abc123\x00origin/main\x00\x00*\x00Commit\n'
+    const localRaw = 'main\tabc123\torigin/main\t\t*\tCommit\n'
     const branches = parseBranches(localRaw, '')
 
     expect(branches[0].upstream).toBe('origin/main')
   })
 
   it('should handle branch with no upstream', () => {
-    const localRaw = 'local-only\x00abc123\x00\x00\x00 \x00Commit\n'
+    const localRaw = 'local-only\tabc123\t\t\t \tCommit\n'
     const branches = parseBranches(localRaw, '')
 
     expect(branches[0].upstream).toBeUndefined()
@@ -269,8 +274,8 @@ describe('parseBranches()', () => {
   })
 
   it('should combine local and remote branches', () => {
-    const localRaw = 'main\x00abc123\x00\x00\x00*\x00Commit\n'
-    const remoteRaw = 'origin/main\x00abc123\x00\x00\x00 \x00Commit\n'
+    const localRaw = 'main\tabc123\t\t\t*\tCommit\n'
+    const remoteRaw = 'origin/main\tabc123\t\t\t \tCommit\n'
     const branches = parseBranches(localRaw, remoteRaw)
 
     expect(branches).toHaveLength(2)

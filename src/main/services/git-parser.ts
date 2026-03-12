@@ -232,8 +232,9 @@ export function parseLog(raw: string): Commit[] {
 }
 
 /**
- * Parse `git branch --format=<NUL-delimited>` output.
- * Format: %(refname:short)%x00%(objectname:short)%x00%(upstream:short)%x00%(upstream:track)%x00%(HEAD)%x00%(subject)
+ * Parse `git branch --format=<TAB-delimited>` output.
+ * Format: %(refname:short)%09%(objectname:short)%09%(upstream:short)%09%(upstream:track)%09%(HEAD)%09%(subject)
+ * Note: Uses tab delimiter due to Git for Windows not supporting %x00 in branch --format
  */
 export function parseBranches(localRaw: string, remoteRaw: string): Branch[] {
   const branches: Branch[] = []
@@ -244,7 +245,7 @@ export function parseBranches(localRaw: string, remoteRaw: string): Branch[] {
     const lines = raw.split('\n').filter((l) => l.trim().length > 0)
 
     for (const line of lines) {
-      const fields = line.split('\0')
+      const fields = line.split('\t')
       const [name, lastCommitHash, upstream, trackingStr, headMarker, lastCommitSubject] = fields
 
       if (!name) continue

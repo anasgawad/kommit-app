@@ -316,7 +316,7 @@ describe('GitService', () => {
   describe('branches()', () => {
     it('should list local branches', async () => {
       mockExecSuccess(
-        'main\x00abc123\x00origin/main\x00[ahead 1]\x00*\x00Latest commit\nfeature\x00def456\x00\x00\x00 \x00Feature work\n'
+        'main\tabc123\torigin/main\t[ahead 1]\t*\tLatest commit\nfeature\tdef456\t\t\t \tFeature work\n'
       )
       const branches = await git.branches('/repo')
       const local = branches.filter((b) => !b.isRemote)
@@ -327,9 +327,7 @@ describe('GitService', () => {
     })
 
     it('should identify current branch', async () => {
-      mockExecSuccess(
-        'main\x00abc123\x00\x00\x00*\x00Commit\nother\x00def456\x00\x00\x00 \x00Commit\n'
-      )
+      mockExecSuccess('main\tabc123\t\t\t*\tCommit\nother\tdef456\t\t\t \tCommit\n')
       const branches = await git.branches('/repo')
       const current = branches.find((b) => b.isCurrent)
 
@@ -338,7 +336,7 @@ describe('GitService', () => {
     })
 
     it('should parse tracking info for branches', async () => {
-      mockExecSuccess('main\x00abc123\x00origin/main\x00[ahead 2, behind 1]\x00*\x00Commit\n')
+      mockExecSuccess('main\tabc123\torigin/main\t[ahead 2, behind 1]\t*\tCommit\n')
       const branches = await git.branches('/repo')
 
       expect(branches[0].tracking).toBeDefined()
@@ -353,7 +351,7 @@ describe('GitService', () => {
           const cb = typeof _opts === 'function' ? (_opts as ExecFileCallback) : callback
           if (cb) {
             process.nextTick(() =>
-              cb(null, '(HEAD detached at abc123)\x00abc123\x00\x00\x00*\x00Commit\n', '')
+              cb(null, '(HEAD detached at abc123)\tabc123\t\t\t*\tCommit\n', '')
             )
           }
           return {} as ReturnType<typeof execFile>

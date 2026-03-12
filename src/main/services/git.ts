@@ -174,6 +174,10 @@ export class GitService {
   /**
    * List all branches (local and remote).
    */
+  /**
+   * List branches (local and remote).
+   * Uses tab delimiter (%09) instead of NUL (%x00) due to Git for Windows limitations.
+   */
   async branches(repoPath: string): Promise<Branch[]> {
     const format = [
       '%(refname:short)', // branch name
@@ -182,7 +186,7 @@ export class GitService {
       '%(upstream:track)', // [ahead N, behind M]
       '%(HEAD)', // * if current
       '%(subject)' // last commit subject
-    ].join('%x00')
+    ].join('%09')
 
     const localRaw = await this.exec(['branch', `--format=${format}`, '--list'], repoPath)
 
