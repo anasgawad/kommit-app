@@ -23,10 +23,16 @@ export function StatusBar() {
             {status.tracking && (
               <span>
                 {status.tracking.ahead > 0 && (
-                  <span className="text-kommit-success mr-1">{'\u2191'}{status.tracking.ahead}</span>
+                  <span className="text-kommit-success mr-1">
+                    {'\u2191'}
+                    {status.tracking.ahead}
+                  </span>
                 )}
                 {status.tracking.behind > 0 && (
-                  <span className="text-kommit-danger">{'\u2193'}{status.tracking.behind}</span>
+                  <span className="text-kommit-danger">
+                    {'\u2193'}
+                    {status.tracking.behind}
+                  </span>
                 )}
               </span>
             )}
@@ -35,6 +41,12 @@ export function StatusBar() {
               <span className="text-kommit-success">{'\u2713'} Clean</span>
             ) : (
               <span>
+                {status.conflicted.length > 0 && (
+                  <span className="text-kommit-danger mr-1">
+                    {'\u2716'}
+                    {status.conflicted.length}
+                  </span>
+                )}
                 {status.staged.length > 0 && (
                   <span className="text-kommit-success mr-1">+{status.staged.length}</span>
                 )}

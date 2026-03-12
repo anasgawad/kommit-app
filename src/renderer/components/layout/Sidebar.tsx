@@ -48,11 +48,7 @@ export function Sidebar() {
         >
           {activeRepo?.name ?? 'No repository'}
         </button>
-        {status && (
-          <div className="text-xs text-kommit-text-secondary mt-1">
-            {status.branch}
-          </div>
-        )}
+        {status && <div className="text-xs text-kommit-text-secondary mt-1">{status.branch}</div>}
       </div>
 
       {/* Branches */}
@@ -120,6 +116,11 @@ export function Sidebar() {
             Changes
           </div>
           <div className="text-xs space-y-0.5">
+            {status.conflicted.length > 0 && (
+              <div className="text-kommit-danger font-medium">
+                {'\u2716'} {status.conflicted.length} conflicted
+              </div>
+            )}
             {status.staged.length > 0 && (
               <div className="text-kommit-success">{status.staged.length} staged</div>
             )}
