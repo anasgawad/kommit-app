@@ -5,7 +5,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
-import type { LogOptions, GitStatus, Commit, Branch, RepoInfo } from '@shared/types'
+import type { LogOptions, GitStatus, Commit, Branch, RepoInfo, CommitDetail } from '@shared/types'
 
 const api = {
   git: {
@@ -16,6 +16,9 @@ const api = {
 
     log: (repoPath: string, options?: LogOptions): Promise<Commit[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_LOG, repoPath, options),
+
+    show: (repoPath: string, hash: string): Promise<CommitDetail> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_SHOW, repoPath, hash),
 
     branches: (repoPath: string): Promise<Branch[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_BRANCHES, repoPath),

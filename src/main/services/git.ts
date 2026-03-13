@@ -11,6 +11,8 @@ import {
   Commit,
   Branch,
   LogOptions,
+  CommitDetail,
+  CommitChangedFile,
   GitError,
   GitNotFoundError,
   NotARepositoryError
@@ -169,6 +171,100 @@ export class GitService {
       }
       throw error
     }
+  }
+
+  /**
+   * Get detailed commit info including changed files.
+   * Uses git show to get commit metadata and git diff-tree for file list.
+   */
+  async show(repoPath: string, hash: string): Promise<CommitDetail> {
+    // Get full commit metadata (including body)
+    const format = [
+      '%H', // hash
+      '%h', // abbreviated hash
+      '%P', // parent hashes
+      '%an', // author name
+      '%ae', // author email
+      '%aI', // author date (ISO 8601)
+      '%s', // subject
+      '%b', // body
+      '%D' // ref names
+    ].join('%x00')
+
+    const logArgs = ['log', '-1', `--format=${format}%x00%x00`, hash]
+    const logRaw = await this.exec(logArgs, repoPath)
+    const commits = parseLog(logRaw)
+
+    if (commits.length === 0) {
+      throw new GitError(`Commit not found: ${hash}`, `git log -1 ${hash}`, 128, '')
+    }
+
+    const commit = commits[0]
+
+    // Get changed files using diff-tree
+    // --no-commit-id: suppress commit ID output
+    // -r: recursive into subtrees
+    // --name-status: show file names with status (A/M/D/R)
+    const diffArgs = ['diff-tree', '--no-commit-id', '-r', '--name-status', hash]
+
+    let changedFiles: CommitChangedFile[] = []
+    try {
+      const diffRaw = await this.exec(diffArgs, repoPath)
+      changedFiles = this.parseChangedFiles(diffRaw)
+    } catch (error) {
+      // Root commits have no parent, diff-tree fails
+      // Try diff against empty tree instead
+      if (error instanceof GitError) {
+        try {
+          const emptyTreeArgs = [
+            'diff-tree',
+            '--no-commit-id',
+            '-r',
+            '--name-status',
+            '--root',
+            hash
+          ]
+          const diffRaw = await this.exec(emptyTreeArgs, repoPath)
+          changedFiles = this.parseChangedFiles(diffRaw)
+        } catch {
+          // If still fails, return empty list
+          changedFiles = []
+        }
+      }
+    }
+
+    return { commit, changedFiles }
+  }
+
+  /**
+   * Parse git diff-tree --name-status output into CommitChangedFile array.
+   * Format: <status>\t<path>
+   */
+  private parseChangedFiles(raw: string): CommitChangedFile[] {
+    const lines = raw
+      .trim()
+      .split('\n')
+      .filter((line) => line.length > 0)
+    const files: CommitChangedFile[] = []
+
+    for (const line of lines) {
+      const parts = line.split('\t')
+      if (parts.length < 2) continue
+
+      const statusCode = parts[0]
+      const path = parts[1]
+
+      let status: CommitChangedFile['status']
+      if (statusCode === 'A') status = 'added'
+      else if (statusCode === 'M') status = 'modified'
+      else if (statusCode === 'D') status = 'deleted'
+      else if (statusCode.startsWith('R')) status = 'renamed'
+      else continue // Skip unknown statuses
+
+      files.push({ path, status })
+    }
+
+    return files
   }
 
   /**

@@ -64,7 +64,7 @@ describe('WelcomeScreen', () => {
 
   it('should display Kommit heading', () => {
     render(<WelcomeScreen />)
-    expect(screen.getByText('Kommit')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Kommit' })).toBeInTheDocument()
   })
 
   it('should show "Open Repository" button', () => {

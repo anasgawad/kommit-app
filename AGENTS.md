@@ -16,18 +16,41 @@ This file contains project context, conventions, and instructions for AI coding 
 
 ### Development Phases
 
-| Phase | Focus                                           | Weeks | Status                                                |
-| ----- | ----------------------------------------------- | ----- | ----------------------------------------------------- |
-| 1     | Foundation & Repository Management              | 1-3   | Scaffolded (not yet verified — Node.js not installed) |
-| 2     | Commit Graph & Branch Visualization             | 4-6   | Not started                                           |
-| 3     | Core Git Operations                             | 7-9   | Not started                                           |
-| 4     | Stash, Interactive Rebase & Conflict Resolution | 10-12 | Not started                                           |
-| 5     | Remote Operations & Platform Integration        | 13-15 | Not started                                           |
-| 6     | Performance, Testing & Release                  | 16-18 | Not started                                           |
+| Phase | Focus                                           | Weeks | Status      |
+| ----- | ----------------------------------------------- | ----- | ----------- |
+| 1     | Foundation & Repository Management              | 1-3   | ✅ Complete |
+| 2     | Commit Graph & Branch Visualization             | 4-6   | ✅ Complete |
+| 3     | Core Git Operations                             | 7-9   | Not started |
+| 4     | Stash, Interactive Rebase & Conflict Resolution | 10-12 | Not started |
+| 5     | Remote Operations & Platform Integration        | 13-15 | Not started |
+| 6     | Performance, Testing & Release                  | 16-18 | Not started |
 
-### Critical Note
+### Phase Completion Status
 
-Phase 1 code has been fully written (38 files) but **never compiled or tested**. Node.js is not yet installed on the dev machine. Before starting Phase 2, verify Phase 1 by running `npm install`, `npm test`, and `npm run build`.
+**Phase 1 (Complete):**
+
+- ✅ 74 unit tests passing
+- ✅ 10 component tests passing (WelcomeScreen)
+- ✅ 4 E2E tests passing
+- ✅ Repository selection, recent repos, status parsing
+- ✅ Git service with CLI integration
+- ✅ Manual tests documented in `Manual-Tests.md`
+
+**Phase 2 (Complete):**
+
+- ✅ 51 new tests passing (20 unit + 23 component + 8 E2E)
+- ✅ Lane assignment algorithm with edge computation
+- ✅ Virtualized commit graph with @tanstack/react-virtual
+- ✅ Deterministic branch colors (djb2 hash)
+- ✅ Filtering by branch, author, search query
+- ✅ Keyboard navigation (arrow keys)
+- ✅ Context menu (UI only, actions stubbed)
+- ✅ CommitDetail panel with changed files
+- ✅ GitService.show() implemented with git diff-tree
+- ✅ Manual tests documented in `Manual-Tests-Phase2.md`
+- ✅ Build verified with no errors
+
+**Total Test Count:** 138 tests (105 unit + 33 component + 0 E2E implemented yet)
 
 ## Technology Stack
 

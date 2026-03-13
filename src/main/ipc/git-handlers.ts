@@ -32,6 +32,16 @@ export function registerGitHandlers(): void {
     return gitService.log(repoPath, options)
   })
 
+  ipcMain.handle(IPC_CHANNELS.GIT_SHOW, async (_event, repoPath: string, hash: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    if (typeof hash !== 'string' || hash.length === 0) {
+      throw new Error('hash must be a non-empty string')
+    }
+    return gitService.show(repoPath, hash)
+  })
+
   // --- Branches ---
   ipcMain.handle(IPC_CHANNELS.GIT_BRANCHES, async (_event, repoPath: string) => {
     if (typeof repoPath !== 'string' || repoPath.length === 0) {

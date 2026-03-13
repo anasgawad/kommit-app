@@ -131,6 +131,16 @@ export interface GraphEdge {
   color: string
 }
 
+export interface CommitChangedFile {
+  path: string
+  status: 'added' | 'modified' | 'deleted' | 'renamed'
+}
+
+export interface CommitDetail {
+  commit: Commit
+  changedFiles: CommitChangedFile[]
+}
+
 // --- Repository Types ---
 
 export interface RepoInfo {
