@@ -1,54 +1,44 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background rounded rectangle -->
-  <rect width="512" height="512" rx="96" fill="#1e1e2e"/>
-  
-  <!-- Git branch/merge visualization -->
-  <g stroke="#89b4fa" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Main branch line (center vertical) -->
-    <line x1="256" y1="96" x2="256" y2="416"/>
-    
-    <!-- Left branch (fork and merge back) -->
-    <path d="M 256 160 Q 200 180, 160 240 L 160 320 Q 200 380, 256 400"/>
-    
-    <!-- Right branch (fork and continue) -->
-    <path d="M 256 240 Q 300 260, 352 300 L 352 416"/>
-  </g>
-  
-  <!-- Commit nodes (circles at intersection points) -->
-  <g fill="#89b4fa">
-    <!-- Top commit -->
-    <circle cx="256" cy="96" r="16"/>
-    
-    <!-- Main branch commits -->
-    <circle cx="256" cy="160" r="14"/>
-    <circle cx="256" cy="240" r="14"/>
-    <circle cx="256" cy="400" r="14"/>
-    <circle cx="256" cy="416" r="16"/>
-    
-    <!-- Left branch commits -->
-    <circle cx="160" cy="240" r="12"/>
-    <circle cx="160" cy="280" r="12"/>
-    <circle cx="160" cy="320" r="12"/>
-    
-    <!-- Right branch commit -->
-    <circle cx="352" cy="300" r="12"/>
-    <circle cx="352" cy="360" r="12"/>
-    <circle cx="352" cy="416" r="14"/>
-  </g>
-  
-  <!-- Subtle glow effect on nodes for depth -->
+  <!-- Background with subtle gradient -->
   <defs>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#89b4fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#74c7ec;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow for depth -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
       <feMerge>
-        <feMergeNode in="coloredBlur"/>
+        <feMergeNode/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
   </defs>
-  <g filter="url(#glow)" opacity="0.6">
-    <circle cx="256" cy="96" r="16" fill="#89b4fa"/>
-    <circle cx="256" cy="416" r="16" fill="#89b4fa"/>
-    <circle cx="352" cy="416" r="14" fill="#89b4fa"/>
+  
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGradient)"/>
+  
+  <!-- Letter K with git branch style -->
+  <g fill="#1e1e2e" filter="url(#shadow)">
+    <!-- Main vertical bar of K -->
+    <rect x="120" y="140" width="60" height="232" rx="8"/>
+    
+    <!-- Upper diagonal of K (branch going up-right) -->
+    <path d="M 180 230 L 340 140 L 380 170 L 220 260 Z" />
+    
+    <!-- Lower diagonal of K (branch going down-right) -->
+    <path d="M 180 270 L 220 255 L 380 342 L 340 372 Z" />
+    
+    <!-- Small commit nodes (circles) -->
+    <circle cx="150" cy="160" r="18"/>
+    <circle cx="150" cy="250" r="22"/>
+    <circle cx="150" cy="352" r="18"/>
+    <circle cx="360" cy="155" r="18"/>
+    <circle cx="360" cy="357" r="18"/>
   </g>
 </svg>
