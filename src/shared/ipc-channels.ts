@@ -56,6 +56,12 @@ export const IPC_CHANNELS = {
   DIALOG_OPEN_DIRECTORY: 'dialog:open-directory',
   DIALOG_OPEN_FILE: 'dialog:open-file',
 
+  // Window controls (for frameless window)
+  WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_MAXIMIZE: 'window:maximize',
+  WINDOW_CLOSE: 'window:close',
+  WINDOW_IS_MAXIMIZED: 'window:is-maximized',
+
   // App events (main -> renderer)
   APP_REPO_CHANGED: 'app:repo-changed',
   APP_GIT_PROGRESS: 'app:git-progress'

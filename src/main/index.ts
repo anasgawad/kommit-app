@@ -2,15 +2,19 @@
 // Kommit — Main Process Entry Point
 // ============================================================
 
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerGitHandlers } from './ipc/git-handlers'
 import { registerRepoHandlers } from './ipc/repo-handlers'
 import { RepoService } from './services/repo'
+import { IPC_CHANNELS } from '@shared/ipc-channels'
 
 // Electron Store is ESM-only in v10, use dynamic import
-let store: { get: (key: string, defaultValue?: unknown) => unknown; set: (key: string, value: unknown) => void }
+let store: {
+  get: (key: string, defaultValue?: unknown) => unknown
+  set: (key: string, value: unknown) => void
+}
 
 async function initStore(): Promise<void> {
   const ElectronStore = (await import('electron-store')).default
@@ -40,8 +44,10 @@ function createWindow(): BrowserWindow {
     minWidth: 800,
     minHeight: 600,
     show: false,
+    frame: false,
     title: 'Kommit',
     backgroundColor: '#1e1e2e',
+    icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -77,9 +83,48 @@ function createWindow(): BrowserWindow {
   return mainWindow
 }
 
+// ============================================================
+// Window Control Handlers (for frameless window)
+// ============================================================
+
+function registerWindowHandlers(): void {
+  ipcMain.handle(IPC_CHANNELS.WINDOW_MINIMIZE, () => {
+    const window = BrowserWindow.getFocusedWindow()
+    if (window) {
+      window.minimize()
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_MAXIMIZE, () => {
+    const window = BrowserWindow.getFocusedWindow()
+    if (window) {
+      if (window.isMaximized()) {
+        window.unmaximize()
+      } else {
+        window.maximize()
+      }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_CLOSE, () => {
+    const window = BrowserWindow.getFocusedWindow()
+    if (window) {
+      window.close()
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_IS_MAXIMIZED, () => {
+    const window = BrowserWindow.getFocusedWindow()
+    return window ? window.isMaximized() : false
+  })
+}
+
 app.whenReady().then(async () => {
   // Set app user model id for Windows
   electronApp.setAppUserModelId('com.kommit.app')
+
+  // Remove default application menu
+  Menu.setApplicationMenu(null)
 
   // Dev tools shortcut handling
   app.on('browser-window-created', (_, window) => {
@@ -93,6 +138,7 @@ app.whenReady().then(async () => {
   // Register IPC handlers
   registerGitHandlers()
   registerRepoHandlers(repoService)
+  registerWindowHandlers()
 
   // Create the main window
   createWindow()

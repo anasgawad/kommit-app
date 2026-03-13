@@ -81,3 +81,28 @@ body,
 .no-drag {
   -webkit-app-region: no-drag;
 }
+
+/* Window control buttons (for frameless window) */
+.window-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.window-control-btn:hover {
+  color: var(--color-text);
+}
+
+.window-control-btn:active {
+  opacity: 0.8;
+}

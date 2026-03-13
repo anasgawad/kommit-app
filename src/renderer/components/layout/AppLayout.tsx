@@ -8,11 +8,57 @@ import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
 
 export function AppLayout() {
+  const handleMinimize = () => window.api.window.minimize()
+  const handleMaximize = () => window.api.window.maximize()
+  const handleClose = () => window.api.window.close()
+
   return (
     <div className="h-full flex flex-col bg-kommit-bg">
       {/* Title bar area */}
       <div className="h-8 bg-kommit-bg-secondary border-b border-kommit-border flex items-center px-4 drag-region">
-        <span className="text-xs font-medium text-kommit-text-secondary no-drag">Kommit</span>
+        <div className="flex items-center gap-2 no-drag">
+          <img src="/icon.svg" alt="Kommit" className="w-4 h-4" />
+          <span className="text-xs font-medium text-kommit-text-secondary">Kommit</span>
+        </div>
+
+        {/* Window controls */}
+        <div className="ml-auto flex items-center gap-1 no-drag">
+          <button
+            onClick={handleMinimize}
+            className="window-control-btn hover:bg-kommit-bg-tertiary"
+            title="Minimize"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <path d="M 0 5 L 10 5" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          </button>
+          <button
+            onClick={handleMaximize}
+            className="window-control-btn hover:bg-kommit-bg-tertiary"
+            title="Maximize"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <rect
+                x="0"
+                y="0"
+                width="10"
+                height="10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={handleClose}
+            className="window-control-btn hover:bg-kommit-danger"
+            title="Close"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <path d="M 0 0 L 10 10 M 10 0 L 0 10" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Main content area */}
@@ -38,9 +84,7 @@ function MainPanel() {
   return (
     <div className="flex-1 flex items-center justify-center text-kommit-text-secondary">
       <div className="text-center">
-        <h2 className="text-lg font-medium text-kommit-text mb-2">
-          {activeRepo?.name}
-        </h2>
+        <h2 className="text-lg font-medium text-kommit-text mb-2">{activeRepo?.name}</h2>
         {status && (
           <div className="space-y-1 text-sm">
             <p>
@@ -76,9 +120,7 @@ function MainPanel() {
             )}
           </div>
         )}
-        <p className="text-xs text-kommit-text-secondary mt-4">
-          Graph view coming in Phase 2
-        </p>
+        <p className="text-xs text-kommit-text-secondary mt-4">Graph view coming in Phase 2</p>
       </div>
     </div>
   )

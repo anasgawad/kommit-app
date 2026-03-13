@@ -1,0 +1,54 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rounded rectangle -->
+  <rect width="512" height="512" rx="96" fill="#1e1e2e"/>
+  
+  <!-- Git branch/merge visualization -->
+  <g stroke="#89b4fa" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main branch line (center vertical) -->
+    <line x1="256" y1="96" x2="256" y2="416"/>
+    
+    <!-- Left branch (fork and merge back) -->
+    <path d="M 256 160 Q 200 180, 160 240 L 160 320 Q 200 380, 256 400"/>
+    
+    <!-- Right branch (fork and continue) -->
+    <path d="M 256 240 Q 300 260, 352 300 L 352 416"/>
+  </g>
+  
+  <!-- Commit nodes (circles at intersection points) -->
+  <g fill="#89b4fa">
+    <!-- Top commit -->
+    <circle cx="256" cy="96" r="16"/>
+    
+    <!-- Main branch commits -->
+    <circle cx="256" cy="160" r="14"/>
+    <circle cx="256" cy="240" r="14"/>
+    <circle cx="256" cy="400" r="14"/>
+    <circle cx="256" cy="416" r="16"/>
+    
+    <!-- Left branch commits -->
+    <circle cx="160" cy="240" r="12"/>
+    <circle cx="160" cy="280" r="12"/>
+    <circle cx="160" cy="320" r="12"/>
+    
+    <!-- Right branch commit -->
+    <circle cx="352" cy="300" r="12"/>
+    <circle cx="352" cy="360" r="12"/>
+    <circle cx="352" cy="416" r="14"/>
+  </g>
+  
+  <!-- Subtle glow effect on nodes for depth -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)" opacity="0.6">
+    <circle cx="256" cy="96" r="16" fill="#89b4fa"/>
+    <circle cx="256" cy="416" r="16" fill="#89b4fa"/>
+    <circle cx="352" cy="416" r="14" fill="#89b4fa"/>
+  </g>
+</svg>

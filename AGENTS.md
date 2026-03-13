@@ -16,14 +16,14 @@ This file contains project context, conventions, and instructions for AI coding 
 
 ### Development Phases
 
-| Phase | Focus | Weeks | Status |
-|-------|-------|-------|--------|
-| 1 | Foundation & Repository Management | 1-3 | Scaffolded (not yet verified — Node.js not installed) |
-| 2 | Commit Graph & Branch Visualization | 4-6 | Not started |
-| 3 | Core Git Operations | 7-9 | Not started |
-| 4 | Stash, Interactive Rebase & Conflict Resolution | 10-12 | Not started |
-| 5 | Remote Operations & Platform Integration | 13-15 | Not started |
-| 6 | Performance, Testing & Release | 16-18 | Not started |
+| Phase | Focus                                           | Weeks | Status                                                |
+| ----- | ----------------------------------------------- | ----- | ----------------------------------------------------- |
+| 1     | Foundation & Repository Management              | 1-3   | Scaffolded (not yet verified — Node.js not installed) |
+| 2     | Commit Graph & Branch Visualization             | 4-6   | Not started                                           |
+| 3     | Core Git Operations                             | 7-9   | Not started                                           |
+| 4     | Stash, Interactive Rebase & Conflict Resolution | 10-12 | Not started                                           |
+| 5     | Remote Operations & Platform Integration        | 13-15 | Not started                                           |
+| 6     | Performance, Testing & Release                  | 16-18 | Not started                                           |
 
 ### Critical Note
 
@@ -31,18 +31,18 @@ Phase 1 code has been fully written (38 files) but **never compiled or tested**.
 
 ## Technology Stack
 
-| Concern | Choice |
-|---------|--------|
-| Framework | Electron + React 19 + TypeScript 5.x |
-| Bundler | `electron-vite` (Vite for all processes) |
-| Packaging | `electron-builder` |
-| State management | Zustand |
-| Git integration | `child_process.execFile('git', ...)` in main process |
-| Graph rendering | Custom SVG per-row inside `@tanstack/react-virtual` |
-| Styling | Tailwind CSS |
-| Unit/component tests | Vitest + React Testing Library |
-| E2E tests | Playwright (Electron support) |
-| Auto-update | `electron-updater` via GitHub Releases |
+| Concern              | Choice                                               |
+| -------------------- | ---------------------------------------------------- |
+| Framework            | Electron + React 19 + TypeScript 5.x                 |
+| Bundler              | `electron-vite` (Vite for all processes)             |
+| Packaging            | `electron-builder`                                   |
+| State management     | Zustand                                              |
+| Git integration      | `child_process.execFile('git', ...)` in main process |
+| Graph rendering      | Custom SVG per-row inside `@tanstack/react-virtual`  |
+| Styling              | Tailwind CSS                                         |
+| Unit/component tests | Vitest + React Testing Library                       |
+| E2E tests            | Playwright (Electron support)                        |
+| Auto-update          | `electron-updater` via GitHub Releases               |
 
 ## Architecture
 
@@ -60,6 +60,16 @@ Main Process (Node.js)          Preload (contextBridge)         Renderer (React)
 - `contextIsolation: true`, `nodeIntegration: false` — always enforced
 - All native operations go through IPC via `contextBridge`
 - All IPC channels defined in `src/shared/ipc-channels.ts` as single source of truth
+- **Frameless window:** `frame: false` — custom title bar with window controls (minimize/maximize/close) via IPC
+- **No application menu:** `Menu.setApplicationMenu(null)` removes the default Electron menu (File/Edit/View/etc.)
+
+### Window & UI
+
+- Frameless window with custom title bar (32px high, draggable via `-webkit-app-region: drag`)
+- Window controls (minimize/maximize/close) implemented via IPC handlers in main process
+- Title bar present in both `AppLayout` (main app) and `WelcomeScreen` (no repo open)
+- Custom icon: Git branch/merge motif in blue accent (`#89b4fa`) on dark background (`#1e1e2e`)
+- Icon files: `resources/icon.svg` (source), `icon.png`, `icon.ico` (Windows), `icon.icns` (macOS)
 
 ### Git Integration
 
@@ -76,6 +86,7 @@ Main Process (Node.js)          Preload (contextBridge)         Renderer (React)
 ### Path Aliases
 
 TypeScript path alias `@shared/*` maps to `src/shared/*`. Use this in all main process and shared imports:
+
 ```typescript
 import { GitStatus } from '@shared/types'
 ```
@@ -99,6 +110,7 @@ import { GitStatus } from '@shared/types'
 ### File Headers
 
 Source files use a banner comment:
+
 ```typescript
 // ============================================================
 // Kommit — <Short Description>
@@ -115,6 +127,7 @@ Source files use a banner comment:
 ### Error Handling
 
 Custom error classes defined in `src/shared/types.ts`:
+
 - `GitError` — generic git command failure (includes command, exitCode, stderr)
 - `GitNotFoundError` — git binary not found (ENOENT)
 - `NotARepositoryError` — path is not a git repository
@@ -156,6 +169,7 @@ Custom error classes defined in `src/shared/types.ts`:
 ### Test Specifications
 
 All test cases are pre-defined in PLAN.md. When implementing tests, follow the exact test descriptions specified there. Phase 2 tests include:
+
 - `tests/unit/graph/lane-algorithm.test.ts` (10 tests)
 - `tests/unit/graph/colors.test.ts` (4 tests)
 - `tests/components/graph/GraphRow.test.tsx` (8 tests)
@@ -248,6 +262,7 @@ kommit-app/
 ### Lane Assignment (Commit Graph)
 
 The graph rendering uses a custom lane assignment algorithm (~50 lines, O(n)) defined in PLAN.md. Key properties:
+
 - Commits arrive in topological order (git log default)
 - Each lane tracks which commit hash it "expects" next
 - First parent continues the lane; additional parents (merges) get new lanes

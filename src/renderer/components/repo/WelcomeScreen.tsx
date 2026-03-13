@@ -15,6 +15,10 @@ export function WelcomeScreen() {
   const [cloneError, setCloneError] = useState<string | null>(null)
   const [isCloning, setIsCloning] = useState(false)
 
+  const handleMinimize = () => window.api.window.minimize()
+  const handleMaximize = () => window.api.window.maximize()
+  const handleClose = () => window.api.window.close()
+
   const handleOpenRepo = async () => {
     const path = await window.api.dialog.openDirectory()
     if (path) {
@@ -62,123 +66,173 @@ export function WelcomeScreen() {
   }
 
   return (
-    <div className="h-full flex items-center justify-center bg-kommit-bg overflow-hidden">
-      <div className="max-w-2xl w-full p-8 max-h-full overflow-y-auto">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-kommit-text mb-2">Kommit</h1>
-          <p className="text-kommit-text-secondary">
-            A powerful Git GUI for experienced developers
-          </p>
+    <div className="h-full flex flex-col bg-kommit-bg overflow-hidden">
+      {/* Title bar area */}
+      <div className="h-8 bg-kommit-bg-secondary border-b border-kommit-border flex items-center px-4 drag-region">
+        <div className="flex items-center gap-2 no-drag">
+          <img src="/icon.svg" alt="Kommit" className="w-4 h-4" />
+          <span className="text-xs font-medium text-kommit-text-secondary">Kommit</span>
         </div>
 
-        {/* Error display */}
-        {error && (
-          <div className="mb-4 p-3 rounded bg-red-900/30 border border-kommit-danger text-kommit-danger text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        {/* Window controls */}
+        <div className="ml-auto flex items-center gap-1 no-drag">
           <button
-            onClick={handleOpenRepo}
-            disabled={isLoading}
-            className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
+            onClick={handleMinimize}
+            className="window-control-btn hover:bg-kommit-bg-tertiary"
+            title="Minimize"
           >
-            <div className="text-2xl mb-2">&#128194;</div>
-            <div className="text-sm font-medium text-kommit-text">Open Repository</div>
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <path d="M 0 5 L 10 5" stroke="currentColor" strokeWidth="1" />
+            </svg>
           </button>
-
           <button
-            onClick={() => setShowCloneForm(!showCloneForm)}
-            disabled={isLoading}
-            className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
+            onClick={handleMaximize}
+            className="window-control-btn hover:bg-kommit-bg-tertiary"
+            title="Maximize"
           >
-            <div className="text-2xl mb-2">&#128229;</div>
-            <div className="text-sm font-medium text-kommit-text">Clone Repository</div>
-          </button>
-
-          <button
-            onClick={handleInitRepo}
-            disabled={isLoading}
-            className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
-          >
-            <div className="text-2xl mb-2">&#10010;</div>
-            <div className="text-sm font-medium text-kommit-text">Init Repository</div>
-          </button>
-        </div>
-
-        {/* Clone form */}
-        {showCloneForm && (
-          <div className="mb-8 p-4 rounded-lg bg-kommit-bg-secondary border border-kommit-border">
-            <h3 className="text-sm font-medium text-kommit-text mb-3">Clone Repository</h3>
-
-            <input
-              type="text"
-              placeholder="Repository URL (https or ssh)"
-              value={cloneUrl}
-              onChange={(e) => setCloneUrl(e.target.value)}
-              className="w-full mb-2 p-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text text-sm placeholder-kommit-text-secondary focus:border-kommit-accent focus:outline-none"
-            />
-
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                placeholder="Target directory"
-                value={cloneTarget}
-                onChange={(e) => setCloneTarget(e.target.value)}
-                className="flex-1 p-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text text-sm placeholder-kommit-text-secondary focus:border-kommit-accent focus:outline-none"
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <rect
+                x="0"
+                y="0"
+                width="10"
+                height="10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
               />
-              <button
-                onClick={handleSelectCloneTarget}
-                className="px-3 py-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text-secondary text-sm hover:border-kommit-accent"
-              >
-                Browse
-              </button>
-            </div>
+            </svg>
+          </button>
+          <button
+            onClick={handleClose}
+            className="window-control-btn hover:bg-kommit-danger"
+            title="Close"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <path d="M 0 0 L 10 10 M 10 0 L 0 10" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
-            {cloneError && <div className="mb-2 text-sm text-kommit-danger">{cloneError}</div>}
+      {/* Welcome content */}
+      <div className="flex-1 flex items-center justify-center overflow-hidden">
+        <div className="max-w-2xl w-full p-8 max-h-full overflow-y-auto">
+          {/* Header */}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl font-bold text-kommit-text mb-2">Kommit</h1>
+            <p className="text-kommit-text-secondary">
+              A powerful Git GUI for experienced developers
+            </p>
+          </div>
+
+          {/* Error display */}
+          {error && (
+            <div className="mb-4 p-3 rounded bg-red-900/30 border border-kommit-danger text-kommit-danger text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <button
+              onClick={handleOpenRepo}
+              disabled={isLoading}
+              className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
+            >
+              <div className="text-2xl mb-2">&#128194;</div>
+              <div className="text-sm font-medium text-kommit-text">Open Repository</div>
+            </button>
 
             <button
-              onClick={handleClone}
-              disabled={isCloning || !cloneUrl.trim() || !cloneTarget.trim()}
-              className="w-full p-2 rounded bg-kommit-accent text-kommit-bg font-medium text-sm hover:bg-kommit-accent-hover disabled:opacity-50 transition-colors"
+              onClick={() => setShowCloneForm(!showCloneForm)}
+              disabled={isLoading}
+              className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
             >
-              {isCloning ? 'Cloning...' : 'Clone'}
+              <div className="text-2xl mb-2">&#128229;</div>
+              <div className="text-sm font-medium text-kommit-text">Clone Repository</div>
+            </button>
+
+            <button
+              onClick={handleInitRepo}
+              disabled={isLoading}
+              className="p-4 rounded-lg bg-kommit-bg-tertiary border border-kommit-border hover:border-kommit-accent transition-colors text-center disabled:opacity-50"
+            >
+              <div className="text-2xl mb-2">&#10010;</div>
+              <div className="text-sm font-medium text-kommit-text">Init Repository</div>
             </button>
           </div>
-        )}
 
-        {/* Recent repositories */}
-        {recentRepos.length > 0 && (
-          <div>
-            <h2 className="text-sm font-medium text-kommit-text-secondary mb-3 uppercase tracking-wider">
-              Recent Repositories
-            </h2>
-            <div
-              className="space-y-1 max-h-80 overflow-y-auto pr-2"
-              style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: 'var(--color-border) var(--color-bg-secondary)'
-              }}
-            >
-              {recentRepos.map((repo) => (
+          {/* Clone form */}
+          {showCloneForm && (
+            <div className="mb-8 p-4 rounded-lg bg-kommit-bg-secondary border border-kommit-border">
+              <h3 className="text-sm font-medium text-kommit-text mb-3">Clone Repository</h3>
+
+              <input
+                type="text"
+                placeholder="Repository URL (https or ssh)"
+                value={cloneUrl}
+                onChange={(e) => setCloneUrl(e.target.value)}
+                className="w-full mb-2 p-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text text-sm placeholder-kommit-text-secondary focus:border-kommit-accent focus:outline-none"
+              />
+
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  placeholder="Target directory"
+                  value={cloneTarget}
+                  onChange={(e) => setCloneTarget(e.target.value)}
+                  className="flex-1 p-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text text-sm placeholder-kommit-text-secondary focus:border-kommit-accent focus:outline-none"
+                />
                 <button
-                  key={repo.path}
-                  onClick={() => handleSelectRecent(repo)}
-                  disabled={isLoading}
-                  className="w-full text-left p-3 rounded-lg hover:bg-kommit-bg-tertiary transition-colors group disabled:opacity-50"
+                  onClick={handleSelectCloneTarget}
+                  className="px-3 py-2 rounded bg-kommit-bg-tertiary border border-kommit-border text-kommit-text-secondary text-sm hover:border-kommit-accent"
                 >
-                  <div className="text-sm font-medium text-kommit-text group-hover:text-kommit-accent">
-                    {repo.name}
-                  </div>
-                  <div className="text-xs text-kommit-text-secondary truncate">{repo.path}</div>
+                  Browse
                 </button>
-              ))}
+              </div>
+
+              {cloneError && <div className="mb-2 text-sm text-kommit-danger">{cloneError}</div>}
+
+              <button
+                onClick={handleClone}
+                disabled={isCloning || !cloneUrl.trim() || !cloneTarget.trim()}
+                className="w-full p-2 rounded bg-kommit-accent text-kommit-bg font-medium text-sm hover:bg-kommit-accent-hover disabled:opacity-50 transition-colors"
+              >
+                {isCloning ? 'Cloning...' : 'Clone'}
+              </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Recent repositories */}
+          {recentRepos.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-kommit-text-secondary mb-3 uppercase tracking-wider">
+                Recent Repositories
+              </h2>
+              <div
+                className="space-y-1 max-h-80 overflow-y-auto pr-2"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'var(--color-border) var(--color-bg-secondary)'
+                }}
+              >
+                {recentRepos.map((repo) => (
+                  <button
+                    key={repo.path}
+                    onClick={() => handleSelectRecent(repo)}
+                    disabled={isLoading}
+                    className="w-full text-left p-3 rounded-lg hover:bg-kommit-bg-tertiary transition-colors group disabled:opacity-50"
+                  >
+                    <div className="text-sm font-medium text-kommit-text group-hover:text-kommit-accent">
+                      {repo.name}
+                    </div>
+                    <div className="text-xs text-kommit-text-secondary truncate">{repo.path}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
