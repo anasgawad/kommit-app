@@ -263,31 +263,31 @@ These must pass before any other testing can begin.
 
 | #      | Test Case                  | Steps                                         | Expected Result                                        | Pass |
 | ------ | -------------------------- | --------------------------------------------- | ------------------------------------------------------ | ---- |
-| 10.1.1 | Current branch highlighted | Open repo, look at sidebar branch list        | Current branch has `*` prefix and accent color styling | [ ]  |
-| 10.1.2 | All local branches listed  | Compare sidebar list with `git branch` output | All local branches are shown in the sidebar            | [ ]  |
-| 10.1.3 | Branch name in status bar  | Look at the status bar                        | Current branch name is displayed with accent color     | [ ]  |
+| 10.1.1 | Current branch highlighted | Open repo, look at sidebar branch list        | Current branch has `*` prefix and accent color styling | [✅]  |
+| 10.1.2 | All local branches listed  | Compare sidebar list with `git branch` output | All local branches are shown in the sidebar            | [✅]  |
+| 10.1.3 | Branch name in status bar  | Look at the status bar                        | Current branch name is displayed with accent color     | [✅]  |
 
 ### 10.2 Remote Branches
 
 | #      | Test Case                 | Steps                                              | Expected Result                                                      | Pass |
 | ------ | ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------- | ---- |
-| 10.2.1 | Remote branches section   | Open a repo with remote tracking branches          | "Remote Branches" section appears in sidebar listing remote branches | [ ]  |
-| 10.2.2 | No remote section if none | Open a repo with no remotes (e.g., freshly init'd) | No "Remote Branches" section is shown                                | [ ]  |
+| 10.2.1 | Remote branches section   | Open a repo with remote tracking branches          | "Remote Branches" section appears in sidebar listing remote branches | [✅]  |
+| 10.2.2 | No remote section if none | Open a repo with no remotes (e.g., freshly init'd) | No "Remote Branches" section is shown                                | [✅]  |
 
 ### 10.3 Tracking Information
 
 | #      | Test Case          | Steps                                                                      | Expected Result                                                                       | Pass |
 | ------ | ------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---- |
-| 10.3.1 | Ahead count shown  | 1. Make commits locally that haven't been pushed 2. Open/refresh in Kommit | Ahead count (e.g., arrow up with number) is displayed next to branch or in status bar | [ ]  |
-| 10.3.2 | Behind count shown | 1. Have a branch that is behind its upstream 2. Open/refresh in Kommit     | Behind count (e.g., arrow down with number) is displayed                              | [ ]  |
-| 10.3.3 | Ahead and behind   | Branch is both ahead and behind upstream                                   | Both ahead and behind counts are shown                                                | [ ]  |
-| 10.3.4 | No tracking info   | Open a branch with no upstream configured                                  | No ahead/behind arrows or counts are shown                                            | [ ]  |
+| 10.3.1 | Ahead count shown  | 1. Make commits locally that haven't been pushed 2. Open/refresh in Kommit | Ahead count (e.g., arrow up with number) is displayed next to branch or in status bar | [✅]  |
+| 10.3.2 | Behind count shown | 1. Have a branch that is behind its upstream 2. Open/refresh in Kommit     | Behind count (e.g., arrow down with number) is displayed                              | [✅]  |
+| 10.3.3 | Ahead and behind   | Branch is both ahead and behind upstream                                   | Both ahead and behind counts are shown                                                | [✅]  |
+| 10.3.4 | No tracking info   | Open a branch with no upstream configured                                  | No ahead/behind arrows or counts are shown                                            | [✅]  |
 
 ### 10.4 Detached HEAD
 
 | #      | Test Case             | Steps                                                                    | Expected Result                                                       | Pass |
 | ------ | --------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- | ---- |
-| 10.4.1 | Detached HEAD display | 1. Externally run `git checkout <commit-hash>` 2. Open/refresh in Kommit | Branch displays as "HEAD (detached)" or similar indication. No crash. | [ ]  |
+| 10.4.1 | Detached HEAD display | 1. Externally run `git checkout <commit-hash>` 2. Open/refresh in Kommit | Branch displays as "HEAD (detached)" or similar indication. No crash. | [✅]  |
 
 ---
 
@@ -297,36 +297,36 @@ These must pass before any other testing can begin.
 
 | #      | Test Case           | Steps                         | Expected Result                          | Pass |
 | ------ | ------------------- | ----------------------------- | ---------------------------------------- | ---- |
-| 11.1.1 | Title bar visible   | Open a repo to see App Layout | 32px title bar at top with "Kommit" text | [ ]  |
-| 11.1.2 | Title bar draggable | Click and drag the title bar  | Window moves (custom drag region works)  | [ ]  |
+| 11.1.1 | Title bar visible   | Open a repo to see App Layout | 32px title bar at top with "Kommit" text | [✅]  |
+| 11.1.2 | Title bar draggable | Click and drag the title bar  | Window moves (custom drag region works)  | [✅]  |
 
 ### 11.2 Sidebar
 
 | #      | Test Case            | Steps                                           | Expected Result                                                             | Pass |
 | ------ | -------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- | ---- |
-| 11.2.1 | Sidebar content      | Open a repo                                     | Sidebar contains: repo name, current branch, branches list, changes summary | [ ]  |
-| 11.2.2 | Collapsible sections | Look for expandable/collapsible branch sections | Branch sections can be collapsed and expanded                               | [ ]  |
-| 11.2.3 | Changes summary      | Open a dirty repo                               | Sidebar footer shows staged/modified/untracked counts                       | [ ]  |
-| 11.2.4 | No changes summary   | Open a clean repo                               | No changes summary shown (or shows "clean")                                 | [ ]  |
+| 11.2.1 | Sidebar content      | Open a repo                                     | Sidebar contains: repo name, current branch, branches list, changes summary | [✅]  |
+| 11.2.2 | Collapsible sections | Look for expandable/collapsible branch sections | Branch sections can be collapsed and expanded                               | [✅]  |
+| 11.2.3 | Changes summary      | Open a dirty repo                               | Sidebar footer shows staged/modified/untracked counts                       | [✅]  |
+| 11.2.4 | No changes summary   | Open a clean repo                               | No changes summary shown (or shows "clean")                                 | [✅]  |
 
 ### 11.3 Status Bar
 
 | #      | Test Case           | Steps                                             | Expected Result                                                                  | Pass |
 | ------ | ------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- | ---- |
-| 11.3.1 | Left side content   | Open a repo                                       | Status bar left side shows: branch name, upstream arrows (if applicable), status | [ ]  |
-| 11.3.2 | Right side content  | Open a repo                                       | Status bar right side shows: repo path, "Kommit v0.1.0"                          | [ ]  |
-| 11.3.3 | Loading indicator   | During a loading operation (e.g., opening a repo) | A loading indicator briefly appears in the status bar                            | [ ]  |
-| 11.3.4 | Error in status bar | Trigger an error state                            | Error message appears in the status bar                                          | [ ]  |
+| 11.3.1 | Left side content   | Open a repo                                       | Status bar left side shows: branch name, upstream arrows (if applicable), status | [✅]  |
+| 11.3.2 | Right side content  | Open a repo                                       | Status bar right side shows: repo path, "Kommit v0.1.0"                          | [✅]  |
+| 11.3.3 | Loading indicator   | During a loading operation (e.g., opening a repo) | A loading indicator briefly appears in the status bar                            | [✅]  |
+| 11.3.4 | Error in status bar | Trigger an error state                            | Error message appears in the status bar                                          | [✅]  |
 
 ### 11.4 Dark Theme
 
 | #      | Test Case         | Steps                                                          | Expected Result                                                | Pass |
 | ------ | ----------------- | -------------------------------------------------------------- | -------------------------------------------------------------- | ---- |
-| 11.4.1 | Dark background   | Observe overall appearance                                     | Background uses dark Catppuccin colors (dark blue-gray tones)  | [ ]  |
-| 11.4.2 | Text contrast     | Read all text in the UI                                        | Text is light-colored and readable against the dark background | [ ]  |
-| 11.4.3 | Custom scrollbars | Scroll a long list (if available) or observe scrollbar styling | Scrollbars use custom dark styling, not default OS scrollbars  | [ ]  |
-| 11.4.4 | Selection color   | Select text in the UI (if possible)                            | Selection uses accent color highlighting                       | [ ]  |
-| 11.4.5 | Accent colors     | Look at active/highlighted elements (current branch, buttons)  | Accent colors (blue/lavender tones) are applied consistently   | [ ]  |
+| 11.4.1 | Dark background   | Observe overall appearance                                     | Background uses dark Catppuccin colors (dark blue-gray tones)  | [✅]  |
+| 11.4.2 | Text contrast     | Read all text in the UI                                        | Text is light-colored and readable against the dark background | [✅]  |
+| 11.4.3 | Custom scrollbars | Scroll a long list (if available) or observe scrollbar styling | Scrollbars use custom dark styling, not default OS scrollbars  | [✅]  |
+| 11.4.4 | Selection color   | Select text in the UI (if possible)                            | Selection uses accent color highlighting                       | [✅]  |
+| 11.4.5 | Accent colors     | Look at active/highlighted elements (current branch, buttons)  | Accent colors (blue/lavender tones) are applied consistently   | [✅]  |
 
 ---
 
@@ -342,14 +342,14 @@ These must pass before any other testing can begin.
 
 | #      | Test Case              | Steps                                                                                             | Expected Result                                                 | Pass |
 | ------ | ---------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ---- |
-| 12.2.1 | Repo directory deleted | 1. Open a repo in Kommit 2. Delete the repo's `.git` folder externally 3. Try to refresh/interact | Error is handled gracefully. No crash. Error message displayed. | [ ]  |
+| 12.2.1 | Repo directory deleted | 1. Open a repo in Kommit 2. Delete the repo's `.git` folder externally 3. Try to refresh/interact | Error is handled gracefully. No crash. Error message displayed. | [✅]  |
 
 ### 12.3 Error Display
 
 | #      | Test Case        | Steps                                                 | Expected Result                                                  | Pass |
 | ------ | ---------------- | ----------------------------------------------------- | ---------------------------------------------------------------- | ---- |
-| 12.3.1 | Error visibility | Trigger any error (e.g., open non-git dir)            | Error message is visible and clearly styled (red/warning colors) | [ ]  |
-| 12.3.2 | Error clears     | 1. Trigger an error 2. Perform a successful operation | Previous error message is cleared                                | [ ]  |
+| 12.3.1 | Error visibility | Trigger any error (e.g., open non-git dir)            | Error message is visible and clearly styled (red/warning colors) | [✅]  |
+| 12.3.2 | Error clears     | 1. Trigger an error 2. Perform a successful operation | Previous error message is cleared                                | [✅]  |
 
 ---
 
