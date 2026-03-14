@@ -104,7 +104,7 @@ export function GraphRow({
         {incomingEdges.map((edge, i) => {
           const x2 = column * LANE_WIDTH + LANE_WIDTH / 2
           const y2 = ROW_HEIGHT / 2
-          const rowDistance = edge.toRow - edge.fromRow
+          const x1 = edge.fromColumn * LANE_WIDTH + LANE_WIDTH / 2
 
           if (edge.fromColumn === edge.toColumn) {
             // Straight line from top to node (same column)
@@ -120,35 +120,19 @@ export function GraphRow({
               />
             )
           } else {
-            // Cross-column edge
-            const x1 = edge.fromColumn * LANE_WIDTH + LANE_WIDTH / 2
-
-            if (rowDistance === 1) {
-              // Adjacent rows: draw full curve from source to destination in this row only
-              return (
-                <path
-                  key={`in-${i}`}
-                  d={`M ${x1} ${0} C ${x1} ${y2 * 0.5}, ${x2} ${y2 * 0.5}, ${x2} ${y2}`}
-                  stroke={edge.color}
-                  strokeWidth="2"
-                  fill="none"
-                />
-              )
-            } else {
-              // Multi-row edge: just draw straight line from top (in destination column) to node
-              // The curve was already drawn in the first row (outgoing edge)
-              return (
-                <line
-                  key={`in-${i}`}
-                  x1={x2}
-                  y1={0}
-                  x2={x2}
-                  y2={y2}
-                  stroke={edge.color}
-                  strokeWidth="2"
-                />
-              )
-            }
+            // Cross-column edge: always draw straight line from top of destination column to node
+            // The curve was drawn in the outgoing edge of the child row
+            return (
+              <line
+                key={`in-${i}`}
+                x1={x2}
+                y1={0}
+                x2={x2}
+                y2={y2}
+                stroke={edge.color}
+                strokeWidth="2"
+              />
+            )
           }
         })}
 
