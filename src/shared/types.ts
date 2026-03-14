@@ -120,7 +120,9 @@ export interface DiffFile {
 export interface GraphRow {
   commit: Commit
   column: number
-  edges: GraphEdge[]
+  edges: GraphEdge[] // Edges originating from this commit (to parents)
+  passThroughEdges: PassThroughEdge[] // Edges passing through this row
+  incomingEdges: GraphEdge[] // Edges terminating at this commit (from children)
 }
 
 export interface GraphEdge {
@@ -128,6 +130,11 @@ export interface GraphEdge {
   toColumn: number
   fromRow: number
   toRow: number
+  color: string
+}
+
+export interface PassThroughEdge {
+  column: number
   color: string
 }
 

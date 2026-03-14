@@ -211,13 +211,13 @@ export function parseLog(raw: string): Commit[] {
       parts.slice(i, i + 8)
 
     commits.push({
-      hash: hash ?? '',
-      abbreviatedHash: abbreviatedHash ?? '',
+      hash: (hash ?? '').trim(),
+      abbreviatedHash: (abbreviatedHash ?? '').trim(),
       parents: parents && parents.trim().length > 0 ? parents.trim().split(' ') : [],
-      author: author ?? '',
-      authorEmail: authorEmail ?? '',
+      author: (author ?? '').trim(),
+      authorEmail: (authorEmail ?? '').trim(),
       authorDate: new Date(authorDateStr ?? 0),
-      subject: subject ?? '',
+      subject: (subject ?? '').trim(),
       refs:
         refsStr && refsStr.trim().length > 0
           ? refsStr

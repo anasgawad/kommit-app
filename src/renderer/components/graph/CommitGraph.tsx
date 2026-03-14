@@ -49,6 +49,21 @@ export function CommitGraph() {
 
   const maxColumn = getMaxColumn(graphRows)
 
+  // Debug: log maxColumn
+  useEffect(() => {
+    if (graphRows.length > 0) {
+      console.log('[CommitGraph] graphRows:', graphRows.length, 'maxColumn:', maxColumn)
+      console.log(
+        '[CommitGraph] First 3 rows:',
+        graphRows.slice(0, 3).map((r) => ({
+          hash: r.commit.hash.substring(0, 8),
+          column: r.column,
+          edges: r.edges.length
+        }))
+      )
+    }
+  }, [graphRows, maxColumn])
+
   // Load more on scroll near bottom
   useEffect(() => {
     const parent = parentRef.current
