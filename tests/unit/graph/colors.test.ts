@@ -37,16 +37,16 @@ describe('Color Assignment', () => {
     const color1 = getBranchColor('')
     const color2 = getBranchColor('   ') // whitespace only
 
-    // Should return a valid color (default blue)
+    // Should return a valid color (default bright blue at index 8)
     expect(BRANCH_COLORS).toContain(color1)
     expect(BRANCH_COLORS).toContain(color2)
     expect(color1).toBe(color2) // Both should default to same color
-    expect(color1).toBe(BRANCH_COLORS[4]) // Blue default
+    expect(color1).toBe(BRANCH_COLORS[8]) // Bright blue default (#3498DB)
   })
 
   it('should return same color for same branch across calls', () => {
     const branchName = 'feature/graph-rendering'
-    const colors = []
+    const colors: string[] = []
 
     for (let i = 0; i < 100; i++) {
       colors.push(getBranchColor(branchName))

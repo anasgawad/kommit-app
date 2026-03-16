@@ -27,15 +27,6 @@ import { getBranchColor } from './colors'
 export function assignLanes(commits: Commit[]): GraphRow[] {
   if (commits.length === 0) return []
 
-  console.log('[Lane Algorithm] Processing', commits.length, 'commits')
-  console.log(
-    '[Lane Algorithm] First 3 commits:',
-    commits.slice(0, 3).map((c) => ({
-      hash: c.hash.substring(0, 8),
-      parents: c.parents.map((p) => p.substring(0, 8))
-    }))
-  )
-
   // Pass 1: Assign columns
   const lanes: (string | null)[] = []
   const rows: GraphRow[] = []
@@ -43,23 +34,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
 
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i]
-
-    // Debug first few commits
-    if (i < 5) {
-      console.log(
-        `[Lane] Commit ${i}:`,
-        commit.hash.substring(0, 8),
-        'parents:',
-        commit.parents.map((p) => p.substring(0, 8))
-      )
-      console.log(
-        `[Lane] Current lanes:`,
-        lanes.map((l) => (l ? l.substring(0, 8) : 'null'))
-      )
-      // Check if this commit hash matches any lane
-      const matchingLane = lanes.findIndex((l) => l === commit.hash)
-      console.log(`[Lane] Looking for commit hash in lanes: ${matchingLane}`)
-    }
 
     // Find lane expecting this commit hash
     let col = lanes.indexOf(commit.hash)
@@ -71,10 +45,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
         col = lanes.length
         lanes.push(null)
       }
-    }
-
-    if (i < 5) {
-      console.log(`[Lane] Assigned column ${col} to commit ${commit.hash.substring(0, 8)}`)
     }
 
     // Lane now expects first parent (if any)
@@ -106,10 +76,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
   }
 
   // Pass 2: Compute edges
-  console.log('[Lane Algorithm] Pass 2: Computing edges')
-  let edgesCreated = 0
-  let parentsNotFound = 0
-
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
     const commit = row.commit
@@ -118,12 +84,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       const parentRowIndex = hashToRowIndex.get(parentHash)
       if (parentRowIndex === undefined) {
         // Parent not in this commit list (probably filtered out)
-        if (i < 3) {
-          console.log(
-            `[Lane] Parent not found: child=${commit.hash.substring(0, 8)} parent=${parentHash.substring(0, 8)}`
-          )
-        }
-        parentsNotFound++
         continue
       }
 
@@ -146,16 +106,10 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       row.edges.push(edge)
       // Add to parent row's incoming edges
       parentRow.incomingEdges.push(edge)
-      edgesCreated++
     }
   }
 
-  console.log(
-    `[Lane Algorithm] Pass 2 complete: ${edgesCreated} edges created, ${parentsNotFound} parents not found`
-  )
-
   // Pass 3: Compute pass-through edges for intermediate rows
-  console.log('[Lane Algorithm] Pass 3: Computing pass-through edges')
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]
 
@@ -177,7 +131,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
         // Cross-column edges (merges/branches):
         // The edge curves from fromColumn to toColumn in the first row (or first couple rows),
         // then continues vertically in the toColumn for remaining intermediate rows.
-        //
         for (let intermediateRow = i + 1; intermediateRow < edge.toRow; intermediateRow++) {
           const intermediate = rows[intermediateRow]
           const column = edge.toColumn
@@ -188,18 +141,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
         }
       }
     }
-  }
-
-  console.log(`[Lane Algorithm] Pass 3 complete`)
-  console.log('[Lane Algorithm] Complete:', rows.length, 'rows processed')
-  if (rows.length > 0) {
-    console.log('[Lane Algorithm] Sample row 0:', {
-      hash: rows[0].commit.hash.substring(0, 8),
-      column: rows[0].column,
-      edges: rows[0].edges.length,
-      passThroughEdges: rows[0].passThroughEdges.length,
-      incomingEdges: rows[0].incomingEdges.length
-    })
   }
 
   return rows

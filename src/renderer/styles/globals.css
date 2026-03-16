@@ -4,7 +4,7 @@
 
 /* CSS Custom Properties for theming */
 :root {
-  /* Dark theme (default) */
+  /* Dark theme (default) - Catppuccin Mocha */
   --color-bg: #1e1e2e;
   --color-bg-secondary: #181825;
   --color-bg-tertiary: #313244;
@@ -19,6 +19,7 @@
 }
 
 .light {
+  /* Light theme - Catppuccin Latte */
   --color-bg: #eff1f5;
   --color-bg-secondary: #e6e9ef;
   --color-bg-tertiary: #ccd0da;
@@ -48,14 +49,14 @@ body,
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - thin and unobtrusive */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -105,4 +106,82 @@ body,
 
 .window-control-btn:active {
   opacity: 0.8;
+}
+
+/* Graph row styles */
+.graph-row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.graph-row:hover {
+  background-color: rgba(49, 50, 68, 0.5);
+}
+
+/* Graph node styles - subtle glow on hover */
+.graph-node {
+  transition: filter 0.15s ease;
+}
+
+.graph-row:hover .graph-node {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+/* Context menu animation */
+.context-menu {
+  animation: contextMenuIn 0.1s ease-out;
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Commit detail panel slide-in */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading spinner pulse */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Focus ring for keyboard navigation */
+.graph-row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* Border utilities for selection indicator */
+.border-l-3 {
+  border-left-width: 3px;
+}
+
+/* Input focus ring enhancement */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.15);
+}
+
+/* Badge truncation */
+.max-w-24 {
+  max-width: 6rem;
 }

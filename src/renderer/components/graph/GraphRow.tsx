@@ -1,23 +1,43 @@
 // ============================================================
 // Kommit — Graph Row Component
 // Renders a single commit row with SVG graph visualization
+// GitKraken-inspired professional styling
 // ============================================================
 
-import type { GraphRow } from '@shared/types'
+import type { GraphRow as GraphRowType } from '@shared/types'
 import { formatDistanceToNow } from 'date-fns'
+import { getInitials, getAvatarColor } from '../../utils/avatar'
 
-const LANE_WIDTH = 20
-const ROW_HEIGHT = 32
-const NODE_RADIUS = 4
+// Enhanced sizing for better visual clarity (GitKraken-inspired)
+export const LANE_WIDTH = 24
+export const ROW_HEIGHT = 36
+export const NODE_RADIUS = 5
+export const MERGE_NODE_RADIUS = 6
+export const STROKE_WIDTH = 2.5
 
 interface GraphRowProps {
-  graphRow: GraphRow
+  graphRow: GraphRowType
   rowIndex: number
   isSelected: boolean
   maxColumns: number
   onSelect: (hash: string) => void
   onContextMenu: (hash: string, event: React.MouseEvent) => void
 }
+
+/**
+ * Small inline SVG icons for ref badges
+ */
+const BranchIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
+    <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.492 2.492 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zM3.5 3.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0z" />
+  </svg>
+)
+
+const TagIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
+    <path d="M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25v5.025zM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+  </svg>
+)
 
 export function GraphRow({
   graphRow,
@@ -28,31 +48,21 @@ export function GraphRow({
   onContextMenu
 }: GraphRowProps) {
   const { commit, column, edges, passThroughEdges, incomingEdges } = graphRow
+
   // Cap the SVG width to prevent it from taking too much space
   const effectiveMaxColumns = Math.min(maxColumns, 10)
   const svgWidth = (effectiveMaxColumns + 1) * LANE_WIDTH + 10
 
-  // Debug logging for first few rows
-  if (rowIndex < 5) {
-    console.log(`[GraphRow ${rowIndex}]`, {
-      hash: commit.hash.substring(0, 8),
-      column,
-      edgeCount: edges.length,
-      passThroughCount: passThroughEdges.length,
-      incomingCount: incomingEdges.length,
-      passThrough: passThroughEdges.map((p) => ({ col: p.column, color: p.color })),
-      incoming: incomingEdges.map((e) => ({
-        from: `col${e.fromColumn}row${e.fromRow}`,
-        to: `col${e.toColumn}row${e.toRow}`,
-        color: e.color
-      })),
-      outgoing: edges.map((e) => ({
-        from: `col${e.fromColumn}row${e.fromRow}`,
-        to: `col${e.toColumn}row${e.toRow}`,
-        color: e.color
-      }))
-    })
-  }
+  // Detect merge commit (has more than 1 parent)
+  const isMerge = commit.parents.length > 1
+
+  // Get the node color from edges
+  const nodeColor =
+    edges.length > 0
+      ? edges[0].color
+      : incomingEdges.length > 0
+        ? incomingEdges[0].color
+        : '#3498DB' // default bright blue
 
   const handleClick = () => {
     onSelect(commit.hash)
@@ -63,11 +73,40 @@ export function GraphRow({
     onContextMenu(commit.hash, e)
   }
 
+  // Render curved path for cross-column edges (smoother S-curve)
+  const renderCurvedEdge = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    color: string,
+    key: string
+  ) => {
+    // Create a smooth S-curve using cubic Bezier
+    // Control points create a natural flow from node to destination
+    const midY = y1 + (y2 - y1) * 0.6
+    const d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`
+
+    return (
+      <path
+        key={key}
+        d={d}
+        stroke={color}
+        strokeWidth={STROKE_WIDTH}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    )
+  }
+
   return (
     <div
-      className={`flex items-center border-b border-kommit-border hover:bg-kommit-bg-tertiary cursor-pointer ${
-        isSelected ? 'bg-kommit-bg-tertiary' : ''
-      }`}
+      className={`
+        graph-row flex items-center cursor-pointer transition-colors duration-150
+        border-l-3 border-transparent
+        ${isSelected ? 'bg-kommit-accent/10 border-l-kommit-accent' : 'hover:bg-kommit-bg-tertiary/50'}
+      `}
       style={{ height: `${ROW_HEIGHT}px` }}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
@@ -77,14 +116,9 @@ export function GraphRow({
         width={svgWidth}
         height={ROW_HEIGHT}
         className="flex-shrink-0"
-        style={{ width: `${Math.min(svgWidth, 240)}px` }}
+        style={{ width: `${Math.min(svgWidth, 260)}px` }}
       >
-        {/* DEBUG: Always draw a test line in column 0 for first 5 rows */}
-        {rowIndex < 5 && (
-          <line x1={10} y1={0} x2={10} y2={ROW_HEIGHT} stroke="red" strokeWidth="3" opacity="0.5" />
-        )}
-
-        {/* 1. Draw pass-through edges (full height vertical lines) */}
+        {/* 1. Draw pass-through edges (full height vertical lines) with slight opacity for depth */}
         {passThroughEdges.map((passThrough, i) => {
           const x = passThrough.column * LANE_WIDTH + LANE_WIDTH / 2
           return (
@@ -95,7 +129,9 @@ export function GraphRow({
               x2={x}
               y2={ROW_HEIGHT}
               stroke={passThrough.color}
-              strokeWidth="2"
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="round"
+              opacity={0.7}
             />
           )
         })}
@@ -105,34 +141,19 @@ export function GraphRow({
           const x2 = column * LANE_WIDTH + LANE_WIDTH / 2
           const y2 = ROW_HEIGHT / 2
 
-          if (edge.fromColumn === edge.toColumn) {
-            // Straight line from top to node (same column)
-            return (
-              <line
-                key={`in-${i}`}
-                x1={x2}
-                y1={0}
-                x2={x2}
-                y2={y2}
-                stroke={edge.color}
-                strokeWidth="2"
-              />
-            )
-          } else {
-            // Cross-column edge: always draw straight line from top of destination column to node
-            // The curve was drawn in the outgoing edge of the child row
-            return (
-              <line
-                key={`in-${i}`}
-                x1={x2}
-                y1={0}
-                x2={x2}
-                y2={y2}
-                stroke={edge.color}
-                strokeWidth="2"
-              />
-            )
-          }
+          // Always draw straight line from top to node center
+          return (
+            <line
+              key={`in-${i}`}
+              x1={x2}
+              y1={0}
+              x2={x2}
+              y2={y2}
+              stroke={edge.color}
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="round"
+            />
+          )
         })}
 
         {/* 3. Draw outgoing edges (from commit node to bottom of row or towards parent column) */}
@@ -151,24 +172,13 @@ export function GraphRow({
                 x2={x2}
                 y2={ROW_HEIGHT}
                 stroke={edge.color}
-                strokeWidth="2"
+                strokeWidth={STROKE_WIDTH}
+                strokeLinecap="round"
               />
             )
           } else {
-            // Cross-column edge: draw curve from node toward destination column
-            // The curve should reach the destination column by the bottom of this row
-            // Use a bezier curve that smoothly transitions horizontally
-            const controlY = y1 + (ROW_HEIGHT - y1) * 0.5
-
-            return (
-              <path
-                key={`out-${i}`}
-                d={`M ${x1} ${y1} C ${x1} ${controlY}, ${x2} ${controlY}, ${x2} ${ROW_HEIGHT}`}
-                stroke={edge.color}
-                strokeWidth="2"
-                fill="none"
-              />
-            )
+            // Cross-column edge: smooth curved path
+            return renderCurvedEdge(x1, y1, x2, ROW_HEIGHT, edge.color, `out-${i}`)
           }
         })}
 
@@ -176,22 +186,26 @@ export function GraphRow({
         <circle
           cx={column * LANE_WIDTH + LANE_WIDTH / 2}
           cy={ROW_HEIGHT / 2}
-          r={NODE_RADIUS}
-          fill={
-            edges.length > 0
-              ? edges[0].color
-              : incomingEdges.length > 0
-                ? incomingEdges[0].color
-                : '#569CD6'
-          }
-          stroke="#1e1e2e"
-          strokeWidth="1.5"
+          r={isMerge ? MERGE_NODE_RADIUS : NODE_RADIUS}
+          fill={nodeColor}
+          className="graph-node"
         />
+
+        {/* Merge indicator: inner ring for merge commits */}
+        {isMerge && (
+          <circle
+            cx={column * LANE_WIDTH + LANE_WIDTH / 2}
+            cy={ROW_HEIGHT / 2}
+            r={NODE_RADIUS - 1.5}
+            fill="#1e1e2e"
+            className="graph-node-inner"
+          />
+        )}
       </svg>
 
-      {/* Commit info section */}
-      <div className="flex-1 flex items-center gap-3 px-3 overflow-hidden min-w-0">
-        {/* Commit message and refs */}
+      {/* Commit info section - columnar layout */}
+      <div className="flex-1 flex items-center gap-2 px-3 overflow-hidden min-w-0">
+        {/* Subject + Badges column */}
         <div className="flex-1 flex items-center gap-2 overflow-hidden min-w-0">
           <span
             className={`text-sm font-mono truncate ${
@@ -201,16 +215,16 @@ export function GraphRow({
             {commit.subject}
           </span>
 
-          {/* Ref badges (branches, tags) */}
+          {/* Ref badges (branches, tags) - pill style with icons */}
           {commit.refs.length > 0 && (
             <div className="flex gap-1 flex-shrink-0">
-              {commit.refs.map((ref, i) => {
+              {commit.refs.slice(0, 3).map((ref, i) => {
                 const trimmed = ref.trim()
                 if (!trimmed || trimmed === 'HEAD') return null
 
                 const isTag = trimmed.startsWith('tag:')
-                const isBranch = !isTag && !trimmed.startsWith('HEAD ->')
                 const isHead = trimmed.startsWith('HEAD ->')
+                const isBranch = !isTag && !isHead
 
                 if (!isBranch && !isTag && !isHead) return null
 
@@ -223,35 +237,51 @@ export function GraphRow({
                 return (
                   <span
                     key={i}
-                    className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                      isTag
-                        ? 'bg-kommit-warning/20 text-kommit-warning'
-                        : isHead
-                          ? 'bg-kommit-accent/20 text-kommit-accent font-bold'
-                          : 'bg-kommit-success/20 text-kommit-success'
-                    }`}
+                    className={`
+                      inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium
+                      ${
+                        isTag
+                          ? 'bg-kommit-warning/15 text-kommit-warning'
+                          : isHead
+                            ? 'bg-kommit-accent/20 text-kommit-accent font-semibold'
+                            : 'bg-kommit-success/15 text-kommit-success'
+                      }
+                    `}
                     title={ref}
                   >
-                    {label}
+                    {isTag ? <TagIcon /> : <BranchIcon />}
+                    <span className="truncate max-w-24">{label}</span>
                   </span>
                 )
               })}
+              {commit.refs.length > 3 && (
+                <span className="text-xs text-kommit-text-secondary px-1">
+                  +{commit.refs.length - 3}
+                </span>
+              )}
             </div>
           )}
         </div>
 
-        {/* Abbreviated hash */}
-        <span className="text-xs font-mono text-kommit-text-secondary flex-shrink-0">
+        {/* Author column - avatar + name */}
+        <div className="flex items-center gap-2 flex-shrink-0 w-36">
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white flex-shrink-0"
+            style={{ backgroundColor: getAvatarColor(commit.author) }}
+            title={commit.author}
+          >
+            {getInitials(commit.author)}
+          </div>
+          <span className="text-xs text-kommit-text-secondary truncate">{commit.author}</span>
+        </div>
+
+        {/* Hash column */}
+        <span className="text-xs font-mono text-kommit-text-secondary flex-shrink-0 w-16">
           {commit.abbreviatedHash}
         </span>
 
-        {/* Author */}
-        <span className="text-xs text-kommit-text-secondary flex-shrink-0 max-w-32 truncate">
-          {commit.author}
-        </span>
-
-        {/* Relative time */}
-        <span className="text-xs text-kommit-text-secondary flex-shrink-0 w-20 text-right">
+        {/* Date column */}
+        <span className="text-xs text-kommit-text-secondary flex-shrink-0 w-24 text-right">
           {formatDistanceToNow(commit.authorDate, { addSuffix: true })}
         </span>
       </div>

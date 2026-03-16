@@ -1,15 +1,85 @@
 // ============================================================
 // Kommit — Commit Graph Component
 // Virtualized list of commit history with filtering and search
+// GitKraken-inspired professional styling
 // ============================================================
 
 import { useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useGraphStore } from '../../stores/graph-store'
 import { getMaxColumn } from '../../graph/lane-algorithm'
-import { GraphRow } from './GraphRow'
+import { GraphRow, ROW_HEIGHT, LANE_WIDTH } from './GraphRow'
 
-const ROW_HEIGHT = 32
+/**
+ * SVG Icons for toolbar and context menu
+ */
+const SearchIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    className="text-kommit-text-secondary"
+  >
+    <path d="M11.5 7a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0zm-.82 4.74a6 6 0 1 1 1.06-1.06l3.04 3.04a.75.75 0 1 1-1.06 1.06l-3.04-3.04z" />
+  </svg>
+)
+
+const BranchFilterIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    className="text-kommit-text-secondary"
+  >
+    <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.492 2.492 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zM3.5 3.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0z" />
+  </svg>
+)
+
+const UserIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    className="text-kommit-text-secondary"
+  >
+    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm5.216 3.858C12.165 9.999 10.243 9 8 9s-4.165.999-5.216 2.858C2.12 13.108 3.19 14 4.5 14h7c1.31 0 2.38-.892 1.716-2.142z" />
+  </svg>
+)
+
+const ClearIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z" />
+  </svg>
+)
+
+// Context menu icons
+const CheckoutIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
+  </svg>
+)
+
+const CherryPickIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M8 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0zm0 13.5a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1a.75.75 0 0 1 .75-.75z" />
+  </svg>
+)
+
+const RevertIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0zM8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.28 5.78a.751.751 0 0 0-1.042-.018.751.751 0 0 0-.018 1.042L11.69 8l-1.47 1.22a.751.751 0 0 0 .326 1.275.749.749 0 0 0 .734-.215l2-1.75a.75.75 0 0 0 0-1.06z" />
+  </svg>
+)
+
+const ResetIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M8 3a5 5 0 0 0-4.546 2.914.75.75 0 0 1-1.36-.628A6.5 6.5 0 0 1 14.5 8a6.5 6.5 0 0 1-12.98.738.75.75 0 1 1 1.46-.338A5 5 0 1 0 8 3z" />
+    <path d="M2.5 1.75v3.5h3.25a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0z" />
+  </svg>
+)
 
 export function CommitGraph() {
   const {
@@ -49,20 +119,9 @@ export function CommitGraph() {
 
   const maxColumn = getMaxColumn(graphRows)
 
-  // Debug: log maxColumn
-  useEffect(() => {
-    if (graphRows.length > 0) {
-      console.log('[CommitGraph] graphRows:', graphRows.length, 'maxColumn:', maxColumn)
-      console.log(
-        '[CommitGraph] First 3 rows:',
-        graphRows.slice(0, 3).map((r) => ({
-          hash: r.commit.hash.substring(0, 8),
-          column: r.column,
-          edges: r.edges.length
-        }))
-      )
-    }
-  }, [graphRows, maxColumn])
+  // Calculate graph column width for header alignment
+  const effectiveMaxColumns = Math.min(maxColumn, 10)
+  const graphColumnWidth = Math.min((effectiveMaxColumns + 1) * LANE_WIDTH + 10, 260)
 
   // Load more on scroll near bottom
   useEffect(() => {
@@ -73,7 +132,6 @@ export function CommitGraph() {
       const { scrollTop, scrollHeight, clientHeight } = parent
       const scrolledPercentage = (scrollTop + clientHeight) / scrollHeight
 
-      // Trigger load more when scrolled past 80%
       if (scrolledPercentage > 0.8 && !isLoading && hasMore) {
         loadMore()
       }
@@ -145,72 +203,132 @@ export function CommitGraph() {
   }
 
   const handleContextMenuAction = (action: string, hash: string) => {
-    console.log(`Context menu action: ${action} on ${hash}`)
     // TODO: Phase 3 - implement actual actions
     setContextMenu(null)
   }
 
+  const hasFilters = branchFilter || authorFilter || searchQuery
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Toolbar */}
-      <div className="h-10 border-b border-kommit-border flex items-center gap-3 px-4 bg-kommit-bg-secondary">
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search commits..."
-          value={searchQuery || ''}
-          onChange={(e) => setSearchQuery(e.target.value || null)}
-          className="px-2 py-1 text-xs bg-kommit-bg-tertiary text-kommit-text border border-kommit-border rounded focus:outline-none focus:border-kommit-accent w-64"
-        />
+      {/* Toolbar - redesigned with icons */}
+      <div className="h-11 border-b border-kommit-border flex items-center gap-2 px-4 bg-kommit-bg-secondary">
+        {/* Search with icon */}
+        <div className="relative">
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <SearchIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Search commits..."
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery(e.target.value || null)}
+            className="pl-8 pr-3 py-1.5 text-xs bg-kommit-bg text-kommit-text border border-kommit-border rounded-md focus:outline-none focus:border-kommit-accent focus:ring-1 focus:ring-kommit-accent/30 w-56 transition-colors"
+          />
+        </div>
 
-        {/* Branch filter */}
-        <input
-          type="text"
-          placeholder="Filter by branch..."
-          value={branchFilter || ''}
-          onChange={(e) => setBranchFilter(e.target.value || null)}
-          className="px-2 py-1 text-xs bg-kommit-bg-tertiary text-kommit-text border border-kommit-border rounded focus:outline-none focus:border-kommit-accent w-40"
-        />
+        {/* Branch filter with icon */}
+        <div className="relative">
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <BranchFilterIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Branch..."
+            value={branchFilter || ''}
+            onChange={(e) => setBranchFilter(e.target.value || null)}
+            className="pl-8 pr-3 py-1.5 text-xs bg-kommit-bg text-kommit-text border border-kommit-border rounded-md focus:outline-none focus:border-kommit-accent focus:ring-1 focus:ring-kommit-accent/30 w-32 transition-colors"
+          />
+        </div>
 
-        {/* Author filter */}
-        <input
-          type="text"
-          placeholder="Filter by author..."
-          value={authorFilter || ''}
-          onChange={(e) => setAuthorFilter(e.target.value || null)}
-          className="px-2 py-1 text-xs bg-kommit-bg-tertiary text-kommit-text border border-kommit-border rounded focus:outline-none focus:border-kommit-accent w-40"
-        />
+        {/* Author filter with icon */}
+        <div className="relative">
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <UserIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Author..."
+            value={authorFilter || ''}
+            onChange={(e) => setAuthorFilter(e.target.value || null)}
+            className="pl-8 pr-3 py-1.5 text-xs bg-kommit-bg text-kommit-text border border-kommit-border rounded-md focus:outline-none focus:border-kommit-accent focus:ring-1 focus:ring-kommit-accent/30 w-32 transition-colors"
+          />
+        </div>
 
-        {/* Clear filters */}
-        {(branchFilter || authorFilter || searchQuery) && (
+        {/* Clear filters button */}
+        {hasFilters && (
           <button
             onClick={clearFilters}
-            className="px-2 py-1 text-xs bg-kommit-bg-tertiary text-kommit-text-secondary hover:text-kommit-text border border-kommit-border rounded hover:border-kommit-accent"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-kommit-bg text-kommit-text-secondary hover:text-kommit-text border border-kommit-border rounded-md hover:border-kommit-accent transition-colors"
+            title="Clear all filters"
           >
-            Clear
+            <ClearIcon />
+            <span>Clear</span>
           </button>
         )}
 
-        {/* Loading indicator */}
+        {/* Active filter indicator */}
+        {hasFilters && (
+          <div className="flex items-center gap-1 ml-1">
+            <span className="w-2 h-2 rounded-full bg-kommit-accent animate-pulse" />
+            <span className="text-xs text-kommit-accent">Filtered</span>
+          </div>
+        )}
+
+        {/* Loading indicator - moved to right */}
         {isLoading && (
-          <span className="text-xs text-kommit-text-secondary ml-auto">Loading...</span>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-kommit-accent/30 border-t-kommit-accent rounded-full animate-spin" />
+            <span className="text-xs text-kommit-text-secondary">Loading...</span>
+          </div>
+        )}
+
+        {/* Commit count */}
+        {!isLoading && graphRows.length > 0 && (
+          <span className="ml-auto text-xs text-kommit-text-secondary">
+            {graphRows.length} commits
+          </span>
         )}
       </div>
 
       {/* Error display */}
       {error && (
-        <div className="px-4 py-2 bg-kommit-danger/10 text-kommit-danger text-xs border-b border-kommit-danger/30">
+        <div className="px-4 py-2 bg-kommit-danger/10 text-kommit-danger text-xs border-b border-kommit-danger/30 flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575zM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5zm1 6a1 1 0 1 0-2 0 1 1 0 0 0 2 0z" />
+          </svg>
           {error}
         </div>
       )}
 
+      {/* Column headers */}
+      <div className="h-8 border-b border-kommit-border flex items-center bg-kommit-bg-secondary/50 text-xs text-kommit-text-secondary font-medium">
+        <div style={{ width: `${graphColumnWidth}px` }} className="flex-shrink-0 px-2">
+          Graph
+        </div>
+        <div className="flex-1 px-2">Description</div>
+        <div className="w-36 px-2 flex-shrink-0">Author</div>
+        <div className="w-16 px-2 flex-shrink-0">Commit</div>
+        <div className="w-24 px-2 flex-shrink-0 text-right">Date</div>
+        <div className="w-3" /> {/* Scrollbar compensation */}
+      </div>
+
       {/* Graph rows (virtualized) */}
       <div ref={parentRef} className="flex-1 overflow-auto">
         {graphRows.length === 0 && !isLoading ? (
-          <div className="flex items-center justify-center h-full text-kommit-text-secondary text-sm">
-            {branchFilter || authorFilter || searchQuery
-              ? 'No commits match the current filters'
-              : 'No commits found'}
+          <div className="flex flex-col items-center justify-center h-full text-kommit-text-secondary">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              className="opacity-30 mb-4"
+            >
+              <path d="M11.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zm-2.25.75a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.492 2.492 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25zM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5zM3.5 3.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0z" />
+            </svg>
+            <span className="text-sm">
+              {hasFilters ? 'No commits match the current filters' : 'No commits found'}
+            </span>
           </div>
         ) : (
           <div
@@ -249,37 +367,42 @@ export function CommitGraph() {
         )}
       </div>
 
-      {/* Context menu */}
+      {/* Context menu - polished with icons */}
       {contextMenu && (
         <div
-          className="fixed bg-kommit-bg-secondary border border-kommit-border rounded shadow-lg py-1 z-50"
+          className="context-menu fixed bg-kommit-bg-secondary border border-kommit-border rounded-lg shadow-xl py-1.5 z-50 min-w-44 animate-in fade-in duration-100"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="w-full px-4 py-1.5 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary"
+            className="w-full px-3 py-2 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary flex items-center gap-2.5 transition-colors"
             onClick={() => handleContextMenuAction('checkout', contextMenu.hash)}
           >
-            Checkout
+            <CheckoutIcon />
+            <span>Checkout</span>
+            <span className="ml-auto text-xs text-kommit-text-secondary">Ctrl+K</span>
           </button>
           <button
-            className="w-full px-4 py-1.5 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary"
+            className="w-full px-3 py-2 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary flex items-center gap-2.5 transition-colors"
             onClick={() => handleContextMenuAction('cherry-pick', contextMenu.hash)}
           >
-            Cherry-pick
+            <CherryPickIcon />
+            <span>Cherry-pick</span>
           </button>
           <button
-            className="w-full px-4 py-1.5 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary"
+            className="w-full px-3 py-2 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary flex items-center gap-2.5 transition-colors"
             onClick={() => handleContextMenuAction('revert', contextMenu.hash)}
           >
-            Revert
+            <RevertIcon />
+            <span>Revert</span>
           </button>
-          <div className="border-t border-kommit-border my-1" />
+          <div className="border-t border-kommit-border my-1.5" />
           <button
-            className="w-full px-4 py-1.5 text-left text-sm text-kommit-danger hover:bg-kommit-bg-tertiary"
+            className="w-full px-3 py-2 text-left text-sm text-kommit-danger hover:bg-kommit-danger/10 flex items-center gap-2.5 transition-colors"
             onClick={() => handleContextMenuAction('reset', contextMenu.hash)}
           >
-            Reset to here
+            <ResetIcon />
+            <span>Reset to here</span>
           </button>
         </div>
       )}

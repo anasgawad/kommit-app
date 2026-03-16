@@ -1,30 +1,33 @@
 // ============================================================
 // Kommit — Branch Color Assignment
-// Deterministic color mapping for branches
+// Deterministic color mapping for branches (GitKraken-inspired vibrant palette)
 // ============================================================
 
 /**
- * 8 predefined branch colors matching tailwind.config.ts branch-0 through branch-7
+ * 10 predefined branch colors - vibrant, high-saturation colors
+ * designed to pop against dark backgrounds (GitKraken-inspired)
  */
 export const BRANCH_COLORS: string[] = [
-  '#4EC9B0', // teal
-  '#CE9178', // salmon
-  '#DCDCAA', // yellow
-  '#C586C0', // purple
-  '#569CD6', // blue
-  '#9CDCFE', // light blue
-  '#D7BA7D', // gold
-  '#F44747' // red
+  '#0BC4E2', // cyan - primary, eye-catching
+  '#2ECC71', // emerald green - success, main branch
+  '#F1C40F', // vivid yellow - attention
+  '#E74C3C', // vibrant red - danger, alerts
+  '#9B59B6', // rich purple - feature branches
+  '#E67E22', // warm orange - in-progress
+  '#1ABC9C', // teal - secondary
+  '#FF6B81', // coral pink - accent
+  '#3498DB', // bright blue - info
+  '#F39C12' // amber - warning
 ]
 
 /**
  * Gets a deterministic color for a branch name using djb2 hash.
  * Same branch name always returns the same color.
- * Empty/detached HEAD defaults to blue (index 4).
+ * Empty/detached HEAD defaults to bright blue (index 8).
  */
 export function getBranchColor(branchName: string): string {
   if (!branchName || branchName.trim() === '') {
-    return BRANCH_COLORS[4] // blue default for detached HEAD
+    return BRANCH_COLORS[8] // bright blue default for detached HEAD
   }
 
   const hash = djb2Hash(branchName)
@@ -52,10 +55,17 @@ function djb2Hash(str: string): number {
  */
 export function getBranchColorClass(branchName: string): string {
   if (!branchName || branchName.trim() === '') {
-    return 'text-branch-4' // blue default
+    return 'text-branch-8' // bright blue default
   }
 
   const hash = djb2Hash(branchName)
   const colorIndex = hash % BRANCH_COLORS.length
   return `text-branch-${colorIndex}`
+}
+
+/**
+ * Gets the default color for commits without branch refs (detached HEAD, etc.)
+ */
+export function getDefaultColor(): string {
+  return BRANCH_COLORS[8] // bright blue
 }
