@@ -3,7 +3,7 @@
 // Assigns columns (swim lanes) to commits for graph visualization
 // ============================================================
 
-import type { Commit, GraphRow, GraphEdge, PassThroughEdge } from '@shared/types'
+import type { Commit, GraphRow, GraphEdge } from '@shared/types'
 import { getBranchColor } from './colors'
 
 /**
@@ -178,21 +178,13 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
         // The edge curves from fromColumn to toColumn in the first row (or first couple rows),
         // then continues vertically in the toColumn for remaining intermediate rows.
         //
-        // Strategy: After the initial curve (1-2 rows), continue in destination column
-        const curveRows = Math.min(2, edge.toRow - i) // Reserve 1-2 rows for the curve
-
         for (let intermediateRow = i + 1; intermediateRow < edge.toRow; intermediateRow++) {
           const intermediate = rows[intermediateRow]
-
-          // After the curve transition, draw in destination column
-          if (intermediateRow >= i + curveRows) {
-            const column = edge.toColumn
-            const exists = intermediate.passThroughEdges.some((pte) => pte.column === column)
-            if (!exists) {
-              intermediate.passThroughEdges.push({ column, color: edge.color })
-            }
+          const column = edge.toColumn
+          const exists = intermediate.passThroughEdges.some((pte) => pte.column === column)
+          if (!exists) {
+            intermediate.passThroughEdges.push({ column, color: edge.color })
           }
-          // During curve transition (first 1-2 rows), the curve path itself will handle drawing
         }
       }
     }

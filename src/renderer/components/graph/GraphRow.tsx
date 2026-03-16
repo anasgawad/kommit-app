@@ -104,7 +104,6 @@ export function GraphRow({
         {incomingEdges.map((edge, i) => {
           const x2 = column * LANE_WIDTH + LANE_WIDTH / 2
           const y2 = ROW_HEIGHT / 2
-          const x1 = edge.fromColumn * LANE_WIDTH + LANE_WIDTH / 2
 
           if (edge.fromColumn === edge.toColumn) {
             // Straight line from top to node (same column)
@@ -159,13 +158,12 @@ export function GraphRow({
             // Cross-column edge: draw curve from node toward destination column
             // The curve should reach the destination column by the bottom of this row
             // Use a bezier curve that smoothly transitions horizontally
-            const controlY1 = y1 + (ROW_HEIGHT - y1) * 0.5
-            const controlY2 = ROW_HEIGHT
+            const controlY = y1 + (ROW_HEIGHT - y1) * 0.5
 
             return (
               <path
                 key={`out-${i}`}
-                d={`M ${x1} ${y1} C ${x1} ${controlY1}, ${x2} ${controlY2}, ${x2} ${ROW_HEIGHT}`}
+                d={`M ${x1} ${y1} C ${x1} ${controlY}, ${x2} ${controlY}, ${x2} ${ROW_HEIGHT}`}
                 stroke={edge.color}
                 strokeWidth="2"
                 fill="none"
