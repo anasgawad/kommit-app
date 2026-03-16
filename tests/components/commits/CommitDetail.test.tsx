@@ -103,7 +103,7 @@ describe('CommitDetail', () => {
 
   it('should list parent commit hashes as links', () => {
     const commit = createCommit({
-      parents: ['parent1', 'parent2']
+      parents: ['parent1abc123', 'parent2def456']
     })
     const detail: CommitDetailType = {
       commit,
@@ -115,6 +115,7 @@ describe('CommitDetail', () => {
     render(<CommitDetail />)
 
     expect(screen.getByText('Parents (2)')).toBeInTheDocument()
+    // Parent hashes are now abbreviated (first 7 chars)
     expect(screen.getByText('parent1')).toBeInTheDocument()
     expect(screen.getByText('parent2')).toBeInTheDocument()
   })
@@ -135,22 +136,25 @@ describe('CommitDetail', () => {
 
     render(<CommitDetail />)
 
-    expect(screen.getByText('Changed Files (4)')).toBeInTheDocument()
+    // Section label is now separate from count (badge)
+    expect(screen.getByText('Changed Files')).toBeInTheDocument()
+    expect(screen.getByText('4')).toBeInTheDocument()
     expect(screen.getByText('added.txt')).toBeInTheDocument()
     expect(screen.getByText('modified.txt')).toBeInTheDocument()
     expect(screen.getByText('deleted.txt')).toBeInTheDocument()
     expect(screen.getByText('renamed.txt')).toBeInTheDocument()
 
-    // Check for status icons (displayed as text)
-    expect(screen.getByText('+')).toBeInTheDocument() // Added
-    expect(screen.getByText('M')).toBeInTheDocument() // Modified
-    expect(screen.getByText('-')).toBeInTheDocument() // Deleted
-    expect(screen.getByText('R')).toBeInTheDocument() // Renamed
+    // Status icons are now SVGs, not text characters
+    // We verify the files are rendered with their status via title attribute
+    expect(screen.getByTitle('Added: added.txt')).toBeInTheDocument()
+    expect(screen.getByTitle('Modified: modified.txt')).toBeInTheDocument()
+    expect(screen.getByTitle('Deleted: deleted.txt')).toBeInTheDocument()
+    expect(screen.getByTitle('Renamed: renamed.txt')).toBeInTheDocument()
   })
 
   it('should handle merge commits (multiple parents)', () => {
     const commit = createCommit({
-      parents: ['parent1', 'parent2', 'parent3']
+      parents: ['parent1abc123', 'parent2def456', 'parent3ghi789']
     })
     const detail: CommitDetailType = {
       commit,
@@ -162,6 +166,7 @@ describe('CommitDetail', () => {
     render(<CommitDetail />)
 
     expect(screen.getByText('Parents (3)')).toBeInTheDocument()
+    // Parent hashes are now abbreviated (first 7 chars)
     expect(screen.getByText('parent1')).toBeInTheDocument()
     expect(screen.getByText('parent2')).toBeInTheDocument()
     expect(screen.getByText('parent3')).toBeInTheDocument()

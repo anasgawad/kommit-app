@@ -42,7 +42,9 @@ describe('CommitGraph', () => {
     const graphRows: GraphRow[] = commits.map((c, i) => ({
       commit: c,
       column: 0,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }))
 
     useGraphStore.setState({ graphRows, commits })
@@ -84,7 +86,7 @@ describe('CommitGraph', () => {
 
     render(<CommitGraph />)
 
-    const branchInput = screen.getByPlaceholderText('Filter by branch...')
+    const branchInput = screen.getByPlaceholderText('Branch...')
     await user.type(branchInput, 'f')
 
     // Verify setBranchFilter was called when typing
@@ -104,7 +106,7 @@ describe('CommitGraph', () => {
 
     render(<CommitGraph />)
 
-    const authorInput = screen.getByPlaceholderText('Filter by author...')
+    const authorInput = screen.getByPlaceholderText('Author...')
     await user.type(authorInput, 'J')
 
     // Verify setAuthorFilter was called when typing
@@ -137,7 +139,9 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
-        edges: []
+        edges: [],
+        passThroughEdges: [],
+        incomingEdges: []
       }
     ]
 
@@ -161,7 +165,9 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
-        edges: []
+        edges: [],
+        passThroughEdges: [],
+        incomingEdges: []
       }
     ]
 
@@ -185,7 +191,9 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
-        edges: []
+        edges: [],
+        passThroughEdges: [],
+        incomingEdges: []
       }
     ]
 

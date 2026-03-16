@@ -28,7 +28,9 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit(),
       column: 2,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container } = render(
@@ -47,8 +49,8 @@ describe('GraphRow', () => {
 
     const circle = container.querySelector('circle')
     expect(circle).toBeInTheDocument()
-    // Column 2 * 20px LANE_WIDTH + 10px offset = 50px
-    expect(circle?.getAttribute('cx')).toBe('50')
+    // Column 2 * 24px LANE_WIDTH + 12px offset = 60px
+    expect(circle?.getAttribute('cx')).toBe('60')
   })
 
   it('should render straight line for linear parent', () => {
@@ -61,9 +63,11 @@ describe('GraphRow', () => {
           toColumn: 0,
           fromRow: 0,
           toRow: 1,
-          color: '#4EC9B0'
+          color: '#3498DB'
         }
-      ]
+      ],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container } = render(
@@ -79,7 +83,7 @@ describe('GraphRow', () => {
 
     const line = container.querySelector('line')
     expect(line).toBeInTheDocument()
-    expect(line?.getAttribute('stroke')).toBe('#4EC9B0')
+    expect(line?.getAttribute('stroke')).toBe('#3498DB')
   })
 
   it('should render curved line for merge', () => {
@@ -92,9 +96,11 @@ describe('GraphRow', () => {
           toColumn: 1, // Different column = merge
           fromRow: 0,
           toRow: 1,
-          color: '#569CD6'
+          color: '#9B59B6'
         }
-      ]
+      ],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container } = render(
@@ -110,14 +116,16 @@ describe('GraphRow', () => {
 
     const path = container.querySelector('path')
     expect(path).toBeInTheDocument()
-    expect(path?.getAttribute('stroke')).toBe('#569CD6')
+    expect(path?.getAttribute('stroke')).toBe('#9B59B6')
   })
 
   it('should render ref labels for branches', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ refs: ['main', 'origin/main'] }),
       column: 0,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     render(
@@ -139,7 +147,9 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ refs: ['tag: v1.0.0'] }),
       column: 0,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     render(
@@ -160,7 +170,9 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit(),
       column: 0,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container, rerender } = render(
@@ -175,9 +187,8 @@ describe('GraphRow', () => {
     )
 
     const row = container.firstChild as HTMLElement
-    const classes = row.className.split(' ')
-    // When not selected, should only have hover:bg-kommit-bg-tertiary, not bg-kommit-bg-tertiary
-    expect(classes.includes('bg-kommit-bg-tertiary')).toBe(false)
+    // When not selected, should not have the accent background class
+    expect(row.className).not.toContain('bg-kommit-accent')
 
     rerender(
       <GraphRow
@@ -190,9 +201,9 @@ describe('GraphRow', () => {
       />
     )
 
-    const classesAfter = row.className.split(' ')
-    // When selected, should have bg-kommit-bg-tertiary class
-    expect(classesAfter.includes('bg-kommit-bg-tertiary')).toBe(true)
+    // When selected, should have bg-kommit-accent/10 and border-l-kommit-accent classes
+    expect(row.className).toContain('bg-kommit-accent')
+    expect(row.className).toContain('border-l-kommit-accent')
   })
 
   it('should apply correct color per branch', () => {
@@ -205,9 +216,11 @@ describe('GraphRow', () => {
           toColumn: 0,
           fromRow: 0,
           toRow: 1,
-          color: '#CE9178' // Salmon color
+          color: '#E74C3C' // Red color from new palette
         }
-      ]
+      ],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container } = render(
@@ -222,7 +235,7 @@ describe('GraphRow', () => {
     )
 
     const line = container.querySelector('line')
-    expect(line?.getAttribute('stroke')).toBe('#CE9178')
+    expect(line?.getAttribute('stroke')).toBe('#E74C3C')
   })
 
   it('should truncate long commit messages', () => {
@@ -230,7 +243,9 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ subject: longMessage }),
       column: 0,
-      edges: []
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
     }
 
     const { container } = render(
