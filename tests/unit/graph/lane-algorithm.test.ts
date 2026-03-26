@@ -309,4 +309,131 @@ describe('Lane Assignment', () => {
       }
     }
   })
+
+  // --- Lane convergence / rightward drift prevention tests ---
+
+  it('should not drift rightward on repeated merges', () => {
+    // Simulate a mainline with repeated merge commits from feature branches.
+    // Without convergence, each merge allocates a new lane that persists,
+    // pushing subsequent commits rightward.
+    //
+    // Topology (topological order):
+    //   M3 ---> M2 ---> M1 ---> base
+    //     \       \       \
+    //      f3      f2      f1
+    //
+    // M3 merges f3, M2 merges f2, M1 merges f1. All merge into base.
+    const commits = [
+      createCommit('M3', ['M2', 'f3']),
+      createCommit('M2', ['M1', 'f2']),
+      createCommit('M1', ['base', 'f1']),
+      createCommit('f3', ['M2']),
+      createCommit('f2', ['M1']),
+      createCommit('f1', ['base']),
+      createCommit('base', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    // The mainline (M3 -> M2 -> M1 -> base) should stay in column 0
+    const m3Row = rows.find((r) => r.commit.hash === 'M3')!
+    const m2Row = rows.find((r) => r.commit.hash === 'M2')!
+    const m1Row = rows.find((r) => r.commit.hash === 'M1')!
+    const baseRow = rows.find((r) => r.commit.hash === 'base')!
+
+    expect(m3Row.column).toBe(0)
+    expect(m2Row.column).toBe(0)
+    expect(m1Row.column).toBe(0)
+    expect(baseRow.column).toBe(0)
+
+    // Max column should be small (not drifting rightward)
+    const maxCol = Math.max(...rows.map((r) => r.column))
+    expect(maxCol).toBeLessThanOrEqual(1)
+  })
+
+  it('should converge lanes when first parent is already tracked', () => {
+    // A branch (feat) converges back to mainline.
+    // After feat is processed, its lane should be freed.
+    //
+    // Topology:
+    //   merge(parents=[main1, feat]) -> main1 -> base
+    //                                   feat -> base
+    //
+    // feat's first parent is base, which is already tracked by main1's lane.
+    // So feat's lane should be freed after processing feat.
+    const commits = [
+      createCommit('merge', ['main1', 'feat']),
+      createCommit('main1', ['base']),
+      createCommit('feat', ['base']),
+      createCommit('base', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    // merge and main1 should be in column 0
+    expect(rows[0].column).toBe(0) // merge
+    expect(rows[1].column).toBe(0) // main1
+
+    // After feat is processed (its first parent 'base' is already tracked
+    // in main1's lane), feat's lane should be freed.
+    // A subsequent unrelated commit should be able to reuse column 0 or 1.
+    const maxCol = Math.max(...rows.map((r) => r.column))
+    expect(maxCol).toBeLessThanOrEqual(1)
+  })
+
+  it('should keep mainline at column 0 through multiple merges', () => {
+    // 10 merge commits on mainline, each merging a different feature branch.
+    // The mainline should never leave column 0.
+    const commits: Commit[] = []
+
+    // Build: m9 -> m8 -> ... -> m0 -> root
+    // Each mi merges fi, and fi's parent is m(i-1)
+    for (let i = 9; i >= 0; i--) {
+      const parent = i > 0 ? `m${i - 1}` : 'root'
+      commits.push(createCommit(`m${i}`, [parent, `f${i}`]))
+    }
+    // Feature branches (each branches off the previous merge)
+    for (let i = 9; i >= 0; i--) {
+      const parent = i > 0 ? `m${i - 1}` : 'root'
+      commits.push(createCommit(`f${i}`, [parent]))
+    }
+    commits.push(createCommit('root', []))
+
+    const rows = assignLanes(commits)
+
+    // All mainline commits (m0..m9) should be in column 0
+    for (let i = 0; i <= 9; i++) {
+      const row = rows.find((r) => r.commit.hash === `m${i}`)!
+      expect(row.column).toBe(0)
+    }
+
+    // Max column should be bounded, not growing with number of merges
+    const maxCol = Math.max(...rows.map((r) => r.column))
+    expect(maxCol).toBeLessThanOrEqual(2)
+  })
+
+  it('should free merge-parent lanes after the parent is processed', () => {
+    // After a merge-parent commit is processed, its lane should be freed
+    // so subsequent commits can reuse it.
+    //
+    // Topology:
+    //   merge(parents=[A, B]) -> A -> root
+    //                            B -> root
+    //   X(parents=[root]) — unrelated commit after B
+    //
+    // X should reuse a freed column, not drift to column 2.
+    const commits = [
+      createCommit('merge', ['A', 'B']),
+      createCommit('A', ['root']),
+      createCommit('B', ['root']),
+      createCommit('X', ['root']),
+      createCommit('root', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    const xRow = rows.find((r) => r.commit.hash === 'X')!
+    // X should reuse a freed column (0 or 1), not drift to 2+
+    expect(xRow.column).toBeLessThanOrEqual(1)
+  })
 })

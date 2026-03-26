@@ -11,15 +11,16 @@ import { getBranchColor, BRANCH_COLORS } from './colors'
  * Assigns lanes (columns) to commits and computes edges between them.
  * Commits must be in topological order (as returned by git log --topo-order).
  *
- * Time complexity: O(n) where n = number of commits
+ * Time complexity: O(n * L) where n = commits, L = active lanes (typically small)
  * Space complexity: O(n) for the output GraphRow array
  *
  * Algorithm:
  * 1. Pass 1: Assign columns using a lane tracking array
  *    - Each lane tracks which commit hash it "expects" next
  *    - First parent continues the lane; additional parents (merges) get new lanes
+ *    - Lane convergence: when a commit's first parent is already tracked in
+ *      another lane, the current lane is freed immediately (prevents rightward drift)
  *    - Colors propagate through lanes (all commits on same lane share color)
- *    - Stale lanes (parents that never arrive) are cleaned up
  * 2. Pass 2: Compute edges by connecting each commit to its parents
  *    - Edge color = the lane color of the child commit's lane for first parent,
  *      or the target lane color for merge parents
@@ -29,6 +30,14 @@ import { getBranchColor, BRANCH_COLORS } from './colors'
  */
 export function assignLanes(commits: Commit[]): GraphRow[] {
   if (commits.length === 0) return []
+
+  // Build upfront lookup: hash → position in input array.
+  // Used to detect when a parent has already been processed (appears earlier
+  // in topological order) so we don't create stale lane expectations.
+  const hashToInputIndex = new Map<string, number>()
+  for (let i = 0; i < commits.length; i++) {
+    hashToInputIndex.set(commits[i].hash, i)
+  }
 
   // Pass 1: Assign columns with lane-based color propagation
   const lanes: (string | null)[] = []
@@ -46,10 +55,12 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
     // Find lane expecting this commit hash
     let col = lanes.indexOf(commit.hash)
     let color: string
+    let wasPreAllocated = false
 
     if (col !== -1) {
       // Lane found — inherit its color
       color = laneColors[col]!
+      wasPreAllocated = true
     } else {
       // Not expected by any lane — find a free lane or create one
       col = lanes.indexOf(null)
@@ -63,33 +74,107 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       laneColors[col] = color
     }
 
-    // Lane now expects first parent (if any), keeping same color
+    // Determine whether this lane will continue (track first parent) or be freed,
+    // and specifically whether it will be freed due to convergence (first parent
+    // already tracked in another lane). Only convergence-freed lanes get relocated.
+    let laneWillBeFreed = false
+    let freedDueToConvergence = false
+
     if (commit.parents.length > 0) {
-      lanes[col] = commit.parents[0]
-      // Color stays the same — first parent continues the lane
+      const firstParent = commit.parents[0]
+
+      // Check if the first parent has already been processed (stale reference)
+      const firstParentIdx = hashToInputIndex.get(firstParent)
+      if (firstParentIdx !== undefined && firstParentIdx < i) {
+        laneWillBeFreed = true
+      } else {
+        // Check if the first parent is already expected in another lane (convergence)
+        const existingParentLane = lanes.indexOf(firstParent)
+        if (existingParentLane !== -1 && existingParentLane !== col) {
+          laneWillBeFreed = true
+          freedDueToConvergence = true
+        }
+      }
+    } else {
+      // Root commit — lane will be freed
+      laneWillBeFreed = true
+    }
+
+    // If this commit was pre-allocated to a merge-parent lane that will be freed
+    // due to convergence or stale parent (its branch is ending), try to relocate
+    // it to a more leftward free column. This prevents rightward drift where
+    // merge-parent lanes accumulate at high column indices.
+    //
+    // We do NOT relocate root commits (no parents) because their pre-allocated
+    // column is intentional — it was reserved for the visual edge from the merge.
+    if (wasPreAllocated && laneWillBeFreed && commit.parents.length > 0) {
+      // Free the pre-allocated lane first
+      lanes[col] = null
+      laneColors[col] = null
+
+      // Find the leftmost free lane (which might be to the left of col)
+      const leftCol = lanes.indexOf(null)
+      if (leftCol !== -1 && leftCol < col) {
+        // Relocate to the more leftward lane
+        col = leftCol
+        // Re-assign color for the new lane position
+        color = getLaneColor(commit, i, colorEndRow)
+        laneColors[col] = color
+      } else {
+        // Stay at the current column (re-claim it)
+        laneColors[col] = color
+      }
+    }
+
+    // Now apply the lane continuation/freeing logic
+    if (commit.parents.length > 0) {
+      const firstParent = commit.parents[0]
+      const firstParentIdx = hashToInputIndex.get(firstParent)
+
+      if (firstParentIdx !== undefined && firstParentIdx < i) {
+        // Parent already processed — free the lane
+        lanes[col] = null
+        laneColors[col] = null
+        recordColorEnd(color, i, colorEndRow)
+      } else {
+        const existingParentLane = lanes.indexOf(firstParent)
+        if (existingParentLane !== -1 && existingParentLane !== col) {
+          // Convergence — free the lane
+          lanes[col] = null
+          laneColors[col] = null
+          recordColorEnd(color, i, colorEndRow)
+        } else {
+          // Normal case: lane continues expecting the first parent
+          lanes[col] = firstParent
+        }
+      }
     } else {
       // Root commit — free the lane
       lanes[col] = null
       laneColors[col] = null
-      // Record that this color is now available for reuse
       recordColorEnd(color, i, colorEndRow)
     }
 
     // Additional parents (merges) get their own lanes
     for (let j = 1; j < commit.parents.length; j++) {
       const parentHash = commit.parents[j]
-      let parentCol = lanes.indexOf(parentHash)
+
+      // Skip if parent was already processed (no future commit to consume the lane)
+      const parentIdx = hashToInputIndex.get(parentHash)
+      if (parentIdx !== undefined && parentIdx < i) continue
+
+      const parentCol = lanes.indexOf(parentHash)
       if (parentCol === -1) {
         // Parent not already in a lane, find or create one
-        parentCol = lanes.indexOf(null)
-        if (parentCol === -1) {
-          parentCol = lanes.length
+        let newCol = lanes.indexOf(null)
+        if (newCol === -1) {
+          newCol = lanes.length
           lanes.push(null)
           laneColors.push(null)
         }
-        lanes[parentCol] = parentHash
-        // Merge parent gets its own color (based on the merge parent's eventual branch)
-        laneColors[parentCol] = getMergeParentColor(parentCol, i, colorEndRow)
+        lanes[newCol] = parentHash
+        // Merge parent gets its own color
+        laneColors[newCol] = getMergeParentColor(newCol, i, colorEndRow)
       }
     }
 
@@ -110,11 +195,6 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
     })
     hashToRowIndex.set(commit.hash, i)
   }
-
-  // Post-pass 1: Clean up stale lanes
-  // Any lane still expecting a hash that isn't in hashToRowIndex will never arrive
-  // (pagination boundary or filtered out). We don't need to modify lane assignments
-  // since they're already computed, but this information helps understand the graph.
 
   // Pass 2: Compute edges
   for (let i = 0; i < rows.length; i++) {
