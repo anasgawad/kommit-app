@@ -18,6 +18,16 @@ vi.mock('@tanstack/react-virtual', () => ({
   })
 }))
 
+// Mock GraphSvgOverlay to avoid rendering SVG in tests
+vi.mock('../../../src/renderer/components/graph/GraphSvgOverlay', () => ({
+  GraphSvgOverlay: () => null,
+  ROW_HEIGHT: 36,
+  LANE_WIDTH: 24,
+  NODE_RADIUS: 5,
+  MERGE_NODE_RADIUS: 6,
+  STROKE_WIDTH: 2
+}))
+
 // Helper to create test commits
 function createCommit(hash: string): Commit {
   return {
@@ -42,6 +52,7 @@ describe('CommitGraph', () => {
     const graphRows: GraphRow[] = commits.map((c, i) => ({
       commit: c,
       column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
@@ -139,6 +150,7 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
+        color: '#3498DB',
         edges: [],
         passThroughEdges: [],
         incomingEdges: []
@@ -165,6 +177,7 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
+        color: '#3498DB',
         edges: [],
         passThroughEdges: [],
         incomingEdges: []
@@ -191,6 +204,7 @@ describe('CommitGraph', () => {
       {
         commit: commits[0],
         column: 0,
+        color: '#3498DB',
         edges: [],
         passThroughEdges: [],
         incomingEdges: []

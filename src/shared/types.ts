@@ -120,6 +120,7 @@ export interface DiffFile {
 export interface GraphRow {
   commit: Commit
   column: number
+  color: string // Lane color for this commit (propagated from branch tip)
   edges: GraphEdge[] // Edges originating from this commit (to parents)
   passThroughEdges: PassThroughEdge[] // Edges passing through this row
   incomingEdges: GraphEdge[] // Edges terminating at this commit (from children)

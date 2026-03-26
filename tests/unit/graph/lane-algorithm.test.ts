@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest'
 import { assignLanes } from '../../../src/renderer/graph/lane-algorithm'
 import type { Commit } from '../../../src/shared/types'
+import { BRANCH_COLORS } from '../../../src/renderer/graph/colors'
 
 // Helper to create minimal commit objects for testing
 function createCommit(hash: string, parents: string[] = [], refs: string[] = []): Commit {
@@ -188,5 +189,124 @@ describe('Lane Assignment', () => {
     // Main branch commits should be in column 0
     const mainRows = rows.filter((r) => r.commit.refs.includes('main'))
     expect(mainRows.every((r) => r.column === 0)).toBe(true)
+  })
+
+  // --- New tests for color propagation and pass-through behavior ---
+
+  it('should assign a color to every row', () => {
+    const commits = [
+      createCommit('aaa', ['bbb']),
+      createCommit('bbb', ['ccc']),
+      createCommit('ccc', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    for (const row of rows) {
+      expect(row.color).toBeDefined()
+      expect(typeof row.color).toBe('string')
+      expect(row.color.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('should propagate same color through a linear lane', () => {
+    const commits = [
+      createCommit('aaa', ['bbb']),
+      createCommit('bbb', ['ccc']),
+      createCommit('ccc', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    // All three commits are in lane 0, should have the same color
+    expect(rows[0].color).toBe(rows[1].color)
+    expect(rows[1].color).toBe(rows[2].color)
+  })
+
+  it('should use branch ref for color when available', () => {
+    const commits = [createCommit('aaa', ['bbb'], ['main']), createCommit('bbb', [])]
+
+    const rows = assignLanes(commits)
+
+    // Both should have a color from BRANCH_COLORS
+    expect(BRANCH_COLORS).toContain(rows[0].color)
+    // Color propagates to bbb since it's in the same lane
+    expect(rows[0].color).toBe(rows[1].color)
+  })
+
+  it('should NOT generate pass-through edges for cross-column edges', () => {
+    // Create a merge scenario with cross-column edges
+    const commits = [
+      createCommit('aaa', ['bbb', 'ccc']), // merge
+      createCommit('bbb', ['ddd']),
+      createCommit('ccc', ['ddd']),
+      createCommit('ddd', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    // Find any cross-column edges
+    const hasCrossColumn = rows.some((r) => r.edges.some((e) => e.fromColumn !== e.toColumn))
+
+    if (hasCrossColumn) {
+      // Check that intermediate rows don't have pass-throughs at the
+      // destination column of cross-column edges
+      for (const row of rows) {
+        for (const edge of row.edges) {
+          if (edge.fromColumn !== edge.toColumn) {
+            // For intermediate rows between fromRow+1 and toRow-1,
+            // there should be NO pass-through at edge.toColumn
+            for (let i = edge.fromRow + 1; i < edge.toRow; i++) {
+              const intermediate = rows[i]
+              const hasPTAtToCol = intermediate.passThroughEdges.some(
+                (pte) => pte.column === edge.toColumn
+              )
+              // Pass-throughs at toColumn should NOT exist for cross-column edges
+              // (unless another same-column edge also passes through there)
+              const hasSameColEdgeAtThatCol = rows.some((r) =>
+                r.edges.some(
+                  (e) =>
+                    e.fromColumn === edge.toColumn &&
+                    e.toColumn === edge.toColumn &&
+                    e.fromRow < i &&
+                    e.toRow > i
+                )
+              )
+              if (!hasSameColEdgeAtThatCol) {
+                expect(hasPTAtToCol).toBe(false)
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+
+  it('should generate pass-through edges for same-column edges', () => {
+    // Linear history spanning several rows
+    const commits = [
+      createCommit('aaa', ['ddd']), // spans 3 rows to reach ddd
+      createCommit('bbb', []), // unrelated, sits in between
+      createCommit('ccc', []), // unrelated, sits in between
+      createCommit('ddd', [])
+    ]
+
+    const rows = assignLanes(commits)
+
+    // Find the edge from aaa to ddd
+    const aaaRow = rows.find((r) => r.commit.hash === 'aaa')
+    const aaaEdge = aaaRow?.edges.find((e) => {
+      const parentRow = rows.find((r) => r.commit.hash === 'ddd')
+      return parentRow && e.toRow === rows.indexOf(parentRow)
+    })
+
+    if (aaaEdge && aaaEdge.fromColumn === aaaEdge.toColumn) {
+      // There should be pass-through edges in intermediate rows
+      for (let i = aaaEdge.fromRow + 1; i < aaaEdge.toRow; i++) {
+        const intermediate = rows[i]
+        const hasPT = intermediate.passThroughEdges.some((pte) => pte.column === aaaEdge.fromColumn)
+        expect(hasPT).toBe(true)
+      }
+    }
   })
 })

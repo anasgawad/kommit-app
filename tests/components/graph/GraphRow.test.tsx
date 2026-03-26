@@ -1,5 +1,6 @@
 // ============================================================
 // Kommit — GraphRow Component Tests
+// Tests for the text-only commit row (SVG is in GraphSvgOverlay)
 // ============================================================
 
 import { describe, it, expect, vi } from 'vitest'
@@ -23,121 +24,64 @@ function createCommit(overrides: Partial<Commit> = {}): Commit {
   }
 }
 
+function renderGraphRow(overrides: Partial<Parameters<typeof GraphRow>[0]> = {}) {
+  const graphRow: GraphRowType = {
+    commit: createCommit(),
+    column: 0,
+    color: '#3498DB',
+    edges: [],
+    passThroughEdges: [],
+    incomingEdges: []
+  }
+
+  return render(
+    <GraphRow
+      graphRow={overrides.graphRow ?? graphRow}
+      rowIndex={overrides.rowIndex ?? 0}
+      isSelected={overrides.isSelected ?? false}
+      graphColumnWidth={overrides.graphColumnWidth ?? 130}
+      onSelect={overrides.onSelect ?? vi.fn()}
+      onContextMenu={overrides.onContextMenu ?? vi.fn()}
+    />
+  )
+}
+
 describe('GraphRow', () => {
-  it('should render commit node at correct x position', () => {
+  it('should render commit message', () => {
     const graphRow: GraphRowType = {
-      commit: createCommit(),
-      column: 2,
+      commit: createCommit({ subject: 'Fix the build' }),
+      column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
 
-    const { container } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={5}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
+    renderGraphRow({ graphRow })
 
-    const svg = container.querySelector('svg')
-    expect(svg).toBeInTheDocument()
-
-    const circle = container.querySelector('circle')
-    expect(circle).toBeInTheDocument()
-    // Column 2 * 24px LANE_WIDTH + 12px offset = 60px
-    expect(circle?.getAttribute('cx')).toBe('60')
+    expect(screen.getByText('Fix the build')).toBeInTheDocument()
   })
 
-  it('should render straight line for linear parent', () => {
-    const graphRow: GraphRowType = {
-      commit: createCommit({ hash: 'aaa', parents: ['bbb'] }),
-      column: 0,
-      edges: [
-        {
-          fromColumn: 0,
-          toColumn: 0,
-          fromRow: 0,
-          toRow: 1,
-          color: '#3498DB'
-        }
-      ],
-      passThroughEdges: [],
-      incomingEdges: []
-    }
+  it('should render graph column spacer with correct width', () => {
+    const { container } = renderGraphRow({ graphColumnWidth: 200 })
 
-    const { container } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
-
-    const line = container.querySelector('line')
-    expect(line).toBeInTheDocument()
-    expect(line?.getAttribute('stroke')).toBe('#3498DB')
-  })
-
-  it('should render curved line for merge', () => {
-    const graphRow: GraphRowType = {
-      commit: createCommit({ hash: 'merge', parents: ['aaa', 'bbb'] }),
-      column: 0,
-      edges: [
-        {
-          fromColumn: 0,
-          toColumn: 1, // Different column = merge
-          fromRow: 0,
-          toRow: 1,
-          color: '#9B59B6'
-        }
-      ],
-      passThroughEdges: [],
-      incomingEdges: []
-    }
-
-    const { container } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={3}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
-
-    const path = container.querySelector('path')
-    expect(path).toBeInTheDocument()
-    expect(path?.getAttribute('stroke')).toBe('#9B59B6')
+    // First child of the row div should be the spacer div
+    const row = container.firstChild as HTMLElement
+    const spacer = row.children[0] as HTMLElement
+    expect(spacer.style.width).toBe('200px')
   })
 
   it('should render ref labels for branches', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ refs: ['main', 'origin/main'] }),
       column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
 
-    render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
+    renderGraphRow({ graphRow })
 
     expect(screen.getByText('main')).toBeInTheDocument()
     expect(screen.getByText('origin/main')).toBeInTheDocument()
@@ -147,95 +91,78 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ refs: ['tag: v1.0.0'] }),
       column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
 
-    render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
+    renderGraphRow({ graphRow })
 
     expect(screen.getByText('v1.0.0')).toBeInTheDocument()
   })
 
   it('should highlight selected commit', () => {
+    const { container, rerender } = renderGraphRow({ isSelected: false })
+
+    const row = container.firstChild as HTMLElement
+    expect(row.className).not.toContain('bg-kommit-accent')
+
     const graphRow: GraphRowType = {
       commit: createCommit(),
       column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
-
-    const { container, rerender } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
-
-    const row = container.firstChild as HTMLElement
-    // When not selected, should not have the accent background class
-    expect(row.className).not.toContain('bg-kommit-accent')
 
     rerender(
       <GraphRow
         graphRow={graphRow}
         rowIndex={0}
         isSelected={true}
-        maxColumns={2}
+        graphColumnWidth={130}
         onSelect={vi.fn()}
         onContextMenu={vi.fn()}
       />
     )
 
-    // When selected, should have bg-kommit-accent/10 and border-l-kommit-accent classes
     expect(row.className).toContain('bg-kommit-accent')
     expect(row.className).toContain('border-l-kommit-accent')
   })
 
-  it('should apply correct color per branch', () => {
+  it('should call onSelect when clicked', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
     const graphRow: GraphRowType = {
-      commit: createCommit(),
+      commit: createCommit({ hash: 'deadbeef' }),
       column: 0,
-      edges: [
-        {
-          fromColumn: 0,
-          toColumn: 0,
-          fromRow: 0,
-          toRow: 1,
-          color: '#E74C3C' // Red color from new palette
-        }
-      ],
+      color: '#3498DB',
+      edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
 
-    const { container } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
+    renderGraphRow({ graphRow, onSelect })
 
-    const line = container.querySelector('line')
-    expect(line?.getAttribute('stroke')).toBe('#E74C3C')
+    await user.click(screen.getByText('Test commit message'))
+    expect(onSelect).toHaveBeenCalledWith('deadbeef')
+  })
+
+  it('should render author name', () => {
+    const graphRow: GraphRowType = {
+      commit: createCommit({ author: 'Jane Doe' }),
+      column: 0,
+      color: '#3498DB',
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
+    }
+
+    renderGraphRow({ graphRow })
+
+    expect(screen.getByText('Jane Doe')).toBeInTheDocument()
   })
 
   it('should truncate long commit messages', () => {
@@ -243,24 +170,40 @@ describe('GraphRow', () => {
     const graphRow: GraphRowType = {
       commit: createCommit({ subject: longMessage }),
       column: 0,
+      color: '#3498DB',
       edges: [],
       passThroughEdges: [],
       incomingEdges: []
     }
 
-    const { container } = render(
-      <GraphRow
-        graphRow={graphRow}
-        rowIndex={0}
-        isSelected={false}
-        maxColumns={2}
-        onSelect={vi.fn()}
-        onContextMenu={vi.fn()}
-      />
-    )
+    const { container } = renderGraphRow({ graphRow })
 
     const messageSpan = container.querySelector('.truncate')
     expect(messageSpan).toBeInTheDocument()
     expect(messageSpan?.textContent).toBe(longMessage)
+  })
+
+  it('should render abbreviated hash', () => {
+    const graphRow: GraphRowType = {
+      commit: createCommit({ abbreviatedHash: 'abc1234' }),
+      column: 0,
+      color: '#3498DB',
+      edges: [],
+      passThroughEdges: [],
+      incomingEdges: []
+    }
+
+    renderGraphRow({ graphRow })
+
+    expect(screen.getByText('abc1234')).toBeInTheDocument()
+  })
+
+  it('should not render SVG elements (graph is in overlay)', () => {
+    const { container } = renderGraphRow()
+
+    expect(container.querySelector('svg')).toBeNull()
+    expect(container.querySelector('circle')).toBeNull()
+    expect(container.querySelector('line')).toBeNull()
+    expect(container.querySelector('path')).toBeNull()
   })
 })

@@ -1,25 +1,22 @@
 // ============================================================
 // Kommit — Graph Row Component
-// Renders a single commit row with SVG graph visualization
-// GitKraken-inspired professional styling
+// Renders commit info text for a single row (text only)
+// Graph lines/nodes are rendered by the GraphSvgOverlay
 // ============================================================
 
 import type { GraphRow as GraphRowType } from '@shared/types'
 import { formatDistanceToNow } from 'date-fns'
 import { getInitials, getAvatarColor } from '../../utils/avatar'
+import { ROW_HEIGHT } from './GraphSvgOverlay'
 
-// Enhanced sizing for better visual clarity (GitKraken-inspired)
-export const LANE_WIDTH = 24
-export const ROW_HEIGHT = 36
-export const NODE_RADIUS = 5
-export const MERGE_NODE_RADIUS = 6
-export const STROKE_WIDTH = 2.5
+// Re-export ROW_HEIGHT for backward compatibility
+export { ROW_HEIGHT }
 
 interface GraphRowProps {
   graphRow: GraphRowType
   rowIndex: number
   isSelected: boolean
-  maxColumns: number
+  graphColumnWidth: number
   onSelect: (hash: string) => void
   onContextMenu: (hash: string, event: React.MouseEvent) => void
 }
@@ -41,28 +38,12 @@ const TagIcon = () => (
 
 export function GraphRow({
   graphRow,
-  rowIndex,
   isSelected,
-  maxColumns,
+  graphColumnWidth,
   onSelect,
   onContextMenu
 }: GraphRowProps) {
-  const { commit, column, edges, passThroughEdges, incomingEdges } = graphRow
-
-  // Cap the SVG width to prevent it from taking too much space
-  const effectiveMaxColumns = Math.min(maxColumns, 10)
-  const svgWidth = (effectiveMaxColumns + 1) * LANE_WIDTH + 10
-
-  // Detect merge commit (has more than 1 parent)
-  const isMerge = commit.parents.length > 1
-
-  // Get the node color from edges
-  const nodeColor =
-    edges.length > 0
-      ? edges[0].color
-      : incomingEdges.length > 0
-        ? incomingEdges[0].color
-        : '#3498DB' // default bright blue
+  const { commit } = graphRow
 
   const handleClick = () => {
     onSelect(commit.hash)
@@ -71,33 +52,6 @@ export function GraphRow({
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
     onContextMenu(commit.hash, e)
-  }
-
-  // Render curved path for cross-column edges (smoother S-curve)
-  const renderCurvedEdge = (
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    color: string,
-    key: string
-  ) => {
-    // Create a smooth S-curve using cubic Bezier
-    // Control points create a natural flow from node to destination
-    const midY = y1 + (y2 - y1) * 0.6
-    const d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`
-
-    return (
-      <path
-        key={key}
-        d={d}
-        stroke={color}
-        strokeWidth={STROKE_WIDTH}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    )
   }
 
   return (
@@ -111,97 +65,8 @@ export function GraphRow({
       onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
-      {/* SVG graph section */}
-      <svg
-        width={svgWidth}
-        height={ROW_HEIGHT}
-        className="flex-shrink-0"
-        style={{ width: `${Math.min(svgWidth, 260)}px` }}
-      >
-        {/* 1. Draw pass-through edges (full height vertical lines) with slight opacity for depth */}
-        {passThroughEdges.map((passThrough, i) => {
-          const x = passThrough.column * LANE_WIDTH + LANE_WIDTH / 2
-          return (
-            <line
-              key={`pass-${i}`}
-              x1={x}
-              y1={0}
-              x2={x}
-              y2={ROW_HEIGHT}
-              stroke={passThrough.color}
-              strokeWidth={STROKE_WIDTH}
-              strokeLinecap="round"
-              opacity={0.7}
-            />
-          )
-        })}
-
-        {/* 2. Draw incoming edges (from top of row to commit node) */}
-        {incomingEdges.map((edge, i) => {
-          const x2 = column * LANE_WIDTH + LANE_WIDTH / 2
-          const y2 = ROW_HEIGHT / 2
-
-          // Always draw straight line from top to node center
-          return (
-            <line
-              key={`in-${i}`}
-              x1={x2}
-              y1={0}
-              x2={x2}
-              y2={y2}
-              stroke={edge.color}
-              strokeWidth={STROKE_WIDTH}
-              strokeLinecap="round"
-            />
-          )
-        })}
-
-        {/* 3. Draw outgoing edges (from commit node to bottom of row or towards parent column) */}
-        {edges.map((edge, i) => {
-          const x1 = column * LANE_WIDTH + LANE_WIDTH / 2
-          const y1 = ROW_HEIGHT / 2
-          const x2 = edge.toColumn * LANE_WIDTH + LANE_WIDTH / 2
-
-          if (edge.fromColumn === edge.toColumn) {
-            // Straight line from node to bottom (same column)
-            return (
-              <line
-                key={`out-${i}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={ROW_HEIGHT}
-                stroke={edge.color}
-                strokeWidth={STROKE_WIDTH}
-                strokeLinecap="round"
-              />
-            )
-          } else {
-            // Cross-column edge: smooth curved path
-            return renderCurvedEdge(x1, y1, x2, ROW_HEIGHT, edge.color, `out-${i}`)
-          }
-        })}
-
-        {/* 4. Draw commit node (circle) on top of all lines */}
-        <circle
-          cx={column * LANE_WIDTH + LANE_WIDTH / 2}
-          cy={ROW_HEIGHT / 2}
-          r={isMerge ? MERGE_NODE_RADIUS : NODE_RADIUS}
-          fill={nodeColor}
-          className="graph-node"
-        />
-
-        {/* Merge indicator: inner ring for merge commits */}
-        {isMerge && (
-          <circle
-            cx={column * LANE_WIDTH + LANE_WIDTH / 2}
-            cy={ROW_HEIGHT / 2}
-            r={NODE_RADIUS - 1.5}
-            fill="#1e1e2e"
-            className="graph-node-inner"
-          />
-        )}
-      </svg>
+      {/* Graph column spacer — the SVG overlay draws over this area */}
+      <div className="flex-shrink-0" style={{ width: `${graphColumnWidth}px` }} />
 
       {/* Commit info section - columnar layout */}
       <div className="flex-1 flex items-center gap-2 px-3 overflow-hidden min-w-0">

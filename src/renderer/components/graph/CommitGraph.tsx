@@ -4,11 +4,12 @@
 // GitKraken-inspired professional styling
 // ============================================================
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useGraphStore } from '../../stores/graph-store'
 import { getMaxColumn } from '../../graph/lane-algorithm'
-import { GraphRow, ROW_HEIGHT, LANE_WIDTH } from './GraphRow'
+import { GraphRow } from './GraphRow'
+import { GraphSvgOverlay, ROW_HEIGHT, LANE_WIDTH } from './GraphSvgOverlay'
 
 /**
  * SVG Icons for toolbar and context menu
@@ -106,6 +107,10 @@ export function CommitGraph() {
     hash: string
   } | null>(null)
 
+  // Scroll tracking for SVG overlay
+  const [scrollTop, setScrollTop] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(0)
+
   // Keyboard navigation
   const [focusedIndex, setFocusedIndex] = useState<number>(-1)
 
@@ -123,23 +128,32 @@ export function CommitGraph() {
   const effectiveMaxColumns = Math.min(maxColumn, 10)
   const graphColumnWidth = Math.min((effectiveMaxColumns + 1) * LANE_WIDTH + 10, 260)
 
-  // Load more on scroll near bottom
+  // Scroll handler — tracks position for SVG overlay and triggers load-more
+  const handleScroll = useCallback(() => {
+    const parent = parentRef.current
+    if (!parent) return
+
+    setScrollTop(parent.scrollTop)
+    setViewportHeight(parent.clientHeight)
+
+    const { scrollTop: st, scrollHeight, clientHeight } = parent
+    const scrolledPercentage = (st + clientHeight) / scrollHeight
+    if (scrolledPercentage > 0.8 && !isLoading && hasMore) {
+      loadMore()
+    }
+  }, [isLoading, hasMore, loadMore])
+
+  // Load more on scroll near bottom + track scroll position
   useEffect(() => {
     const parent = parentRef.current
     if (!parent) return
 
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = parent
-      const scrolledPercentage = (scrollTop + clientHeight) / scrollHeight
-
-      if (scrolledPercentage > 0.8 && !isLoading && hasMore) {
-        loadMore()
-      }
-    }
+    // Initialize viewport height
+    setViewportHeight(parent.clientHeight)
 
     parent.addEventListener('scroll', handleScroll)
     return () => parent.removeEventListener('scroll', handleScroll)
-  }, [isLoading, hasMore, loadMore])
+  }, [handleScroll])
 
   // Keyboard navigation
   useEffect(() => {
@@ -338,6 +352,17 @@ export function CommitGraph() {
               position: 'relative'
             }}
           >
+            {/* Single SVG overlay for all graph lines and nodes */}
+            <GraphSvgOverlay
+              graphRows={graphRows}
+              maxColumn={maxColumn}
+              totalHeight={rowVirtualizer.getTotalSize()}
+              scrollTop={scrollTop}
+              viewportHeight={viewportHeight}
+              selectedCommitHash={selectedCommitHash}
+            />
+
+            {/* Virtualized commit info rows (text only — no per-row SVG) */}
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const graphRow = graphRows[virtualRow.index]
               return (
@@ -356,7 +381,7 @@ export function CommitGraph() {
                     graphRow={graphRow}
                     rowIndex={virtualRow.index}
                     isSelected={graphRow.commit.hash === selectedCommitHash}
-                    maxColumns={maxColumn}
+                    graphColumnWidth={graphColumnWidth}
                     onSelect={handleSelect}
                     onContextMenu={handleContextMenu}
                   />
