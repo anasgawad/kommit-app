@@ -46,8 +46,10 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
   const hashToRowIndex = new Map<string, number>()
 
   // Track which color indices are in use, for reuse when lanes are freed
-  // colorEndRow[i] = the last row where color index i was used
-  const colorEndRow: number[] = []
+  // colorEndRow[i] = the last row where BRANCH_COLORS[i] was used
+  // Pre-initialized to -1 (available) for all 10 palette colors so that
+  // colors assigned via getBranchColor() can be properly freed/recycled
+  const colorEndRow: number[] = new Array(BRANCH_COLORS.length).fill(-1)
 
   for (let i = 0; i < commits.length; i++) {
     const commit = commits[i]
@@ -58,9 +60,25 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
     let wasPreAllocated = false
 
     if (col !== -1) {
-      // Lane found — inherit its color
+      // Lane found — inherit its color by default
       color = laneColors[col]!
       wasPreAllocated = true
+
+      // Re-color the lane if this commit carries branch refs.
+      // In a linear history, multiple branch tips sit on the same lane.
+      // Each segment should reflect the branch that "owns" it.
+      const refColor = getColorFromRefs(commit)
+      if (refColor !== null && refColor !== color) {
+        // End the previous color's usage and switch to the ref-based color
+        recordColorEnd(color, i, colorEndRow)
+        color = refColor
+        laneColors[col] = color
+        // Mark new color as in-use
+        const colorIndex = BRANCH_COLORS.indexOf(color)
+        if (colorIndex !== -1) {
+          colorEndRow[colorIndex] = Infinity
+        }
+      }
     } else {
       // Not expected by any lane — find a free lane or create one
       col = lanes.indexOf(null)
@@ -213,9 +231,9 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       const fromColumn = row.column
       const toColumn = parentRow.column
 
-      // Edge color: first parent uses the lane color (continues the branch),
-      // merge parents use the child's lane color (the merge line comes from the child)
-      const color = p === 0 ? row.color : row.color
+      // Edge color: first parent uses the child's lane color (continues the branch),
+      // merge parents use the parent's lane color (shows the merged branch's color)
+      const color = p === 0 ? row.color : parentRow.color
 
       const edge: GraphEdge = {
         fromColumn,
@@ -258,25 +276,80 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
 }
 
 /**
+ * Extracts a deterministic branch color from a commit's refs, if any.
+ * Returns null if the commit has no usable branch refs.
+ * Handles "HEAD -> branchname" refs and strips remote prefixes.
+ */
+function getColorFromRefs(commit: Commit): string | null {
+  if (commit.refs.length === 0) return null
+  for (const ref of commit.refs) {
+    const trimmed = ref.trim()
+    if (!trimmed || trimmed === 'HEAD') continue
+    if (trimmed.startsWith('tag:')) continue
+
+    // Extract branch name from "HEAD -> branchname" format
+    let branchRef = trimmed
+    if (trimmed.startsWith('HEAD -> ')) {
+      branchRef = trimmed.slice('HEAD -> '.length)
+    }
+
+    if (branchRef) {
+      // Strip known remote prefix (e.g., "origin/main" -> "main")
+      // Only strip if it looks like a remote ref (contains "/" and first segment
+      // matches a remote name pattern). We strip only the first segment for
+      // remote-tracking refs.
+      const branchName = stripRemotePrefix(branchRef)
+      return getBranchColor(branchName)
+    }
+  }
+  return null
+}
+
+/**
+ * Strips the remote prefix from a ref name.
+ * "origin/main" -> "main", "origin/feature/foo" -> "feature/foo"
+ * Local branches like "main" or "feature/foo" are returned as-is.
+ *
+ * Heuristic: if the first segment is a common remote name (origin, upstream,
+ * etc.) or the ref has 2+ slashes, strip the first segment.
+ * For refs with exactly one slash like "feature/foo", we keep as-is since
+ * that's more likely a local branch name with a namespace.
+ */
+function stripRemotePrefix(ref: string): string {
+  const slashIdx = ref.indexOf('/')
+  if (slashIdx === -1) return ref // No slash — local branch like "main"
+
+  const firstSegment = ref.slice(0, slashIdx)
+  const rest = ref.slice(slashIdx + 1)
+
+  // Known remote names — strip if the first segment matches
+  const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
+  if (knownRemotes.includes(firstSegment)) {
+    return rest
+  }
+
+  // If there's another slash after the first segment, the first segment
+  // might be a remote name (e.g., "myremote/feature/foo")
+  // But we can't know for sure, so keep as-is to avoid mangling local
+  // branch names like "copilot/implement-vertical-sidebar"
+  return ref
+}
+
+/**
  * Determines the lane color for a new lane based on the commit's refs.
  * Uses VS Code Git Graph-style color reuse: picks a color that hasn't been
  * used since a previous branch ended.
  */
 function getLaneColor(commit: Commit, rowIndex: number, colorEndRow: number[]): string {
   // If the commit has branch refs, use a deterministic color from that branch name
-  if (commit.refs.length > 0) {
-    for (const ref of commit.refs) {
-      const trimmed = ref.trim()
-      if (
-        trimmed &&
-        !trimmed.startsWith('tag:') &&
-        trimmed !== 'HEAD' &&
-        !trimmed.startsWith('HEAD ->')
-      ) {
-        const branchName = trimmed.replace(/^[^/]+\//, '')
-        return getBranchColor(branchName)
-      }
+  const refColor = getColorFromRefs(commit)
+  if (refColor !== null) {
+    // Mark this color as in-use in colorEndRow so it can be properly freed later
+    const colorIndex = BRANCH_COLORS.indexOf(refColor)
+    if (colorIndex !== -1) {
+      colorEndRow[colorIndex] = Infinity
     }
+    return refColor
   }
 
   // No useful ref — pick an available color (one whose previous branch has ended)
@@ -294,21 +367,29 @@ function getMergeParentColor(_laneIndex: number, rowIndex: number, colorEndRow: 
 /**
  * VS Code Git Graph-style color reuse: finds a color whose previous branch
  * ended before this row, so the color can be reused without confusion.
- * If no color is available, cycles through the palette.
+ * colorEndRow is indexed by BRANCH_COLORS palette index.
  */
 function getAvailableColor(rowIndex: number, colorEndRow: number[]): string {
-  for (let i = 0; i < colorEndRow.length; i++) {
+  for (let i = 0; i < BRANCH_COLORS.length; i++) {
     if (rowIndex > colorEndRow[i]) {
       // This color is available — its previous branch ended before this row
       colorEndRow[i] = Infinity // Mark as in-use until freed
-      return BRANCH_COLORS[i % BRANCH_COLORS.length]
+      return BRANCH_COLORS[i]
     }
   }
 
-  // No reusable color — allocate a new one
-  const newIndex = colorEndRow.length
-  colorEndRow.push(Infinity) // Mark as in-use
-  return BRANCH_COLORS[newIndex % BRANCH_COLORS.length]
+  // All colors are in use — pick the one that was freed longest ago
+  // (smallest colorEndRow value), falling back to cycling
+  let bestIndex = 0
+  let bestEnd = colorEndRow[0]
+  for (let i = 1; i < BRANCH_COLORS.length; i++) {
+    if (colorEndRow[i] < bestEnd) {
+      bestEnd = colorEndRow[i]
+      bestIndex = i
+    }
+  }
+  colorEndRow[bestIndex] = Infinity
+  return BRANCH_COLORS[bestIndex]
 }
 
 /**

@@ -69,3 +69,36 @@ export function getBranchColorClass(branchName: string): string {
 export function getDefaultColor(): string {
   return BRANCH_COLORS[8] // bright blue
 }
+
+/**
+ * Gets a deterministic color for a ref string as it appears in git log %D output.
+ * Handles "HEAD -> branchname", "origin/branchname", "tag: v1.0", etc.
+ * Strips remote prefixes so local and remote refs for the same branch get the same color.
+ */
+export function getRefColor(ref: string): string {
+  const trimmed = ref.trim()
+  if (!trimmed || trimmed === 'HEAD') return BRANCH_COLORS[8]
+
+  // Extract branch name from "HEAD -> branchname"
+  let branchRef = trimmed
+  if (trimmed.startsWith('HEAD -> ')) {
+    branchRef = trimmed.slice('HEAD -> '.length)
+  }
+
+  // Strip tag prefix
+  if (branchRef.startsWith('tag: ')) {
+    branchRef = branchRef.slice('tag: '.length)
+  }
+
+  // Strip known remote prefixes (origin/, upstream/, etc.)
+  const slashIdx = branchRef.indexOf('/')
+  if (slashIdx !== -1) {
+    const firstSegment = branchRef.slice(0, slashIdx)
+    const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
+    if (knownRemotes.includes(firstSegment)) {
+      branchRef = branchRef.slice(slashIdx + 1)
+    }
+  }
+
+  return getBranchColor(branchRef)
+}

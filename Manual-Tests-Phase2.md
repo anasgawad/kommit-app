@@ -18,36 +18,36 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Open a repository and verify the commit graph renders correctly
 
-- [ ] Commit graph appears in the main content area
-- [ ] Each commit shows: graph visualization (node + edges), abbreviated hash, subject, author, and relative date
-- [ ] Commits are ordered chronologically (newest first)
-- [ ] Graph lanes (columns) are assigned correctly for linear history
+- [✅] Commit graph appears in the main content area
+- [✅] Each commit shows: graph visualization (node + edges), abbreviated hash, subject, author, and relative date
+- [✅] Commits are ordered chronologically (newest first)
+- [✅] Graph lanes (columns) are assigned correctly for linear history
 
 ### 1.2 Merge Visualization
 
 **Test:** View repository with merge commits
 
-- [ ] Merge commits show curved lines connecting parent branches
-- [ ] Linear parent (first parent) continues on same lane
-- [ ] Additional parents show merge edges from different columns
-- [ ] Colors are distinct for different branches
+- [✅] Merge commits show curved lines connecting parent branches
+- [✅] Linear parent (first parent) continues on same lane
+- [✅] Additional parents show merge edges from different columns
+- [✅] Colors are distinct for different branches
 
 ### 1.3 Branch Colors
 
 **Test:** Verify branch colors are deterministic
 
-- [ ] Same branch name always gets same color across sessions
-- [ ] 8 distinct colors cycle for different branches
-- [ ] Colors are visible against dark background
+- [✅] Same branch name always gets same color across sessions
+- [✅] 10 distinct colors cycle for different branches
+- [✅] Colors are visible against dark background
 
 ### 1.4 Ref Labels (Branches & Tags)
 
 **Test:** View commits with branches and tags
 
-- [ ] Branch names appear as badges next to commit message
-- [ ] Tags appear with different styling (if present)
-- [ ] Remote branches (e.g., `origin/main`) are distinguished
-- [ ] Multiple refs on same commit are all visible
+- [✅] Branch names appear as badges next to commit message
+- [✅] Tags appear with different styling (if present)
+- [✅] Remote branches (e.g., `origin/main`) are distinguished
+- [✅] Multiple refs on same commit are all visible
 
 ---
 

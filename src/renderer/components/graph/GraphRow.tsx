@@ -7,6 +7,7 @@
 import type { GraphRow as GraphRowType } from '@shared/types'
 import { formatDistanceToNow } from 'date-fns'
 import { getInitials, getAvatarColor } from '../../utils/avatar'
+import { getRefColor } from '../../graph/colors'
 import { ROW_HEIGHT } from './GraphSvgOverlay'
 
 // Re-export ROW_HEIGHT for backward compatibility
@@ -91,6 +92,15 @@ export function GraphRow({
                 const isHead = trimmed.startsWith('HEAD ->')
                 const isBranch = !isTag && !isHead
 
+                // Detect remote-tracking branches (e.g., "origin/main", "upstream/dev")
+                const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
+                const firstSlash = trimmed.indexOf('/')
+                const isRemote =
+                  isBranch &&
+                  !isHead &&
+                  firstSlash !== -1 &&
+                  knownRemotes.includes(trimmed.slice(0, firstSlash))
+
                 if (!isBranch && !isTag && !isHead) return null
 
                 const label = isTag
@@ -99,19 +109,31 @@ export function GraphRow({
                     ? trimmed.replace('HEAD -> ', '')
                     : trimmed
 
+                // Get deterministic per-branch color
+                const refColor = getRefColor(trimmed)
+
                 return (
                   <span
                     key={i}
                     className={`
                       inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium
-                      ${
-                        isTag
-                          ? 'bg-kommit-warning/15 text-kommit-warning'
-                          : isHead
-                            ? 'bg-kommit-accent/20 text-kommit-accent font-semibold'
-                            : 'bg-kommit-success/15 text-kommit-success'
-                      }
+                      ${isTag ? 'bg-kommit-warning/15 text-kommit-warning' : ''}
+                      ${isHead ? 'font-semibold' : ''}
                     `}
+                    style={
+                      isTag
+                        ? undefined
+                        : isRemote
+                          ? {
+                              color: refColor,
+                              border: `1px dashed ${refColor}80`, // 50% opacity border
+                              backgroundColor: 'transparent'
+                            }
+                          : {
+                              color: refColor,
+                              backgroundColor: refColor + '26' // ~15% opacity
+                            }
+                    }
                     title={ref}
                   >
                     {isTag ? <TagIcon /> : <BranchIcon />}
