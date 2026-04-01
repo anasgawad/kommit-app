@@ -57,19 +57,19 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Open repository with 1000+ commits
 
-- [ ] Initial load is fast (< 2 seconds)
-- [ ] Scrolling is smooth without stuttering
-- [ ] Only visible commits are rendered (check dev tools DOM)
-- [ ] Scrolling up/down maintains smooth performance
+- [✅] Initial load is fast (< 2 seconds)
+- [✅] Scrolling is smooth without stuttering
+- [✅] Only visible commits are rendered (check dev tools DOM)
+- [✅] Scrolling up/down maintains smooth performance
 
 ### 2.2 Infinite Scroll / Pagination
 
 **Test:** Scroll to bottom of commit list
 
-- [ ] More commits load automatically when reaching 80% scroll
-- [ ] Loading indicator appears during fetch
-- [ ] No duplicate commits appear
-- [ ] Scrolling continues smoothly after load
+- [✅] More commits load automatically when reaching 80% scroll
+- [✅] Loading indicator appears during fetch
+- [✅] No duplicate commits appear
+- [✅] Scrolling continues smoothly after load
 
 ---
 
@@ -79,19 +79,19 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Use branch filter input
 
-- [ ] Type branch name (e.g., `main`)
-- [ ] Graph updates to show only commits from that branch
-- [ ] `--all` flag is disabled when filtering by branch
-- [ ] Clearing filter restores all branches
+- [✅] Type branch name (e.g., `main`)
+- [✅] Graph updates to show only commits from that branch
+- [✅] `--all` flag is disabled when filtering by branch
+- [✅] Clearing filter restores all branches
 
 ### 3.2 Author Filter
 
 **Test:** Use author filter input
 
-- [ ] Type author name or email fragment
-- [ ] Graph filters to show only commits by matching authors
-- [ ] Partial matches work (e.g., "John" matches "John Doe")
-- [ ] Clearing filter restores all commits
+- [✅] Type author name or email fragment
+- [✅] Graph filters to show only commits by matching authors
+- [✅] Partial matches work (e.g., "John" matches "John Doe")
+- [✅] Clearing filter restores all commits
 
 ### 3.3 Search by Message
 

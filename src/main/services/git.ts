@@ -165,9 +165,15 @@ export class GitService {
       const raw = await this.exec(args, repoPath)
       return parseLog(raw)
     } catch (error) {
-      // Empty repo (no commits yet) returns an error
-      if (error instanceof GitError && error.stderr.includes('does not have any commits')) {
-        return []
+      if (error instanceof GitError) {
+        // Empty repo (no commits yet) returns an error
+        if (error.stderr.includes('does not have any commits')) {
+          return []
+        }
+        // Branch filter typed a partial/non-existent ref — return empty instead of throwing
+        if (error.stderr.includes('unknown revision or path not in the working tree')) {
+          return []
+        }
       }
       throw error
     }
