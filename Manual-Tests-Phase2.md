@@ -97,18 +97,18 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Use search input
 
-- [ ] Type commit message substring (e.g., "bugfix")
-- [ ] Graph shows only commits with matching subjects
-- [ ] Search is case-insensitive
-- [ ] Clearing search restores all commits
+- [✅] Type commit message substring (e.g., "bugfix")
+- [✅] Graph shows only commits with matching subjects
+- [✅] Search is case-insensitive
+- [✅] Clearing search restores all commits
 
 ### 3.4 Clear Filters Button
 
 **Test:** Apply multiple filters, then click "Clear Filters"
 
-- [ ] All filters are reset to empty
-- [ ] Graph returns to showing all commits from all branches
-- [ ] Clear button only appears when filters are active
+- [✅] All filters are reset to empty
+- [✅] Graph returns to showing all commits from all branches
+- [✅] Clear button only appears when filters are active
 
 ---
 

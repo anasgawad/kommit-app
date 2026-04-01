@@ -102,8 +102,9 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       const firstParent = commit.parents[0]
 
       // Check if the first parent has already been processed (stale reference)
+      // or is absent from the filtered set entirely (e.g. --grep filtered it out)
       const firstParentIdx = hashToInputIndex.get(firstParent)
-      if (firstParentIdx !== undefined && firstParentIdx < i) {
+      if (firstParentIdx === undefined || firstParentIdx < i) {
         laneWillBeFreed = true
       } else {
         // Check if the first parent is already expected in another lane (convergence)
@@ -149,8 +150,8 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
       const firstParent = commit.parents[0]
       const firstParentIdx = hashToInputIndex.get(firstParent)
 
-      if (firstParentIdx !== undefined && firstParentIdx < i) {
-        // Parent already processed — free the lane
+      if (firstParentIdx === undefined || firstParentIdx < i) {
+        // Parent absent from filtered set or already processed — free the lane
         lanes[col] = null
         laneColors[col] = null
         recordColorEnd(color, i, colorEndRow)
@@ -177,9 +178,9 @@ export function assignLanes(commits: Commit[]): GraphRow[] {
     for (let j = 1; j < commit.parents.length; j++) {
       const parentHash = commit.parents[j]
 
-      // Skip if parent was already processed (no future commit to consume the lane)
+      // Skip if parent is absent from the filtered set or already processed
       const parentIdx = hashToInputIndex.get(parentHash)
-      if (parentIdx !== undefined && parentIdx < i) continue
+      if (parentIdx === undefined || parentIdx < i) continue
 
       const parentCol = lanes.indexOf(parentHash)
       if (parentCol === -1) {
