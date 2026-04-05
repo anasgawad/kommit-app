@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
 import { useGraphStore } from '../../stores/graph-store'
+import { useChangesStore } from '../../stores/changes-store'
 import { ActivityBar } from './ActivityBar'
 import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
@@ -21,6 +22,7 @@ export type ActiveView = 'history' | 'changes'
 export function AppLayout() {
   const { activeRepo, refreshStatus, status } = useRepoStore()
   const { setRepoPath, loadCommits, selectedCommitHash } = useGraphStore()
+  const { selectedFile, selectedIsStaged, clearSelection } = useChangesStore()
   const [activeView, setActiveView] = useState<ActiveView>('history')
 
   // Update graph store when active repo changes
@@ -32,12 +34,34 @@ export function AppLayout() {
     }
   }, [activeRepo, setRepoPath])
 
-  // Refresh: reload status + commit graph
+  // Refresh: reload status + commit graph, then validate the diff selection
   const handleRefresh = useCallback(async () => {
     if (!activeRepo) return
     await refreshStatus()
     await loadCommits()
-  }, [activeRepo, refreshStatus, loadCommits])
+
+    // After refreshing, check if the selected file still exists in the new status.
+    // If not (e.g. changes were pushed/committed externally), clear the stale diff.
+    if (selectedFile) {
+      const newStatus = useRepoStore.getState().status
+      if (newStatus) {
+        const allFiles = [
+          ...newStatus.staged,
+          ...newStatus.unstaged,
+          ...newStatus.untracked,
+          ...newStatus.conflicted
+        ]
+        const stillExists = allFiles.some(
+          (f) => f.path === selectedFile.path && f.isStaged === selectedIsStaged
+        )
+        if (!stillExists) {
+          clearSelection()
+        }
+      } else {
+        clearSelection()
+      }
+    }
+  }, [activeRepo, refreshStatus, loadCommits, selectedFile, selectedIsStaged, clearSelection])
 
   // Keyboard shortcuts: F5 and Ctrl+R trigger refresh
   useEffect(() => {
