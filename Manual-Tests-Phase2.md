@@ -240,9 +240,9 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Make a commit in external tool, then refresh Kommit
 
-- [ ] New commit appears at top of graph
-- [ ] Graph structure updates correctly
-- [ ] Selection persists if still valid
+- [✅] New commit appears at top of graph
+- [✅] Graph structure updates correctly
+- [✅] Selection persists if still valid
 
 ---
 
@@ -252,40 +252,40 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** View repository with simple linear history (A -> B -> C)
 
-- [ ] All commits in same lane (column 0)
-- [ ] Straight vertical lines connecting commits
+- [✅] All commits in same lane (column 0)
+- [✅] Straight vertical lines connecting commits
 
 ### 9.2 Single Branch Off Main
 
 **Test:** View repository: main (A -> B), feature (B -> C)
 
-- [ ] Main commits in column 0
-- [ ] Feature commits in column 1
-- [ ] Diagonal line from B to C
+- [✅] Main commits in column 0
+- [✅] Feature commits in column 1
+- [✅] Diagonal line from B to C
 
 ### 9.3 Merge Back to Main
 
 **Test:** View feature branch merged back to main
 
-- [ ] Merge commit shows convergence of lanes
-- [ ] After merge, main continues in original column
-- [ ] No lane gaps or overlaps
+- [✅] Merge commit shows convergence of lanes
+- [✅] After merge, main continues in original column
+- [✅] No lane gaps or overlaps
 
 ### 9.4 Multiple Concurrent Branches
 
 **Test:** Repository with 3+ active branches
 
-- [ ] Each branch gets distinct column
-- [ ] Colors distinguish branches
-- [ ] Lanes compact after branches merge
+- [✅] Each branch gets distinct column
+- [✅] Colors distinguish branches
+- [✅] Lanes compact after branches merge
 
 ### 9.5 Octopus Merge (3+ parents)
 
 **Test:** View octopus merge commit (rare, but git supports)
 
-- [ ] All parent edges rendered
-- [ ] No visual overlap
-- [ ] Commit detail shows all parents
+- [✅] All parent edges rendered
+- [✅] No visual overlap
+- [✅] Commit detail shows all parents
 
 ---
 
@@ -295,17 +295,17 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Scroll up and down quickly
 
-- [ ] No visual tearing or flashing
-- [ ] Graph remains responsive
+- [✅] No visual tearing or flashing
+- [✅] Graph remains responsive
 - [ ] Memory usage stable (check Task Manager)
 
 ### 10.2 Rapid Filter Changes
 
 **Test:** Type quickly in filter inputs, delete, retype
 
-- [ ] Debouncing prevents excessive API calls (if implemented)
-- [ ] No race conditions or stale data
-- [ ] Final filter state is correct
+- [✅] Debouncing prevents excessive API calls (if implemented)
+- [✅] No race conditions or stale data
+- [✅] Final filter state is correct
 
 ### 10.3 Memory Leaks
 
@@ -320,13 +320,13 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Before marking Phase 2 complete, verify:**
 
-- [ ] All 105 unit tests pass (`npm test`)
+- [✅] All 115 unit tests pass (`npm test`)
 - [ ] All 33 component tests pass
 - [ ] All 8 E2E tests pass (when implemented)
-- [ ] Build succeeds with no errors (`npm run build`)
-- [ ] All manual test scenarios above pass
-- [ ] No console errors during normal usage
-- [ ] Performance is acceptable on 1000+ commit repository
+- [✅] Build succeeds with no errors (`npm run build`)
+- [✅] All manual test scenarios above pass
+- [✅] No console errors during normal usage
+- [✅] Performance is acceptable on 1000+ commit repository
 
 ---
 
