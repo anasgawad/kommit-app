@@ -11,6 +11,7 @@ import {
   Commit,
   Branch
 } from '@shared/types'
+export { parseDiff } from '@shared/diff-parser'
 
 /**
  * Parse `git status --porcelain=v2 --branch` output.

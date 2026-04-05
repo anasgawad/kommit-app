@@ -5,14 +5,20 @@
 
 import type { ReactNode } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
+import type { ActiveView } from './AppLayout'
 
 interface ActivityBarProps {
   onRefresh: () => void
+  activeView: ActiveView
+  onViewChange: (view: ActiveView) => void
 }
 
-export function ActivityBar({ onRefresh }: ActivityBarProps) {
-  const { activeRepo, closeRepo } = useRepoStore()
+export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBarProps) {
+  const { activeRepo, closeRepo, status } = useRepoStore()
   const isRepoOpen = activeRepo !== null
+
+  // Count staged files for badge
+  const stagedCount = status ? status.staged.length : 0
 
   return (
     <div className="w-10 bg-kommit-bg-secondary border-r border-kommit-border flex flex-col items-center py-1 gap-1 shrink-0">
@@ -55,11 +61,11 @@ export function ActivityBar({ onRefresh }: ActivityBarProps) {
       {/* Divider */}
       <div className="w-6 border-t border-kommit-border my-1" />
 
-      {/* Commit History — active view indicator */}
+      {/* Commit History view */}
       <ActivityBarButton
         title="Commit History"
-        onClick={() => {}}
-        active={isRepoOpen}
+        onClick={() => onViewChange('history')}
+        active={isRepoOpen && activeView === 'history'}
         disabled={!isRepoOpen}
       >
         {/* Clock/history icon */}
@@ -74,6 +80,44 @@ export function ActivityBar({ onRefresh }: ActivityBarProps) {
           />
         </svg>
       </ActivityBarButton>
+
+      {/* Changes view — staged file count badge */}
+      <div className="relative">
+        <ActivityBarButton
+          title="Changes (working tree & staging)"
+          onClick={() => onViewChange('changes')}
+          active={isRepoOpen && activeView === 'changes'}
+          disabled={!isRepoOpen}
+        >
+          {/* File-diff / pencil icon */}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect
+              x="2"
+              y="1"
+              width="9"
+              height="12"
+              rx="1"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              fill="none"
+            />
+            <path d="M5 5h5M5 8h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path
+              d="M10.5 10.5l2-2 1.5 1.5-2 2-1.5.5.5-2z"
+              stroke="currentColor"
+              strokeWidth="1.1"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </ActivityBarButton>
+        {/* Badge showing staged file count */}
+        {isRepoOpen && stagedCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-kommit-accent text-[9px] font-bold text-kommit-bg flex items-center justify-center leading-none pointer-events-none">
+            {stagedCount > 99 ? '99+' : stagedCount}
+          </span>
+        )}
+      </div>
     </div>
   )
 }

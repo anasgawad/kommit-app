@@ -1,9 +1,10 @@
 // ============================================================
 // Kommit — Main App Layout
 // Three-panel layout: ActivityBar | Sidebar | Graph/Content | Detail Panel
+// Supports History view (commit graph) and Changes view (working tree + diff)
 // ============================================================
 
-import { useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
 import { useGraphStore } from '../../stores/graph-store'
 import { ActivityBar } from './ActivityBar'
@@ -11,10 +12,16 @@ import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
 import { CommitGraph } from '../graph/CommitGraph'
 import { CommitDetail } from '../commits/CommitDetail'
+import { WorkingTree } from '../commits/WorkingTree'
+import { CommitForm } from '../commits/CommitForm'
+import { DiffViewer } from '../diff/DiffViewer'
+
+export type ActiveView = 'history' | 'changes'
 
 export function AppLayout() {
-  const { activeRepo, refreshStatus } = useRepoStore()
+  const { activeRepo, refreshStatus, status } = useRepoStore()
   const { setRepoPath, loadCommits, selectedCommitHash } = useGraphStore()
+  const [activeView, setActiveView] = useState<ActiveView>('history')
 
   // Update graph store when active repo changes
   useEffect(() => {
@@ -102,17 +109,58 @@ export function AppLayout() {
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Activity bar */}
-        <ActivityBar onRefresh={handleRefresh} />
+        {/* Activity bar — passes view switch callback */}
+        <ActivityBar
+          onRefresh={handleRefresh}
+          activeView={activeView}
+          onViewChange={setActiveView}
+        />
 
         {/* Sidebar */}
         <Sidebar />
 
-        {/* Commit graph */}
-        <CommitGraph />
+        {/* Main content — switches between History and Changes views */}
+        {activeView === 'history' ? (
+          <>
+            {/* Commit graph */}
+            <CommitGraph />
 
-        {/* Commit detail panel (conditionally rendered) */}
-        {selectedCommitHash && <CommitDetail />}
+            {/* Commit detail panel (conditionally rendered) */}
+            {selectedCommitHash && <CommitDetail />}
+          </>
+        ) : (
+          /* Changes view: WorkingTree + DiffViewer + CommitForm */
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left: Working tree file list + commit form */}
+            <div className="w-64 flex flex-col border-r border-[var(--color-border)] overflow-hidden">
+              <div className="flex-1 overflow-hidden">
+                {activeRepo && status ? (
+                  <WorkingTree
+                    repoPath={activeRepo.path}
+                    status={status}
+                    onRefresh={handleRefresh}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
+                    No repository
+                  </div>
+                )}
+              </div>
+              {activeRepo && <CommitForm repoPath={activeRepo.path} onCommit={handleRefresh} />}
+            </div>
+
+            {/* Right: Diff viewer */}
+            <div className="flex-1 overflow-hidden">
+              {activeRepo ? (
+                <DiffViewer repoPath={activeRepo.path} allowHunkStage={true} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
+                  No repository
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Status bar */}

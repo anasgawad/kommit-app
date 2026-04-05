@@ -5,7 +5,7 @@
 
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
-import { LogOptions } from '@shared/types'
+import { LogOptions, TagOptions, ResetMode } from '@shared/types'
 import { gitService } from '../services/git'
 
 export function registerGitHandlers(): void {
@@ -107,6 +107,76 @@ export function registerGitHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.GIT_DISCARD, async (_event, repoPath: string, filePath: string) => {
     return gitService.discardChanges(repoPath, filePath)
+  })
+
+  // --- Tags ---
+  ipcMain.handle(IPC_CHANNELS.GIT_TAGS, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.listTags(repoPath)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_CREATE_TAG,
+    async (_event, repoPath: string, name: string, options?: TagOptions) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.createTag(repoPath, name, options)
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_DELETE_TAG,
+    async (_event, repoPath: string, name: string, remote?: string) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.deleteTag(repoPath, name, remote)
+    }
+  )
+
+  // --- Advanced commit operations ---
+  ipcMain.handle(IPC_CHANNELS.GIT_CHERRY_PICK, async (_event, repoPath: string, hash: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.cherryPick(repoPath, hash)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_REVERT, async (_event, repoPath: string, hash: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.revert(repoPath, hash)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_RESET,
+    async (_event, repoPath: string, ref: string, mode?: ResetMode) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.reset(repoPath, ref, mode)
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_MERGE,
+    async (_event, repoPath: string, branch: string, options?: { noFf?: boolean }) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.merge(repoPath, branch, options)
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STAGE_HUNK, async (_event, repoPath: string, patch: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stageHunk(repoPath, patch)
   })
 
   // --- Repository operations ---

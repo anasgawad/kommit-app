@@ -5,7 +5,20 @@
 
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
-import type { LogOptions, GitStatus, Commit, Branch, RepoInfo, CommitDetail } from '@shared/types'
+import type {
+  LogOptions,
+  GitStatus,
+  Commit,
+  Branch,
+  RepoInfo,
+  CommitDetail,
+  Tag,
+  TagOptions,
+  MergeResult,
+  ResetMode,
+  DiffFile
+} from '@shared/types'
+import { parseDiff as _parseDiff } from '@shared/diff-parser'
 
 const api = {
   git: {
@@ -54,7 +67,35 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.GIT_DIFF_STAGED, repoPath, filePath),
 
     discard: (repoPath: string, filePath: string): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GIT_DISCARD, repoPath, filePath)
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_DISCARD, repoPath, filePath),
+
+    // Tags
+    tags: (repoPath: string): Promise<Tag[]> => ipcRenderer.invoke(IPC_CHANNELS.GIT_TAGS, repoPath),
+
+    createTag: (repoPath: string, name: string, options?: TagOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_CREATE_TAG, repoPath, name, options),
+
+    deleteTag: (repoPath: string, name: string, remote?: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_DELETE_TAG, repoPath, name, remote),
+
+    // Advanced commit operations
+    cherryPick: (repoPath: string, hash: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_CHERRY_PICK, repoPath, hash),
+
+    revert: (repoPath: string, hash: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REVERT, repoPath, hash),
+
+    reset: (repoPath: string, ref: string, mode?: ResetMode): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_RESET, repoPath, ref, mode),
+
+    merge: (repoPath: string, branch: string, options?: { noFf?: boolean }): Promise<MergeResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_MERGE, repoPath, branch, options),
+
+    stageHunk: (repoPath: string, patch: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STAGE_HUNK, repoPath, patch),
+
+    // Client-side diff parsing (no IPC needed)
+    parseDiff: (raw: string): DiffFile[] => _parseDiff(raw)
   },
 
   repo: {

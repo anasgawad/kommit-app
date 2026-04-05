@@ -149,6 +149,31 @@ export interface CommitDetail {
   changedFiles: CommitChangedFile[]
 }
 
+// --- Commit Operation Types (Phase 3) ---
+
+export interface CommitOptions {
+  amend?: boolean
+  allowEmpty?: boolean
+}
+
+export interface MergeResult {
+  success: boolean
+  conflictedFiles: string[]
+}
+
+export interface TagOptions {
+  message?: string // If present → annotated tag; otherwise lightweight
+  hash?: string // Target commit (defaults to HEAD)
+}
+
+export type ResetMode = 'soft' | 'mixed' | 'hard'
+
+export interface DiffOptions {
+  staged?: boolean
+  filePath?: string
+  commitHash?: string
+}
+
 // --- Repository Types ---
 
 export interface RepoInfo {

@@ -13,6 +13,10 @@ import {
   LogOptions,
   CommitDetail,
   CommitChangedFile,
+  MergeResult,
+  ResetMode,
+  TagOptions,
+  Tag,
   GitError,
   GitNotFoundError,
   NotARepositoryError
@@ -473,6 +477,188 @@ export class GitService {
       args.push('--', filePath)
     }
     return this.exec(args, repoPath)
+  }
+
+  /**
+   * Merge a branch into the current branch.
+   * Returns MergeResult indicating success or list of conflicted files.
+   */
+  async merge(
+    repoPath: string,
+    branch: string,
+    options?: { noFf?: boolean }
+  ): Promise<MergeResult> {
+    const args = ['merge']
+    if (options?.noFf) {
+      args.push('--no-ff')
+    }
+    args.push(branch)
+
+    try {
+      await this.exec(args, repoPath)
+      return { success: true, conflictedFiles: [] }
+    } catch (error) {
+      if (error instanceof GitError) {
+        // Merge conflict — get conflicted files from status
+        try {
+          const status = await this.status(repoPath)
+          const conflictedFiles = status.conflicted.map((f) => f.path)
+          return { success: false, conflictedFiles }
+        } catch {
+          return { success: false, conflictedFiles: [] }
+        }
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Cherry-pick a commit onto the current branch.
+   */
+  async cherryPick(repoPath: string, hash: string): Promise<void> {
+    await this.exec(['cherry-pick', hash], repoPath)
+  }
+
+  /**
+   * Revert a commit (creates a new revert commit).
+   */
+  async revert(repoPath: string, hash: string): Promise<void> {
+    await this.exec(['revert', '--no-edit', hash], repoPath)
+  }
+
+  /**
+   * Reset HEAD to a specific ref.
+   * @param mode - 'soft' (keep staged), 'mixed' (unstage), 'hard' (discard all)
+   */
+  async reset(repoPath: string, ref: string, mode: ResetMode = 'mixed'): Promise<void> {
+    await this.exec(['reset', `--${mode}`, ref], repoPath)
+  }
+
+  /**
+   * Stage a single hunk via `git apply --cached`.
+   * The patch must be a valid unified diff including the file header.
+   */
+  async stageHunk(repoPath: string, patch: string): Promise<void> {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(this.gitPath, ['apply', '--cached', '--unidiff-zero', '-'], {
+        cwd: repoPath,
+        env: {
+          ...process.env,
+          GIT_TERMINAL_PROMPT: '0',
+          GIT_ASKPASS: '',
+          LANG: 'en_US.UTF-8'
+        },
+        windowsHide: true
+      })
+
+      let stderr = ''
+      child.stderr?.on('data', (data: Buffer) => {
+        stderr += data.toString()
+      })
+
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve()
+        } else {
+          reject(
+            new GitError(
+              `git apply failed: ${stderr}`,
+              'git apply --cached --unidiff-zero -',
+              code ?? 1,
+              stderr
+            )
+          )
+        }
+      })
+
+      child.on('error', (err) => {
+        reject(err)
+      })
+
+      child.stdin?.write(patch)
+      child.stdin?.end()
+    })
+  }
+
+  /**
+   * List all tags in the repository.
+   */
+  async listTags(repoPath: string): Promise<Tag[]> {
+    // Use for-each-ref for structured output
+    const format = [
+      '%(refname:short)', // tag name
+      '%(objecttype)', // tag or commit (annotated vs lightweight)
+      '%(objectname:short)', // hash of the tag object (or commit for lightweight)
+      '*%(objectname:short)', // dereferenced commit hash for annotated tags
+      '%(contents:subject)', // tag message subject
+      '%(creatordate:iso-strict)' // date
+    ].join('%09')
+
+    try {
+      const raw = await this.exec(
+        ['for-each-ref', '--sort=-creatordate', `--format=${format}`, 'refs/tags'],
+        repoPath
+      )
+      return this.parseTags(raw)
+    } catch {
+      return []
+    }
+  }
+
+  private parseTags(raw: string): Tag[] {
+    if (!raw || raw.trim().length === 0) return []
+
+    const tags: Tag[] = []
+    const lines = raw.split('\n').filter((l) => l.trim().length > 0)
+
+    for (const line of lines) {
+      const parts = line.split('\t')
+      if (parts.length < 6) continue
+
+      const [name, objectType, objectHash, derefHash, message, dateStr] = parts
+      const isAnnotated = objectType === 'tag'
+      // For annotated tags, the commit hash is in derefHash (prefixed with *)
+      const hash = isAnnotated
+        ? (derefHash?.replace(/^\*/, '') ?? objectHash ?? '')
+        : (objectHash ?? '')
+
+      tags.push({
+        name: name.trim(),
+        hash: hash.trim(),
+        isAnnotated,
+        message: message && message.trim().length > 0 ? message.trim() : undefined,
+        taggerDate: dateStr && dateStr.trim().length > 0 ? new Date(dateStr.trim()) : undefined
+      })
+    }
+
+    return tags
+  }
+
+  /**
+   * Create a tag (lightweight or annotated).
+   */
+  async createTag(repoPath: string, name: string, options?: TagOptions): Promise<void> {
+    const args = ['tag']
+    if (options?.message) {
+      // Annotated tag
+      args.push('-a', name, '-m', options.message)
+    } else {
+      args.push(name)
+    }
+    if (options?.hash) {
+      args.push(options.hash)
+    }
+    await this.exec(args, repoPath)
+  }
+
+  /**
+   * Delete a tag locally (and optionally from remote).
+   */
+  async deleteTag(repoPath: string, name: string, remote?: string): Promise<void> {
+    await this.exec(['tag', '-d', name], repoPath)
+    if (remote) {
+      await this.exec(['push', remote, '--delete', name], repoPath)
+    }
   }
 }
 

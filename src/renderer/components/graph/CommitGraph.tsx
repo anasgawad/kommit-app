@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useGraphStore } from '../../stores/graph-store'
+import { useRepoStore } from '../../stores/repo-store'
 import { getMaxColumn } from '../../graph/lane-algorithm'
 import { GraphRow } from './GraphRow'
 import { GraphSvgOverlay, ROW_HEIGHT, LANE_WIDTH } from './GraphSvgOverlay'
@@ -100,12 +101,17 @@ export function CommitGraph() {
     clearFilters
   } = useGraphStore()
 
+  const { activeRepo, refreshStatus } = useRepoStore()
+
   const parentRef = useRef<HTMLDivElement>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
     hash: string
   } | null>(null)
+  const [contextError, setContextError] = useState<string | null>(null)
+  const [resetMode, setResetMode] = useState<'soft' | 'mixed' | 'hard'>('mixed')
+  const [showResetDialog, setShowResetDialog] = useState<string | null>(null) // hash
 
   // Scroll tracking for SVG overlay
   const [scrollTop, setScrollTop] = useState(0)
@@ -216,9 +222,43 @@ export function CommitGraph() {
     })
   }
 
-  const handleContextMenuAction = (action: string, hash: string) => {
-    // TODO: Phase 3 - implement actual actions
+  const handleContextMenuAction = async (action: string, hash: string) => {
     setContextMenu(null)
+    if (!activeRepo) return
+    setContextError(null)
+
+    try {
+      switch (action) {
+        case 'checkout':
+          await window.api.git.checkout(activeRepo.path, hash)
+          await refreshStatus()
+          break
+        case 'cherry-pick':
+          await window.api.git.cherryPick(activeRepo.path, hash)
+          await refreshStatus()
+          break
+        case 'revert':
+          await window.api.git.revert(activeRepo.path, hash)
+          await refreshStatus()
+          break
+        case 'reset':
+          setShowResetDialog(hash)
+          return
+      }
+    } catch (err) {
+      setContextError(err instanceof Error ? err.message : `${action} failed`)
+    }
+  }
+
+  const handleResetConfirm = async () => {
+    if (!activeRepo || !showResetDialog) return
+    setShowResetDialog(null)
+    try {
+      await window.api.git.reset(activeRepo.path, showResetDialog, resetMode)
+      await refreshStatus()
+    } catch (err) {
+      setContextError(err instanceof Error ? err.message : 'Reset failed')
+    }
   }
 
   const hasFilters = branchFilter || authorFilter || searchQuery
@@ -429,6 +469,67 @@ export function CommitGraph() {
             <ResetIcon />
             <span>Reset to here</span>
           </button>
+        </div>
+      )}
+
+      {/* Context action error banner */}
+      {contextError && (
+        <div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 text-red-200 text-xs px-4 py-2 rounded shadow-lg cursor-pointer max-w-md"
+          onClick={() => setContextError(null)}
+          title="Click to dismiss"
+        >
+          {contextError}
+        </div>
+      )}
+
+      {/* Reset confirmation dialog */}
+      {showResetDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-kommit-bg-secondary border border-kommit-border rounded-lg shadow-xl p-4 min-w-72">
+            <h3 className="text-sm font-semibold text-kommit-text mb-3">Reset to commit</h3>
+            <p className="text-xs text-kommit-text-secondary mb-3">Select reset mode:</p>
+            <div className="flex flex-col gap-1.5 mb-4">
+              {(['soft', 'mixed', 'hard'] as const).map((mode) => (
+                <label key={mode} className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="reset-mode"
+                    value={mode}
+                    checked={resetMode === mode}
+                    onChange={() => setResetMode(mode)}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <span className="text-sm text-kommit-text font-medium">{mode}</span>
+                    <p className="text-xs text-kommit-text-secondary">
+                      {mode === 'soft' && 'Move HEAD only; keep staged and working tree'}
+                      {mode === 'mixed' && 'Move HEAD and unstage; keep working tree'}
+                      {mode === 'hard' && 'Move HEAD, unstage, and discard all changes'}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowResetDialog(null)}
+                className="px-3 py-1.5 text-xs text-kommit-text-secondary hover:text-kommit-text"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetConfirm}
+                className={`px-3 py-1.5 text-xs rounded font-medium ${
+                  resetMode === 'hard'
+                    ? 'bg-kommit-danger text-white hover:opacity-80'
+                    : 'bg-kommit-accent text-white hover:opacity-80'
+                }`}
+              >
+                Reset ({resetMode})
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

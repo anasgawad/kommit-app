@@ -39,6 +39,13 @@ export const IPC_CHANNELS = {
   GIT_CREATE_TAG: 'git:create-tag',
   GIT_DELETE_TAG: 'git:delete-tag',
 
+  // Advanced commit operations (Phase 3)
+  GIT_CHERRY_PICK: 'git:cherry-pick',
+  GIT_REVERT: 'git:revert',
+  GIT_RESET: 'git:reset',
+  GIT_MERGE: 'git:merge',
+  GIT_STAGE_HUNK: 'git:stage-hunk',
+
   // Remote operations (Phase 5)
   GIT_FETCH: 'git:fetch',
   GIT_PULL: 'git:pull',
