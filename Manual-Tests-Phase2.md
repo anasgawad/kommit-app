@@ -118,35 +118,35 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Click on a commit row
 
-- [ ] Row highlights with tertiary background color
-- [ ] CommitDetail panel appears on the right side
-- [ ] Panel shows commit hash, author, date, and message
-- [ ] Panel shows parent commit hashes (if any)
+- [✅] Row highlights with tertiary background color
+- [✅] CommitDetail panel appears on the right side
+- [✅] Panel shows commit hash, author, date, and message
+- [✅] Panel shows parent commit hashes (if any)
 
 ### 4.2 Changed Files List
 
 **Test:** Select a commit with file changes
 
-- [ ] Changed files list appears in detail panel
-- [ ] Each file shows path and status icon
-- [ ] Status icons correctly represent: Added (A), Modified (M), Deleted (D), Renamed (R), Copied (C)
-- [ ] File paths are readable and truncated if too long
+- [✅] Changed files list appears in detail panel
+- [✅] Each file shows path and status icon
+- [✅] Status icons correctly represent: Added (A), Modified (M), Deleted (D), Renamed (R), Copied (C)
+- [✅] File paths are readable and truncated if too long
 
 ### 4.3 Root Commit
 
 **Test:** Select the initial commit (no parents)
 
-- [ ] Detail panel shows "(Initial commit)" instead of parent hash
-- [ ] Changed files list shows all files as "Added"
-- [ ] No errors in console
+- [✅] Detail panel shows "(Initial commit)" instead of parent hash
+- [✅] Changed files list shows all files as "Added"
+- [✅] No errors in console
 
 ### 4.4 Merge Commit
 
 **Test:** Select a merge commit (2+ parents)
 
-- [ ] Detail panel lists all parent hashes
-- [ ] Changed files show merge resolution changes
-- [ ] Panel clearly indicates this is a merge
+- [✅] Detail panel lists all parent hashes
+- [✅] Changed files show merge resolution changes
+- [✅] Panel clearly indicates this is a merge
 
 ---
 
@@ -156,17 +156,17 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Click a commit, then use arrow keys
 
-- [ ] Down arrow selects next commit
-- [ ] Up arrow selects previous commit
-- [ ] Selection wraps at top/bottom (or stops)
-- [ ] Selected commit auto-scrolls into view if needed
+- [✅] Down arrow selects next commit
+- [✅] Up arrow selects previous commit
+- [✅] Selection wraps at top/bottom (or stops)
+- [✅] Selected commit auto-scrolls into view if needed
 
 ### 5.2 Navigation Focus
 
 **Test:** Use keyboard navigation
 
-- [ ] Arrow keys work when graph area has focus
-- [ ] Typing in filter inputs doesn't trigger arrow navigation
+- [✅] Arrow keys work when graph area has focus
+- [✅] Typing in filter inputs doesn't trigger arrow navigation
 - [ ] Pressing Escape (if implemented) clears selection
 
 ---
