@@ -175,6 +175,44 @@ describe('GraphStore', () => {
     )
   })
 
+  it('should reset state (filters, selection) when repo changes', async () => {
+    const commits = [createCommit('aaa', [])]
+    mockLog.mockResolvedValue(commits)
+
+    const store = useGraphStore.getState()
+    store.setRepoPath('/test/repo-a')
+
+    await vi.waitFor(() => useGraphStore.getState().commits.length === 1)
+
+    // Apply a filter and select a commit while on repo-a
+    useGraphStore.setState({ branchFilter: 'feature-branch' })
+    useGraphStore.setState({ authorFilter: 'alice' })
+    useGraphStore.setState({ searchQuery: 'bugfix' })
+    useGraphStore.setState({ selectedCommitHash: 'aaa' })
+    useGraphStore.setState({ selectedCommitDetail: { commit: commits[0], changedFiles: [] } })
+
+    mockLog.mockResolvedValue([createCommit('bbb', [])])
+
+    // Switch to a different repo
+    store.setRepoPath('/test/repo-b')
+
+    // Filters and selection should be cleared immediately
+    const stateAfterSwitch = useGraphStore.getState()
+    expect(stateAfterSwitch.branchFilter).toBeNull()
+    expect(stateAfterSwitch.authorFilter).toBeNull()
+    expect(stateAfterSwitch.searchQuery).toBeNull()
+    expect(stateAfterSwitch.selectedCommitHash).toBeNull()
+    expect(stateAfterSwitch.selectedCommitDetail).toBeNull()
+
+    // New repo's commits should load
+    await vi.waitFor(() => {
+      const state = useGraphStore.getState()
+      return state.commits.length === 1 && state.commits[0].hash === 'bbb'
+    })
+
+    expect(useGraphStore.getState().repoPath).toBe('/test/repo-b')
+  })
+
   it('should apply search filter', async () => {
     const commits = [createCommit('aaa', [])]
     mockLog.mockResolvedValue(commits)

@@ -62,11 +62,11 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   // Set repository path
   setRepoPath: (path) => {
+    // Always reset state (filters, selection, commits) when changing repos
+    get().reset()
     set({ repoPath: path })
     if (path) {
       get().loadCommits()
-    } else {
-      get().reset()
     }
   },
 
