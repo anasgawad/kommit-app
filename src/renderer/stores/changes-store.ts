@@ -58,9 +58,15 @@ export const useChangesStore = create<ChangesState>((set, _get) => ({
   loadDiff: async (repoPath, file, isStaged) => {
     set({ isDiffLoading: true, error: null, currentDiff: [] })
     try {
-      const raw = isStaged
-        ? await window.api.git.diffStaged(repoPath, file.path)
-        : await window.api.git.diff(repoPath, file.path)
+      let raw: string
+      if (isStaged) {
+        raw = await window.api.git.diffStaged(repoPath, file.path)
+      } else if (file.workTreeStatus === '?') {
+        // Untracked file: compare against /dev/null to get a fully-added diff
+        raw = await window.api.git.diffUntracked(repoPath, file.path)
+      } else {
+        raw = await window.api.git.diff(repoPath, file.path)
+      }
       const parsed = parseDiff(raw)
       set({ currentDiff: parsed, isDiffLoading: false })
     } catch (err) {

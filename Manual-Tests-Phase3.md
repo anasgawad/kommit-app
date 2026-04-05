@@ -18,26 +18,26 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Verify the Changes icon appears in the ActivityBar
 
-- [ ] ActivityBar shows a file-diff icon below the history (clock) icon
-- [ ] Hovering shows tooltip "Changes (working tree & staging)"
-- [ ] Clicking while no repo is open does nothing (icon is dimmed/disabled)
+- [✅] ActivityBar shows a file-diff icon below the history (clock) icon
+- [✅] Hovering shows tooltip "Changes (working tree & staging)"
+- [ ] Clicking while no repo is open does nothing (icon is dimmed/disabled) N/A
 
 ### 1.2 View Switching
 
 **Test:** Click the Changes icon and History icon to switch views
 
-- [ ] Clicking Changes icon switches main content area to the Changes view (working tree + diff viewer)
-- [ ] Clicking History icon switches back to the commit graph
-- [ ] Active icon is highlighted with accent color
-- [ ] Switching views does not lose the selected file in WorkingTree
+- [✅] Clicking Changes icon switches main content area to the Changes view (working tree + diff viewer)
+- [✅] Clicking History icon switches back to the commit graph
+- [✅] Active icon is highlighted with accent color
+- [✅] Switching views does not lose the selected file in WorkingTree
 
 ### 1.3 Staged File Badge
 
 **Test:** Stage a file and observe the badge
 
-- [ ] When files are staged, a numeric badge appears on the Changes icon
-- [ ] Badge shows the correct count of staged files
-- [ ] Badge disappears when all files are unstaged
+- [✅] When files are staged, a numeric badge appears on the Changes icon
+- [✅] Badge shows the correct count of staged files
+- [✅] Badge disappears when all files are unstaged
 
 ---
 
@@ -47,41 +47,41 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Open a repository with mixed changes
 
-- [ ] Staged section shows all files that are indexed (git add'd)
-- [ ] Unstaged section shows modified tracked files
-- [ ] Untracked section shows new files not yet added
+- [✅] Staged section shows all files that are indexed (git add'd)
+- [✅] Unstaged section shows modified tracked files
+- [✅] Untracked section shows new files not yet added
 - [ ] Conflicted section appears only when a merge conflict exists
-- [ ] Sections collapse/expand when clicking their header
-- [ ] Empty sections are not shown (or clearly labeled as empty)
+- [✅] Sections collapse/expand when clicking their header
+- [ ] Empty sections are not shown (or clearly labeled as empty) N/A
 
 ### 2.2 Staging Files
 
 **Test:** Stage and unstage individual files
 
-- [ ] Clicking the "+" icon (or stage button) on an unstaged file adds it to staged section
-- [ ] Clicking the "−" icon on a staged file removes it from staged section
-- [ ] After staging, running `git status` in terminal confirms the change
-- [ ] Stage All button stages all unstaged/untracked files at once
-- [ ] Unstage All button unstages all staged files at once
+- [✅] Clicking the "+" icon (or stage button) on an unstaged file adds it to staged section
+- [✅] Clicking the "−" icon on a staged file removes it from staged section
+- [✅] After staging, running `git status` in terminal confirms the change
+- [✅] Stage All button stages all unstaged/untracked files at once
+- [✅] Unstage All button unstages all staged files at once
 
 ### 2.3 Discarding Changes
 
 **Test:** Discard unstaged changes
 
-- [ ] Discard button on an unstaged file reverts its working tree changes
-- [ ] A confirmation is shown before discarding (or not — note behavior)
-- [ ] After discard, file no longer appears in unstaged section
-- [ ] Staged files cannot be discarded without unstaging first
+- [✅] Discard button on an unstaged file reverts its working tree changes
+- [✅] A confirmation is shown before discarding (or not — note behavior)
+- [✅] After discard, file no longer appears in unstaged section
+- [✅] Staged files cannot be discarded without unstaging first
 
 ### 2.4 File Selection & Diff Loading
 
 **Test:** Click a file to view its diff
 
-- [ ] Clicking a file in any section highlights it as selected
-- [ ] Clicking a staged file loads the staged diff (git diff --cached)
-- [ ] Clicking an unstaged file loads the unstaged diff (git diff)
-- [ ] Clicking a new untracked file shows it as a fully added diff
-- [ ] DiffViewer updates to show the selected file's diff
+- [✅] Clicking a file in any section highlights it as selected
+- [✅] Clicking a staged file loads the staged diff (git diff --cached)
+- [✅] Clicking an unstaged file loads the unstaged diff (git diff)
+- [✅] Clicking a new untracked file shows it as a fully added diff
+- [✅] DiffViewer updates to show the selected file's diff
 
 ---
 

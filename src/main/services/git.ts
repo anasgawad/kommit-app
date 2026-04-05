@@ -469,6 +469,56 @@ export class GitService {
   }
 
   /**
+   * Get diff for an untracked file by comparing against /dev/null.
+   * git diff --no-index always exits 1 when differences are found, so we
+   * catch the GitError and return stdout when the exit code is 1.
+   */
+  async diffUntracked(repoPath: string, filePath: string): Promise<string> {
+    const nullDevice = process.platform === 'win32' ? 'NUL' : '/dev/null'
+    try {
+      return await this.exec(['diff', '--no-index', nullDevice, filePath], repoPath)
+    } catch (error) {
+      // git diff --no-index exits with code 1 when differences exist (always for new files).
+      // The execFileAsync rejection includes stdout in some versions; reconstruct by
+      // catching and re-running via execFile directly so we can read stdout.
+      const err = error as { exitCode?: number; stderr?: string }
+      if (err.exitCode === 1) {
+        // Re-exec capturing stdout despite non-zero exit
+        const { execFile } = await import('node:child_process')
+        return new Promise<string>((resolve, reject) => {
+          execFile(
+            this.gitPath,
+            ['diff', '--no-index', nullDevice, filePath],
+            {
+              cwd: repoPath,
+              maxBuffer: 10 * 1024 * 1024,
+              env: {
+                ...process.env,
+                GIT_TERMINAL_PROMPT: '0',
+                GIT_ASKPASS: '',
+                LANG: 'en_US.UTF-8'
+              },
+              windowsHide: true
+            },
+            (execError, stdout) => {
+              // exitCode 1 is expected — return stdout regardless
+              if (
+                execError &&
+                (execError as NodeJS.ErrnoException & { code?: number }).code !== 1
+              ) {
+                reject(execError)
+              } else {
+                resolve(stdout)
+              }
+            }
+          )
+        })
+      }
+      throw error
+    }
+  }
+
+  /**
    * Get diff for staged changes.
    */
   async diffStaged(repoPath: string, filePath?: string): Promise<string> {

@@ -66,6 +66,9 @@ const api = {
     diffStaged: (repoPath: string, filePath?: string): Promise<string> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_DIFF_STAGED, repoPath, filePath),
 
+    diffUntracked: (repoPath: string, filePath: string): Promise<string> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_DIFF_UNTRACKED, repoPath, filePath),
+
     discard: (repoPath: string, filePath: string): Promise<void> =>
       ipcRenderer.invoke(IPC_CHANNELS.GIT_DISCARD, repoPath, filePath),
 

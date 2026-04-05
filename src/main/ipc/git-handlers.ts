@@ -105,6 +105,13 @@ export function registerGitHandlers(): void {
     }
   )
 
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_DIFF_UNTRACKED,
+    async (_event, repoPath: string, filePath: string) => {
+      return gitService.diffUntracked(repoPath, filePath)
+    }
+  )
+
   ipcMain.handle(IPC_CHANNELS.GIT_DISCARD, async (_event, repoPath: string, filePath: string) => {
     return gitService.discardChanges(repoPath, filePath)
   })
