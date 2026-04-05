@@ -1,19 +1,20 @@
 // ============================================================
 // Kommit — Main App Layout
-// Three-panel layout: Sidebar | Graph/Content | Detail Panel
+// Three-panel layout: ActivityBar | Sidebar | Graph/Content | Detail Panel
 // ============================================================
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
 import { useGraphStore } from '../../stores/graph-store'
+import { ActivityBar } from './ActivityBar'
 import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
 import { CommitGraph } from '../graph/CommitGraph'
 import { CommitDetail } from '../commits/CommitDetail'
 
 export function AppLayout() {
-  const { activeRepo } = useRepoStore()
-  const { setRepoPath, selectedCommitHash } = useGraphStore()
+  const { activeRepo, refreshStatus } = useRepoStore()
+  const { setRepoPath, loadCommits, selectedCommitHash } = useGraphStore()
 
   // Update graph store when active repo changes
   useEffect(() => {
@@ -23,6 +24,28 @@ export function AppLayout() {
       setRepoPath(null)
     }
   }, [activeRepo, setRepoPath])
+
+  // Refresh: reload status + commit graph
+  const handleRefresh = useCallback(async () => {
+    if (!activeRepo) return
+    await refreshStatus()
+    await loadCommits()
+  }, [activeRepo, refreshStatus, loadCommits])
+
+  // Keyboard shortcuts: F5 and Ctrl+R trigger refresh
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!activeRepo) return
+      const isF5 = e.key === 'F5'
+      const isCtrlR = (e.ctrlKey || e.metaKey) && e.key === 'r'
+      if (isF5 || isCtrlR) {
+        e.preventDefault()
+        handleRefresh()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeRepo, handleRefresh])
 
   const handleMinimize = () => window.api.window.minimize()
   const handleMaximize = () => window.api.window.maximize()
@@ -79,6 +102,9 @@ export function AppLayout() {
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Activity bar */}
+        <ActivityBar onRefresh={handleRefresh} />
+
         {/* Sidebar */}
         <Sidebar />
 

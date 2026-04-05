@@ -24,6 +24,7 @@ interface RepoState {
   openRepo: (path: string) => Promise<void>
   refreshStatus: () => Promise<void>
   loadRecentRepos: () => Promise<void>
+  closeRepo: () => void
 }
 
 export const useRepoStore = create<RepoState>((set, get) => ({
@@ -87,5 +88,9 @@ export const useRepoStore = create<RepoState>((set, get) => ({
     } catch {
       // Silently fail — not critical
     }
+  },
+
+  closeRepo: () => {
+    set({ activeRepo: null, status: null, error: null })
   }
 }))
