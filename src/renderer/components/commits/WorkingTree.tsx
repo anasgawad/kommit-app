@@ -7,6 +7,52 @@ import { useState } from 'react'
 import type { FileStatus, GitStatus } from '@shared/types'
 import { useChangesStore } from '../../stores/changes-store'
 
+// ============================================================
+// DiscardConfirmDialog — modal shown before destructive discard
+// ============================================================
+
+interface DiscardConfirmDialogProps {
+  filePath: string
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+function DiscardConfirmDialog({ filePath, onConfirm, onCancel }: DiscardConfirmDialogProps) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-xl p-5 w-80 flex flex-col gap-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div>
+          <p className="text-sm font-semibold text-[var(--color-text)] mb-1">Discard changes?</p>
+          <p className="text-xs text-[var(--color-text-muted)] break-all">
+            Changes to <span className="font-mono text-[var(--color-text)]">{filePath}</span> will
+            be permanently lost.
+          </p>
+        </div>
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-3 py-1 text-xs rounded border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg-hover)]"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
+            onClick={onConfirm}
+          >
+            Discard
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface WorkingTreeProps {
   repoPath: string
   status: GitStatus
@@ -59,6 +105,7 @@ interface FileSectionProps {
 
 function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [pendingDiscard, setPendingDiscard] = useState<FileStatus | null>(null)
   const {
     selectedFile,
     selectedIsStaged,
@@ -97,13 +144,21 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
     onRefresh()
   }
 
-  const handleDiscard = async (e: React.MouseEvent, file: FileStatus) => {
+  const handleDiscard = (e: React.MouseEvent, file: FileStatus) => {
     e.stopPropagation()
     if (!isStaged) {
-      await discardFile(repoPath, file.path)
-      onRefresh()
+      setPendingDiscard(file)
     }
   }
+
+  const confirmDiscard = async () => {
+    if (!pendingDiscard) return
+    await discardFile(repoPath, pendingDiscard.path)
+    setPendingDiscard(null)
+    onRefresh()
+  }
+
+  const cancelDiscard = () => setPendingDiscard(null)
 
   return (
     <div className="mb-1">
@@ -177,6 +232,15 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
             )
           })}
         </div>
+      )}
+
+      {/* Discard confirmation dialog */}
+      {pendingDiscard && (
+        <DiscardConfirmDialog
+          filePath={pendingDiscard.path}
+          onConfirm={confirmDiscard}
+          onCancel={cancelDiscard}
+        />
       )}
     </div>
   )
