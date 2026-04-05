@@ -177,17 +177,17 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Right-click on a commit
 
-- [ ] Context menu appears at cursor position
-- [ ] Menu shows options: Checkout, Cherry-pick, Reset, Revert
-- [ ] Menu closes when clicking outside
+- [✅] Context menu appears at cursor position
+- [✅] Menu shows options: Checkout, Cherry-pick, Reset, Revert
+- [✅] Menu closes when clicking outside
 
 ### 6.2 Context Menu Actions (Stubs)
 
 **Test:** Click each context menu action
 
-- [ ] Actions are labeled but don't execute (stubs for Phase 3+)
-- [ ] Clicking an action closes the menu
-- [ ] No errors appear in console
+- [✅] Actions are labeled but don't execute (stubs for Phase 3+)
+- [✅] Clicking an action closes the menu
+- [✅] No errors appear in console
 
 ---
 
@@ -197,32 +197,32 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Open a newly initialized repository with no commits
 
-- [ ] Graph shows empty state or appropriate message
-- [ ] No errors in console
-- [ ] Toolbar remains usable
+- [✅] Graph shows empty state or appropriate message
+- [✅] No errors in console
+- [✅] Toolbar remains usable
 
 ### 7.2 Single Commit
 
 **Test:** View repository with only one commit
 
-- [ ] Commit renders with node but no edges
-- [ ] No visual glitches
-- [ ] Detail panel works normally
+- [✅] Commit renders with node but no edges
+- [✅] No visual glitches
+- [✅] Detail panel works normally
 
 ### 7.3 Very Long Commit Messages
 
 **Test:** View commit with 200+ character subject
 
-- [ ] Message is truncated with ellipsis
-- [ ] Full message visible in detail panel
-- [ ] No layout overflow
+- [✅] Message is truncated with ellipsis
+- [✅] Full message visible in detail panel
+- [✅] No layout overflow
 
 ### 7.4 Special Characters in Refs
 
 **Test:** View branches/tags with special characters
 
-- [ ] Ref names render correctly (e.g., `feature/foo-bar`, `v1.0.0`)
-- [ ] No encoding issues
+- [✅] Ref names render correctly (e.g., `feature/foo-bar`, `v1.0.0`)
+- [✅] No encoding issues
 
 ---
 
@@ -232,9 +232,9 @@ Phase 2 implements the commit graph visualization with lane assignment, filterin
 
 **Test:** Open a different repository
 
-- [ ] Graph clears and loads new repository's history
-- [ ] Store state resets (filters, selection)
-- [ ] No stale data from previous repo
+- [✅] Graph clears and loads new repository's history
+- [✅] Store state resets (filters, selection)
+- [✅] No stale data from previous repo
 
 ### 8.2 Refresh After External Changes
 

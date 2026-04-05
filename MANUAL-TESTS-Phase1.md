@@ -357,10 +357,10 @@ These must pass before any other testing can begin.
 
 | #      | Test Case              | Steps                                                                   | Expected Result                                                       | Pass |
 | ------ | ---------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- | ---- |
-| 13.1.1 | Windows paths          | Open a repo with a Windows-style path (e.g., `C:\Users\dev\repo`)       | Path is handled correctly. Repo name is extracted properly.           | [ ]  |
-| 13.1.2 | Unix paths             | (Linux/Mac) Open a repo with a Unix-style path (e.g., `/home/dev/repo`) | Path is handled correctly. Repo name is extracted properly.           | [ ]  |
-| 13.1.3 | External links         | If any links exist in the UI, click one                                 | Link opens in the system default browser, not inside the Electron app | [ ]  |
-| 13.1.4 | Hidden child processes | (Windows) Perform any git operation                                     | No `cmd.exe` / console windows flash on screen (`windowsHide: true`)  | [ ]  |
+| 13.1.1 | Windows paths          | Open a repo with a Windows-style path (e.g., `C:\Users\dev\repo`)       | Path is handled correctly. Repo name is extracted properly.           | [✅]  |
+| 13.1.2 | Unix paths             | (Linux/Mac) Open a repo with a Unix-style path (e.g., `/home/dev/repo`) | Path is handled correctly. Repo name is extracted properly.           | [✅]  |
+| 13.1.3 | External links         | If any links exist in the UI, click one                                 | Link opens in the system default browser, not inside the Electron app | [✅]  |
+| 13.1.4 | Hidden child processes | (Windows) Perform any git operation                                     | No `cmd.exe` / console windows flash on screen (`windowsHide: true`)  | [✅]  |
 
 ---
 
