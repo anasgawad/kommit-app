@@ -20,18 +20,22 @@ export function parseDiff(raw: string): DiffFile[] {
   if (!raw || raw.trim().length === 0) return []
 
   const files: DiffFile[] = []
-  // Split on "diff --git" header lines to get per-file blocks
-  const fileBlocks = raw.split(/^(?=diff --git )/m).filter((b) => b.trim().length > 0)
+  // Split on "diff --git" or "diff --cc" header lines to get per-file blocks
+  const fileBlocks = raw
+    .split(/^(?=diff --(?:git|cc|combined) )/m)
+    .filter((b) => b.trim().length > 0)
 
   for (const block of fileBlocks) {
     const lines = block.split('\n')
 
     // Parse the diff --git header: diff --git a/<path> b/<path>
+    // Also handle combined diff: diff --cc <path>
+    const diffCcMatch = lines[0].match(/^diff --(?:cc|combined) (.+)$/)
     const diffGitMatch = lines[0].match(/^diff --git a\/(.*) b\/(.*)$/)
-    if (!diffGitMatch) continue
+    if (!diffGitMatch && !diffCcMatch) continue
 
-    let oldPath = diffGitMatch[1]
-    let newPath = diffGitMatch[2]
+    let oldPath = diffCcMatch ? diffCcMatch[1] : (diffGitMatch as RegExpMatchArray)[1]
+    let newPath = diffCcMatch ? diffCcMatch[1] : (diffGitMatch as RegExpMatchArray)[2]
     let status: DiffFile['status'] = 'modified'
     let isBinary = false
     let similarityIndex: number | undefined
@@ -82,11 +86,16 @@ export function parseDiff(raw: string): DiffFile[] {
     }
 
     const hunks: DiffHunk[] = []
+    // Combined diffs (diff --cc) use @@@ headers and two-character prefixes
+    const isCombined = !!diffCcMatch
 
     // Parse hunks
     while (lineIdx < lines.length) {
       const hunkHeader = lines[lineIdx]
-      const hunkMatch = hunkHeader.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$/)
+      // Match regular @@ or combined @@@ hunk headers
+      const hunkMatch = isCombined
+        ? hunkHeader.match(/^@@@ -\d+(?:,\d+)? -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@@(.*)$/)
+        : hunkHeader.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$/)
       if (!hunkMatch) {
         lineIdx++
         continue
@@ -107,29 +116,58 @@ export function parseDiff(raw: string): DiffFile[] {
       while (lineIdx < lines.length) {
         const hunkLine = lines[lineIdx]
         // Stop at next hunk or next file diff
-        if (hunkLine.startsWith('@@') || hunkLine.startsWith('diff --git')) break
+        if (hunkLine.startsWith('@@') || hunkLine.startsWith('diff --')) break
 
-        if (hunkLine.startsWith('+')) {
-          hunkLines.push({
-            type: 'add',
-            content: hunkLine.slice(1),
-            newLineNumber: newLineNum++
-          })
-        } else if (hunkLine.startsWith('-')) {
-          hunkLines.push({
-            type: 'delete',
-            content: hunkLine.slice(1),
-            oldLineNumber: oldLineNum++
-          })
-        } else if (hunkLine.startsWith(' ') || hunkLine === '') {
-          hunkLines.push({
-            type: 'context',
-            content: hunkLine.length > 0 ? hunkLine.slice(1) : '',
-            oldLineNumber: oldLineNum++,
-            newLineNumber: newLineNum++
-          })
+        if (isCombined) {
+          // Combined diff: two-character prefix
+          // '++' = present in result (context for both parents)
+          // '+' + ' ' or ' ' + '+' = added relative to one parent → treat as add
+          // '-' in either column = removed → treat as delete
+          const p0 = hunkLine[0]
+          const p1 = hunkLine[1]
+          const content = hunkLine.slice(2)
+          if (p0 === '+' && p1 === '+') {
+            hunkLines.push({
+              type: 'context',
+              content,
+              oldLineNumber: oldLineNum++,
+              newLineNumber: newLineNum++
+            })
+          } else if (p0 === '+' || p1 === '+') {
+            hunkLines.push({ type: 'add', content, newLineNumber: newLineNum++ })
+          } else if (p0 === '-' || p1 === '-') {
+            hunkLines.push({ type: 'delete', content, oldLineNumber: oldLineNum++ })
+          } else if (p0 === ' ' && p1 === ' ') {
+            hunkLines.push({
+              type: 'context',
+              content,
+              oldLineNumber: oldLineNum++,
+              newLineNumber: newLineNum++
+            })
+          }
+        } else {
+          if (hunkLine.startsWith('+')) {
+            hunkLines.push({
+              type: 'add',
+              content: hunkLine.slice(1),
+              newLineNumber: newLineNum++
+            })
+          } else if (hunkLine.startsWith('-')) {
+            hunkLines.push({
+              type: 'delete',
+              content: hunkLine.slice(1),
+              oldLineNumber: oldLineNum++
+            })
+          } else if (hunkLine.startsWith(' ') || hunkLine === '') {
+            hunkLines.push({
+              type: 'context',
+              content: hunkLine.length > 0 ? hunkLine.slice(1) : '',
+              oldLineNumber: oldLineNum++,
+              newLineNumber: newLineNum++
+            })
+          }
+          // Skip "\ No newline at end of file" lines
         }
-        // Skip "\ No newline at end of file" lines
 
         lineIdx++
       }

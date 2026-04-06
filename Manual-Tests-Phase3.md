@@ -50,9 +50,9 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 - [✅] Staged section shows all files that are indexed (git add'd)
 - [✅] Unstaged section shows modified tracked files
 - [✅] Untracked section shows new files not yet added
-- [ ] Conflicted section appears only when a merge conflict exists
+- [✅] Conflicted section appears only when a merge conflict exists
 - [✅] Sections collapse/expand when clicking their header
-- [ ] Empty sections are not shown (or clearly labeled as empty) N/A
+- [✅] Empty sections are not shown (or clearly labeled as empty) N/A
 
 ### 2.2 Staging Files
 
@@ -91,22 +91,22 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** View a modified file in inline mode
 
-- [ ] Diff viewer shows the file path in the toolbar
-- [ ] Added lines are highlighted in green
-- [ ] Deleted lines are highlighted in red
-- [ ] Context lines are neutral
-- [ ] Line numbers are shown for both old and new sides
-- [ ] Hunk headers (e.g., `@@ -1,4 +1,5 @@`) are visible
+- [✅] Diff viewer shows the file path in the toolbar
+- [✅] Added lines are highlighted in green
+- [✅] Deleted lines are highlighted in red
+- [✅] Context lines are neutral
+- [✅] Line numbers are shown for both old and new sides
+- [✅] Hunk headers (e.g., `@@ -1,4 +1,5 @@`) are visible
 
 ### 3.2 Side-by-Side View
 
 **Test:** Switch to side-by-side mode
 
-- [ ] Clicking "Split" toggle switches to side-by-side layout
-- [ ] Old (left) side shows deleted lines and context
-- [ ] New (right) side shows added lines and context
-- [ ] Line numbers align correctly on both sides
-- [ ] Clicking "Inline" switches back
+- [✅] Clicking "Split" toggle switches to side-by-side layout
+- [✅] Old (left) side shows deleted lines and context
+- [✅] New (right) side shows added lines and context
+- [✅] Line numbers align correctly on both sides
+- [✅] Clicking "Inline" switches back
 
 ### 3.3 Syntax Highlighting
 
