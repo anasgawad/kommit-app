@@ -157,7 +157,8 @@ const SectionIcon = ({
 }
 
 export function CommitDetail() {
-  const { selectedCommitDetail, clearSelection } = useGraphStore()
+  const { selectedCommitDetail, selectedCommitFilePath, clearSelection, selectCommitFile } =
+    useGraphStore()
 
   if (!selectedCommitDetail) {
     return (
@@ -308,10 +309,16 @@ export function CommitDetail() {
             <div className="space-y-1">
               {changedFiles.map((file, i) => {
                 const statusConfig = FILE_STATUS_CONFIG[file.status]
+                const isSelected = selectedCommitFilePath === file.path
                 return (
                   <div
                     key={i}
-                    className={`flex items-start gap-2 text-xs hover:bg-kommit-bg-tertiary px-2 py-1.5 rounded cursor-pointer transition-colors ${statusConfig.bgClass}`}
+                    onClick={() => selectCommitFile(commit.hash, file.path)}
+                    className={`flex items-start gap-2 text-xs px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-kommit-accent/20 ring-1 ring-kommit-accent/40'
+                        : `hover:bg-kommit-bg-tertiary ${statusConfig.bgClass}`
+                    }`}
                     title={`${statusConfig.label}: ${file.path}`}
                   >
                     <span className="flex-shrink-0 mt-0.5">{statusConfig.icon}</span>

@@ -4,7 +4,7 @@
 // ============================================================
 
 import { create } from 'zustand'
-import type { Commit, GraphRow, CommitDetail } from '@shared/types'
+import type { Commit, GraphRow, CommitDetail, DiffFile } from '@shared/types'
 import { assignLanes } from '../graph/lane-algorithm'
 
 interface GraphState {
@@ -15,6 +15,11 @@ interface GraphState {
   // Selection
   selectedCommitHash: string | null
   selectedCommitDetail: CommitDetail | null
+
+  // Commit file diff (History view)
+  selectedCommitFilePath: string | null
+  commitFileDiff: DiffFile[]
+  isCommitDiffLoading: boolean
 
   // Filters
   branchFilter: string | null
@@ -38,6 +43,7 @@ interface GraphState {
   loadMore: () => Promise<void>
   selectCommit: (hash: string) => Promise<void>
   clearSelection: () => void
+  selectCommitFile: (hash: string, filePath: string) => Promise<void>
   setBranchFilter: (branch: string | null) => void
   setAuthorFilter: (author: string | null) => void
   setSearchQuery: (query: string | null) => void
@@ -51,6 +57,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   graphRows: [],
   selectedCommitHash: null,
   selectedCommitDetail: null,
+  selectedCommitFilePath: null,
+  commitFileDiff: [],
+  isCommitDiffLoading: false,
   branchFilter: null,
   authorFilter: null,
   searchQuery: null,
@@ -153,7 +162,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     // If already selected, do nothing
     if (selectedCommitHash === hash) return
 
-    set({ selectedCommitHash: hash, selectedCommitDetail: null })
+    set({
+      selectedCommitHash: hash,
+      selectedCommitDetail: null,
+      selectedCommitFilePath: null,
+      commitFileDiff: []
+    })
 
     try {
       const detail = await window.api.git.show(repoPath, hash)
@@ -170,7 +184,31 @@ export const useGraphStore = create<GraphState>((set, get) => ({
 
   // Clear commit selection
   clearSelection: () => {
-    set({ selectedCommitHash: null, selectedCommitDetail: null })
+    set({
+      selectedCommitHash: null,
+      selectedCommitDetail: null,
+      selectedCommitFilePath: null,
+      commitFileDiff: []
+    })
+  },
+
+  // Load diff for a specific file in a commit (History view)
+  selectCommitFile: async (hash, filePath) => {
+    const { repoPath } = get()
+    if (!repoPath) return
+    set({ selectedCommitFilePath: filePath, commitFileDiff: [], isCommitDiffLoading: true })
+    try {
+      const raw = await window.api.git.diffCommitFile(repoPath, hash, filePath)
+      const parsed = window.api.git.parseDiff(raw)
+      if (get().selectedCommitFilePath === filePath) {
+        set({ commitFileDiff: parsed, isCommitDiffLoading: false })
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to load file diff',
+        isCommitDiffLoading: false
+      })
+    }
   },
 
   // Set branch filter
@@ -204,6 +242,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       graphRows: [],
       selectedCommitHash: null,
       selectedCommitDetail: null,
+      selectedCommitFilePath: null,
+      commitFileDiff: [],
+      isCommitDiffLoading: false,
       branchFilter: null,
       authorFilter: null,
       searchQuery: null,

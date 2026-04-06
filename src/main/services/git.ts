@@ -278,6 +278,21 @@ export class GitService {
   }
 
   /**
+   * Get the diff of a specific file at a given commit.
+   * Uses `git show <hash>:<path>` vs parent to produce a unified diff.
+   * For root commits (no parent) uses `git diff 4b825dc...<hash> -- <path>` (empty tree).
+   */
+  async diffCommitFile(repoPath: string, hash: string, filePath: string): Promise<string> {
+    try {
+      return await this.exec(['diff', `${hash}^`, hash, '--', filePath], repoPath)
+    } catch {
+      // Root commit has no parent — diff against the empty tree
+      const emptyTree = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+      return await this.exec(['diff', emptyTree, hash, '--', filePath], repoPath)
+    }
+  }
+
+  /**
    * List all branches (local and remote).
    */
   /**

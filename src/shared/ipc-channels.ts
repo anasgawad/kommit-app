@@ -33,6 +33,7 @@ export const IPC_CHANNELS = {
   GIT_DIFF: 'git:diff',
   GIT_DIFF_STAGED: 'git:diff-staged',
   GIT_DIFF_UNTRACKED: 'git:diff-untracked',
+  GIT_DIFF_COMMIT: 'git:diff-commit',
   GIT_DISCARD: 'git:discard',
 
   // Tags

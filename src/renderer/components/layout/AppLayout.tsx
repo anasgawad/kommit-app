@@ -21,7 +21,8 @@ export type ActiveView = 'history' | 'changes'
 
 export function AppLayout() {
   const { activeRepo, refreshStatus, status } = useRepoStore()
-  const { setRepoPath, loadCommits, selectedCommitHash } = useGraphStore()
+  const { setRepoPath, loadCommits, selectedCommitHash, commitFileDiff, isCommitDiffLoading } =
+    useGraphStore()
   const { selectedFile, selectedIsStaged, clearSelection } = useChangesStore()
   const [activeView, setActiveView] = useState<ActiveView>('history')
 
@@ -149,8 +150,22 @@ export function AppLayout() {
             {/* Commit graph */}
             <CommitGraph />
 
-            {/* Commit detail panel (conditionally rendered) */}
-            {selectedCommitHash && <CommitDetail />}
+            {/* Commit detail panel + diff viewer (conditionally rendered) */}
+            {selectedCommitHash && (
+              <>
+                <CommitDetail />
+                {activeRepo && (
+                  <div className="flex-1 overflow-hidden border-l border-[var(--color-border)]">
+                    <DiffViewer
+                      repoPath={activeRepo.path}
+                      diff={commitFileDiff}
+                      isLoading={isCommitDiffLoading}
+                      emptyMessage="Select a file to view its diff"
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </>
         ) : (
           /* Changes view: WorkingTree + DiffViewer + CommitForm */

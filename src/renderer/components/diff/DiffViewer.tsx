@@ -13,6 +13,12 @@ interface DiffViewerProps {
   repoPath: string
   /** When set, shows a hunk staging button (working tree mode) */
   allowHunkStage?: boolean
+  /** When set, renders this diff instead of reading from changes-store (commit history mode) */
+  diff?: DiffFile[]
+  /** Loading state when diff prop is provided externally */
+  isLoading?: boolean
+  /** Placeholder text when no file is selected */
+  emptyMessage?: string
 }
 
 // ─── Syntax highlighter (lazy Shiki init) ────────────────────────────────────
@@ -332,30 +338,41 @@ function FileTabs({ files, selectedIdx, onSelect }: FileTabsProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function DiffViewer({ repoPath, allowHunkStage = false }: DiffViewerProps) {
+export function DiffViewer({
+  repoPath,
+  allowHunkStage = false,
+  diff: diffProp,
+  isLoading: isLoadingProp,
+  emptyMessage
+}: DiffViewerProps) {
   const { currentDiff, isDiffLoading, diffViewMode, setDiffViewMode, selectedFile } =
     useChangesStore()
   const { refreshStatus } = useRepoStore()
   const [selectedFileIdx, setSelectedFileIdx] = useState(0)
   const prevDiffRef = useRef(currentDiff)
 
+  // When used in commit-history mode (diffProp provided), use that data
+  const activeDiff = diffProp ?? currentDiff
+  const activeLoading = isLoadingProp ?? isDiffLoading
+
   // Reset file tab when diff changes
   useEffect(() => {
-    if (prevDiffRef.current !== currentDiff) {
+    if (prevDiffRef.current !== activeDiff) {
       setSelectedFileIdx(0)
-      prevDiffRef.current = currentDiff
+      prevDiffRef.current = activeDiff
     }
-  }, [currentDiff])
+  }, [activeDiff])
 
-  if (!selectedFile) {
+  // In working-tree mode (no diffProp), require a selected file
+  if (!diffProp && !selectedFile) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-muted)]">
-        Select a file to view diff
+        {emptyMessage ?? 'Select a file to view diff'}
       </div>
     )
   }
 
-  if (isDiffLoading) {
+  if (activeLoading) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-muted)]">
         Loading diff…
@@ -363,7 +380,16 @@ export function DiffViewer({ repoPath, allowHunkStage = false }: DiffViewerProps
     )
   }
 
-  if (currentDiff.length === 0) {
+  // In commit-history mode with nothing selected yet
+  if (diffProp && activeDiff.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-muted)]">
+        {emptyMessage ?? 'Select a file to view diff'}
+      </div>
+    )
+  }
+
+  if (!diffProp && activeDiff.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-[var(--color-text-muted)]">
         No changes to display
@@ -371,7 +397,7 @@ export function DiffViewer({ repoPath, allowHunkStage = false }: DiffViewerProps
     )
   }
 
-  const file = currentDiff[selectedFileIdx] ?? currentDiff[0]
+  const file = activeDiff[selectedFileIdx] ?? activeDiff[0]
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[var(--color-bg)]">
@@ -398,8 +424,8 @@ export function DiffViewer({ repoPath, allowHunkStage = false }: DiffViewerProps
       </div>
 
       {/* File tabs (only if multiple files) */}
-      {currentDiff.length > 1 && (
-        <FileTabs files={currentDiff} selectedIdx={selectedFileIdx} onSelect={setSelectedFileIdx} />
+      {activeDiff.length > 1 && (
+        <FileTabs files={activeDiff} selectedIdx={selectedFileIdx} onSelect={setSelectedFileIdx} />
       )}
 
       {/* Diff content */}

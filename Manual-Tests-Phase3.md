@@ -112,25 +112,25 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** View a TypeScript or JavaScript file diff
 
-- [ ] Code is syntax-highlighted (colors for keywords, strings, etc.)
-- [ ] Highlighting loads asynchronously (brief delay is acceptable)
-- [ ] After highlight loads, diff re-renders with colors in place
+- [✅] Code is syntax-highlighted (colors for keywords, strings, etc.)
+- [✅] Highlighting loads asynchronously (brief delay is acceptable)
+- [✅] After highlight loads, diff re-renders with colors in place
 
 ### 3.4 Binary Files
 
 **Test:** Modify a binary file (e.g., an image) and view its diff
 
-- [ ] Diff viewer shows "Binary file — no diff available" message
-- [ ] No crash or garbled output
+- [✅] Diff viewer shows "Binary file — no diff available" message
+- [✅] No crash or garbled output
 
 ### 3.5 Multiple Files (File Tabs)
 
 **Test:** Create a diff with changes in multiple files, then load via context
 
-- [ ] When a diff spans multiple files, file tabs appear below the toolbar
-- [ ] Clicking a tab switches to that file's diff
-- [ ] The active tab is highlighted
-- [ ] For single-file diffs, no tabs are shown
+- [✅] When a diff spans multiple files, file tabs appear below the toolbar
+- [✅] Clicking a tab switches to that file's diff
+- [✅] The active tab is highlighted
+- [✅] For single-file diffs, no tabs are shown
 
 ### 3.6 Hunk-Level Staging
 
