@@ -84,66 +84,107 @@ export function GraphRow({
           {/* Ref badges (branches, tags) - pill style with icons */}
           {commit.refs.length > 0 && (
             <div className="flex gap-1 flex-shrink-0">
-              {commit.refs.slice(0, 3).map((ref, i) => {
-                const trimmed = ref.trim()
-                if (!trimmed || trimmed === 'HEAD') return null
-
-                const isTag = trimmed.startsWith('tag:')
-                const isHead = trimmed.startsWith('HEAD ->')
-                const isBranch = !isTag && !isHead
-
-                // Detect remote-tracking branches (e.g., "origin/main", "upstream/dev")
-                const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
-                const firstSlash = trimmed.indexOf('/')
-                const isRemote =
-                  isBranch &&
-                  !isHead &&
-                  firstSlash !== -1 &&
-                  knownRemotes.includes(trimmed.slice(0, firstSlash))
-
-                if (!isBranch && !isTag && !isHead) return null
-
-                const label = isTag
-                  ? trimmed.replace('tag: ', '')
-                  : isHead
-                    ? trimmed.replace('HEAD -> ', '')
-                    : trimmed
-
-                // Get deterministic per-branch color
-                const refColor = getRefColor(trimmed)
-
-                return (
-                  <span
-                    key={i}
-                    className={`
-                      inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium
-                      ${isTag ? 'bg-kommit-warning/15 text-kommit-warning' : ''}
-                      ${isHead ? 'font-semibold' : ''}
-                    `}
-                    style={
-                      isTag
-                        ? undefined
-                        : isRemote
-                          ? {
-                              color: refColor,
-                              border: `1px dashed ${refColor}80`, // 50% opacity border
-                              backgroundColor: 'transparent'
-                            }
-                          : {
-                              color: refColor,
-                              backgroundColor: refColor + '26' // ~15% opacity
-                            }
-                    }
-                    title={ref}
+              {/* HEAD badge — shown first and always visible */}
+              {commit.refs.some((r) => r.trim() === 'HEAD' || r.trim().startsWith('HEAD ->')) && (
+                <span
+                  className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{
+                    color: '#f38ba8',
+                    backgroundColor: '#f38ba826',
+                    border: '1px solid #f38ba880'
+                  }}
+                  title="HEAD"
+                >
+                  <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    className="flex-shrink-0"
                   >
-                    {isTag ? <TagIcon /> : <BranchIcon />}
-                    <span className="truncate max-w-24">{label}</span>
-                  </span>
-                )
-              })}
-              {commit.refs.length > 3 && (
+                    <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
+                    <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0z" />
+                  </svg>
+                  HEAD
+                </span>
+              )}
+              {commit.refs
+                .map((r) => {
+                  const trimmed = r.trim()
+                  if (!trimmed || trimmed === 'HEAD') return null
+                  // Extract branch name from "HEAD -> branchname" so it shows
+                  // as a normal branch badge (HEAD badge is rendered separately)
+                  if (trimmed.startsWith('HEAD -> ')) return trimmed.slice('HEAD -> '.length)
+                  return trimmed
+                })
+                .filter(Boolean)
+                .slice(0, 3)
+                .map((ref, i) => {
+                  const trimmed = (ref as string).trim()
+                  if (!trimmed) return null
+
+                  const isTag = trimmed.startsWith('tag:')
+                  const isBranch = !isTag
+
+                  // Detect remote-tracking branches (e.g., "origin/main", "upstream/dev")
+                  const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
+                  const firstSlash = trimmed.indexOf('/')
+                  const isRemote =
+                    isBranch &&
+                    firstSlash !== -1 &&
+                    knownRemotes.includes(trimmed.slice(0, firstSlash))
+
+                  const label = isTag ? trimmed.replace('tag: ', '') : trimmed
+
+                  // Get deterministic per-branch color
+                  const refColor = getRefColor(trimmed)
+
+                  return (
+                    <span
+                      key={i}
+                      className={`
+                        inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium
+                        ${isTag ? 'bg-kommit-warning/15 text-kommit-warning' : ''}
+                      `}
+                      style={
+                        isTag
+                          ? undefined
+                          : isRemote
+                            ? {
+                                color: refColor,
+                                border: `1px dashed ${refColor}80`, // 50% opacity border
+                                backgroundColor: 'transparent'
+                              }
+                            : {
+                                color: refColor,
+                                backgroundColor: refColor + '26' // ~15% opacity
+                              }
+                      }
+                      title={trimmed}
+                    >
+                      {isTag ? <TagIcon /> : <BranchIcon />}
+                      <span className="truncate max-w-24">{label}</span>
+                    </span>
+                  )
+                })}
+              {commit.refs
+                .map((r) => {
+                  const t = r.trim()
+                  if (!t || t === 'HEAD') return null
+                  if (t.startsWith('HEAD -> ')) return t.slice('HEAD -> '.length)
+                  return t
+                })
+                .filter(Boolean).length > 3 && (
                 <span className="text-xs text-kommit-text-secondary px-1">
-                  +{commit.refs.length - 3}
+                  +
+                  {commit.refs
+                    .map((r) => {
+                      const t = r.trim()
+                      if (!t || t === 'HEAD') return null
+                      if (t.startsWith('HEAD -> ')) return t.slice('HEAD -> '.length)
+                      return t
+                    })
+                    .filter(Boolean).length - 3}
                 </span>
               )}
             </div>

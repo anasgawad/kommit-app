@@ -86,6 +86,7 @@ const ResetIcon = () => (
 export function CommitGraph() {
   const {
     graphRows,
+    headCommitHash,
     selectedCommitHash,
     isLoading,
     error,
@@ -95,6 +96,7 @@ export function CommitGraph() {
     searchQuery,
     selectCommit,
     loadMore,
+    loadCommits,
     setBranchFilter,
     setAuthorFilter,
     setSearchQuery,
@@ -201,6 +203,15 @@ export function CommitGraph() {
     }
   }, [selectedCommitHash, graphRows])
 
+  // Scroll to HEAD commit whenever headCommitHash changes (e.g. after checkout)
+  useEffect(() => {
+    if (!headCommitHash) return
+    const headIndex = graphRows.findIndex((row) => row.commit.hash === headCommitHash)
+    if (headIndex >= 0) {
+      rowVirtualizer.scrollToIndex(headIndex, { align: 'start' })
+    }
+  }, [headCommitHash, graphRows, rowVirtualizer])
+
   // Close context menu on click outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null)
@@ -232,14 +243,17 @@ export function CommitGraph() {
         case 'checkout':
           await window.api.git.checkout(activeRepo.path, hash)
           await refreshStatus()
+          await loadCommits()
           break
         case 'cherry-pick':
           await window.api.git.cherryPick(activeRepo.path, hash)
           await refreshStatus()
+          await loadCommits()
           break
         case 'revert':
           await window.api.git.revert(activeRepo.path, hash)
           await refreshStatus()
+          await loadCommits()
           break
         case 'reset':
           setShowResetDialog(hash)
@@ -256,6 +270,7 @@ export function CommitGraph() {
     try {
       await window.api.git.reset(activeRepo.path, showResetDialog, resetMode)
       await refreshStatus()
+      await loadCommits()
     } catch (err) {
       setContextError(err instanceof Error ? err.message : 'Reset failed')
     }

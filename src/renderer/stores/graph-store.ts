@@ -12,6 +12,9 @@ interface GraphState {
   commits: Commit[]
   graphRows: GraphRow[]
 
+  // HEAD position (hash of the commit HEAD points to, updated on every loadCommits)
+  headCommitHash: string | null
+
   // Selection
   selectedCommitHash: string | null
   selectedCommitDetail: CommitDetail | null
@@ -55,6 +58,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   // Initial state
   commits: [],
   graphRows: [],
+  headCommitHash: null,
   selectedCommitHash: null,
   selectedCommitDetail: null,
   selectedCommitFilePath: null,
@@ -95,11 +99,13 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         search: searchQuery || undefined
       })
 
+      const headCommit = commits.find((c) => c.refs.some((r) => r.includes('HEAD')))
       const graphRows = assignLanes(commits)
 
       set({
         commits,
         graphRows,
+        headCommitHash: headCommit?.hash ?? null,
         hasMore: commits.length === pageSize,
         isLoading: false
       })
@@ -240,6 +246,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     set({
       commits: [],
       graphRows: [],
+      headCommitHash: null,
       selectedCommitHash: null,
       selectedCommitDetail: null,
       selectedCommitFilePath: null,

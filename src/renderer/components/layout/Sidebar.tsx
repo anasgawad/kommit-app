@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
+import { useGraphStore } from '../../stores/graph-store'
 import type { Branch, Tag } from '@shared/types'
 
 type BranchContextMenu = {
@@ -17,6 +18,7 @@ type BranchAction = 'checkout' | 'create' | 'rename' | 'delete' | 'merge'
 
 export function Sidebar() {
   const { activeRepo, status, openRepo, refreshStatus } = useRepoStore()
+  const { loadCommits } = useGraphStore()
   const [branches, setBranches] = useState<Branch[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [expandBranches, setExpandBranches] = useState(true)
@@ -73,6 +75,7 @@ export function Sidebar() {
       await window.api.git.checkout(activeRepo.path, branch.name)
       await refreshStatus()
       await loadData()
+      await loadCommits()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Checkout failed')
     }
@@ -111,6 +114,7 @@ export function Sidebar() {
       }
       await refreshStatus()
       await loadData()
+      await loadCommits()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : `${action} failed`)
     }
