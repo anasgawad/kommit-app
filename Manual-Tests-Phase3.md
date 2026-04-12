@@ -136,10 +136,10 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Stage a single hunk from the diff viewer
 
-- [ ] When in Changes view with an unstaged file selected, each hunk shows a "Stage hunk" button
-- [ ] Clicking "Stage hunk" applies only that hunk to the index
-- [ ] After staging a hunk, the working tree status updates correctly
-- [ ] The diff viewer refreshes to reflect the partially staged file
+- [✅] When in Changes view with an unstaged file selected, each hunk shows a "Stage hunk" button
+- [✅] Clicking "Stage hunk" applies only that hunk to the index
+- [✅] After staging a hunk, the working tree status updates correctly
+- [✅] The diff viewer refreshes to reflect the partially staged file
 
 ---
 
@@ -149,51 +149,51 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Stage a file and commit it
 
-- [ ] Subject input is present with placeholder "Summary (required)"
-- [ ] Body textarea is present with placeholder "Description (optional)"
-- [ ] Commit button is disabled when subject is empty
-- [ ] Commit button is disabled when there are no staged changes
-- [ ] Typing a subject and having staged files enables the Commit button
-- [ ] Clicking Commit creates a new commit (verify with `git log`)
-- [ ] After commit, subject/body inputs are cleared
-- [ ] After commit, staged section is empty
+- [✅] Subject input is present with placeholder "Summary (required)"
+- [✅] Body textarea is present with placeholder "Description (optional)"
+- [✅] Commit button is disabled when subject is empty
+- [✅] Commit button is disabled when there are no staged changes
+- [✅] Typing a subject and having staged files enables the Commit button
+- [✅] Clicking Commit creates a new commit (verify with `git log`)
+- [✅] After commit, subject/body inputs are cleared
+- [✅] After commit, staged section is empty
 
 ### 4.2 Commit with Body
 
 **Test:** Commit with a multi-line message
 
-- [ ] Enter subject and body text
-- [ ] After commit, `git log --format="%B"` shows subject + blank line + body
+- [✅] Enter subject and body text
+- [✅] After commit, `git log --format="%B"` shows subject + blank line + body
 
 ### 4.3 72-Character Warning
 
 **Test:** Type a subject longer than 72 characters
 
-- [ ] Warning text appears: "Subject exceeds 72 characters (NN/72)"
-- [ ] Input border changes to yellow/warning color
-- [ ] Can still commit (it's a warning, not a hard limit)
+- [✅] Warning text appears: "Subject exceeds 72 characters (NN/72)"
+- [✅] Input border changes to yellow/warning color
+- [✅] Can still commit (it's a warning, not a hard limit)
 
 ### 4.4 Ctrl+Enter Shortcut
 
 **Test:** Use keyboard shortcut to commit
 
-- [ ] With cursor in subject input, pressing Ctrl+Enter commits (if enabled)
-- [ ] With cursor in body textarea, pressing Ctrl+Enter commits (if enabled)
+- [✅] With cursor in subject input, pressing Ctrl+Enter commits (if enabled)
+- [✅] With cursor in body textarea, pressing Ctrl+Enter commits (if enabled)
 
 ### 4.5 Amend Commit
 
 **Test:** Amend the last commit
 
-- [ ] Checking "Amend last commit" checkbox changes button label to "Amend Commit"
-- [ ] With amend checked, Commit button is enabled even without a subject (uses existing message)
-- [ ] After amend, `git log -1` shows the amended commit
+- [✅] Checking "Amend last commit" checkbox changes button label to "Amend Commit"
+- [✅] With amend checked, Commit button is enabled even without a subject (uses existing message)
+- [✅] After amend, `git log -1` shows the amended commit
 
 ### 4.6 Error Display
 
 **Test:** Attempt to commit with nothing staged (if possible to trigger)
 
-- [ ] Any commit error is shown below the amend checkbox
-- [ ] Error message is readable (not truncated)
+- [✅] Any commit error is shown below the amend checkbox
+- [✅] Error message is readable (not truncated)
 
 ---
 
@@ -203,8 +203,8 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Double-click a branch name in the sidebar
 
-- [ ] Double-clicking a local branch checks it out
-- [ ] ActivityBar / StatusBar updates to show new current branch
+- [✅] Double-clicking a local branch checks it out
+- [✅] ActivityBar / StatusBar updates to show new current branch
 - [ ] Commit graph updates to reflect HEAD position
 
 ### 5.2 Right-Click Context Menu

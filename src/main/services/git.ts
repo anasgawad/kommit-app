@@ -421,8 +421,13 @@ export class GitService {
    * Create a new commit.
    */
   async commit(repoPath: string, message: string, options?: { amend?: boolean }): Promise<string> {
-    const args = ['commit', '-m', message]
-    if (options?.amend) {
+    const isAmend = options?.amend === true
+    // When amending with no new message, preserve the existing commit message via --no-edit
+    const args =
+      isAmend && message.trim().length === 0
+        ? ['commit', '--amend', '--no-edit']
+        : ['commit', '-m', message]
+    if (isAmend && message.trim().length > 0) {
       args.push('--amend')
     }
     const output = await this.exec(args, repoPath)

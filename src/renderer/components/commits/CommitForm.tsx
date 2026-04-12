@@ -120,7 +120,13 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
               : 'Enter a summary'
         }
       >
-        {isCommitting ? 'Committing…' : amend ? 'Amend Commit' : 'Commit'}
+        {isCommitting
+          ? 'Committing…'
+          : amend && subject.trim().length === 0
+            ? 'Amend (keep message)'
+            : amend
+              ? 'Amend Commit'
+              : 'Commit'}
       </button>
     </div>
   )
