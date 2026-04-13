@@ -213,23 +213,23 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 - [✅] Context menu appears with options: Checkout, Merge into current, Rename, Delete
 - [✅] Clicking Checkout checks out the branch
-- [ ] Clicking Merge into current merges that branch into HEAD
+- [✅] Clicking Merge into current merges that branch into HEAD
 
 ### 5.3 Rename Branch
 
 **Test:** Rename a local branch via context menu
 
-- [ ] Clicking Rename shows an inline text input pre-filled with current name
-- [ ] Pressing Enter applies the rename
-- [ ] Pressing Escape cancels
-- [ ] After rename, sidebar reflects new name
+- [✅] Clicking Rename shows an inline text input pre-filled with current name
+- [✅] Pressing Enter applies the rename
+- [✅] Pressing Escape cancels
+- [✅] After rename, sidebar reflects new name
 
 ### 5.4 Delete Branch
 
 **Test:** Delete a local branch via context menu
 
-- [ ] Clicking Delete removes the branch
-- [ ] Deleting current branch is prevented (or shows a clear error)
+- [✅] Clicking Delete removes the branch
+- [✅] Deleting current branch is prevented (or shows a clear error)
 
 ---
 

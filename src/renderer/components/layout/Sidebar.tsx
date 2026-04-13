@@ -99,7 +99,22 @@ export function Sidebar() {
           break
         case 'delete': {
           if (!window.confirm(`Delete branch "${branch.name}"?`)) return
-          await window.api.git.deleteBranch(activeRepo.path, branch.name, false)
+          try {
+            await window.api.git.deleteBranch(activeRepo.path, branch.name, false)
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : ''
+            if (msg.includes('not fully merged')) {
+              if (
+                !window.confirm(
+                  `"${branch.name}" has unmerged commits.\n\nForce delete anyway? This cannot be undone.`
+                )
+              )
+                return
+              await window.api.git.deleteBranch(activeRepo.path, branch.name, true)
+            } else {
+              throw err
+            }
+          }
           break
         }
         case 'merge':
