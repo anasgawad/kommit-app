@@ -686,8 +686,8 @@ export class GitService {
     const format = [
       '%(refname:short)', // tag name
       '%(objecttype)', // tag or commit (annotated vs lightweight)
-      '%(objectname:short)', // hash of the tag object (or commit for lightweight)
-      '*%(objectname:short)', // dereferenced commit hash for annotated tags
+      '%(objectname)', // full hash of the tag object (or commit for lightweight)
+      '*%(objectname)', // dereferenced full commit hash for annotated tags
       '%(contents:subject)', // tag message subject
       '%(creatordate:iso-strict)' // date
     ].join('%09')

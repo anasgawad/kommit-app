@@ -239,7 +239,7 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Open a repository that has tags
 
-- [ ] Tags section appears in the sidebar, collapsible
+- [✅] Tags section appears in the sidebar, collapsible
 - [ ] Tags show name and abbreviated hash
 - [ ] Annotated tags show their message (if short enough)
 - [ ] Lightweight tags are visually distinct from annotated tags (or labeled)
@@ -248,8 +248,10 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Open a repository with no tags
 
-- [ ] Tags section shows "No tags" or is collapsed/hidden cleanly
+- [✅] Tags section shows "No tags" or is collapsed/hidden cleanly
 
+
+NOTE: we missed tags management create/delete tag 
 ---
 
 ## 7. Commit Graph Context Menu Actions

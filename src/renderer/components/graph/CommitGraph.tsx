@@ -193,15 +193,16 @@ export function CommitGraph() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [focusedIndex, graphRows, selectCommit, rowVirtualizer])
 
-  // Update focused index when selection changes externally
+  // Update focused index and scroll when selection changes externally (e.g. tag click)
   useEffect(() => {
     if (selectedCommitHash) {
       const index = graphRows.findIndex((row) => row.commit.hash === selectedCommitHash)
       if (index >= 0) {
         setFocusedIndex(index)
+        rowVirtualizer.scrollToIndex(index, { align: 'center' })
       }
     }
-  }, [selectedCommitHash, graphRows])
+  }, [selectedCommitHash, graphRows, rowVirtualizer])
 
   // Scroll to HEAD commit whenever headCommitHash changes (e.g. after checkout)
   useEffect(() => {

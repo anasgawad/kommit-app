@@ -47,6 +47,7 @@ interface GraphState {
   selectCommit: (hash: string) => Promise<void>
   clearSelection: () => void
   selectCommitFile: (hash: string, filePath: string) => Promise<void>
+  scrollToCommit: (hash: string) => Promise<void>
   setBranchFilter: (branch: string | null) => void
   setAuthorFilter: (author: string | null) => void
   setSearchQuery: (query: string | null) => void
@@ -215,6 +216,49 @@ export const useGraphStore = create<GraphState>((set, get) => ({
         isCommitDiffLoading: false
       })
     }
+  },
+
+  // Navigate to a specific commit: ensures it is loaded in graphRows, clears filters if needed,
+  // selects the commit (which triggers CommitGraph's scroll effect), then loads its details.
+  scrollToCommit: async (hash) => {
+    const { repoPath } = get()
+    if (!repoPath) return
+
+    // Check if commit is already in the current graphRows
+    const alreadyLoaded = get().graphRows.some((row) => row.commit.hash === hash)
+
+    if (!alreadyLoaded) {
+      // Clear any active filters and reload all commits (no maxCount) so the commit is present
+      set({
+        branchFilter: null,
+        authorFilter: null,
+        searchQuery: null,
+        isLoading: true,
+        error: null
+      })
+      try {
+        const commits = await window.api.git.log(repoPath, { all: true })
+        const headCommit = commits.find((c) => c.refs.some((r) => r.includes('HEAD')))
+        const graphRows = assignLanes(commits)
+        set({
+          commits,
+          graphRows,
+          headCommitHash: headCommit?.hash ?? null,
+          hasMore: false,
+          isLoading: false
+        })
+      } catch (error) {
+        set({
+          error: error instanceof Error ? error.message : 'Failed to load commits',
+          isLoading: false
+        })
+        return
+      }
+    }
+
+    // Select the commit — this sets selectedCommitHash, which CommitGraph's useEffect
+    // watches to call rowVirtualizer.scrollToIndex
+    await get().selectCommit(hash)
   },
 
   // Set branch filter

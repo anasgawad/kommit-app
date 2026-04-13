@@ -18,7 +18,7 @@ type BranchAction = 'checkout' | 'create' | 'rename' | 'delete' | 'merge'
 
 export function Sidebar() {
   const { activeRepo, status, openRepo, refreshStatus } = useRepoStore()
-  const { loadCommits } = useGraphStore()
+  const { loadCommits, scrollToCommit } = useGraphStore()
   const [branches, setBranches] = useState<Branch[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [expandBranches, setExpandBranches] = useState(true)
@@ -163,6 +163,10 @@ export function Sidebar() {
     }
   }
 
+  const handleTagClick = (tag: Tag) => {
+    if (tag.hash) scrollToCommit(tag.hash)
+  }
+
   return (
     <div className="w-60 bg-kommit-bg-secondary border-r border-kommit-border flex flex-col overflow-hidden">
       {/* Repository name */}
@@ -237,6 +241,7 @@ export function Sidebar() {
             <div className="mt-1 space-y-0.5">
               {localBranches.map((branch) => {
                 const isRenaming = renameTarget?.branch.name === branch.name
+
                 return (
                   <div key={branch.name}>
                     {isRenaming ? (
@@ -329,8 +334,9 @@ export function Sidebar() {
                 tags.map((tag) => (
                   <div
                     key={tag.name}
-                    className="text-sm px-2 py-1 rounded text-kommit-text hover:bg-kommit-bg-tertiary cursor-default truncate"
-                    title={`${tag.name}${tag.message ? ` — ${tag.message}` : ''}${tag.isAnnotated ? ' (annotated)' : ''}`}
+                    className="text-sm px-2 py-1 rounded text-kommit-text hover:bg-kommit-bg-tertiary cursor-pointer truncate"
+                    title={`${tag.name}${tag.message ? ` — ${tag.message}` : ''}${tag.isAnnotated ? ' (annotated)' : ''}\nClick to jump to commit`}
+                    onClick={() => handleTagClick(tag)}
                   >
                     <span className="text-xs text-kommit-text-secondary mr-1">
                       {tag.isAnnotated ? '⊕' : '○'}
