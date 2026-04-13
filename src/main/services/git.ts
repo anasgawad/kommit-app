@@ -6,6 +6,7 @@
 import { execFile, spawn, ChildProcess } from 'node:child_process'
 import { promisify } from 'node:util'
 import { join } from 'node:path'
+import { rm } from 'node:fs/promises'
 import {
   GitStatus,
   Commit,
@@ -412,9 +413,36 @@ export class GitService {
 
   /**
    * Discard working tree changes for a file.
+   *
+   * Three cases:
+   * 1. Tracked modified/deleted file  → `git checkout -- <file>` (restore from index)
+   * 2. Conflicted (unmerged) file     → `git checkout HEAD -- <file>` (restore from HEAD,
+   *                                     clears the unmerged state)
+   * 3. Untracked file                 → delete the file from disk (git doesn't track it,
+   *                                     so there is nothing to restore)
    */
   async discardChanges(repoPath: string, filePath: string): Promise<void> {
-    await this.exec(['checkout', '--', filePath], repoPath)
+    try {
+      await this.exec(['checkout', '--', filePath], repoPath)
+    } catch (error) {
+      if (error instanceof GitError) {
+        if (error.stderr.includes('is unmerged')) {
+          // Conflicted file — restore from HEAD (discards both sides of the conflict)
+          await this.exec(['checkout', 'HEAD', '--', filePath], repoPath)
+          return
+        }
+        if (
+          error.stderr.includes('did not match any file') ||
+          error.stderr.includes('pathspec') ||
+          error.stderr.includes('unknown to git')
+        ) {
+          // Untracked file — delete it from disk (works for both files and directories)
+          await rm(join(repoPath, filePath), { recursive: true, force: true })
+          return
+        }
+      }
+      throw error
+    }
   }
 
   /**

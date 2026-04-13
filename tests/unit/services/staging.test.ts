@@ -8,6 +8,7 @@ import { GitService } from '../../../src/main/services/git'
 import { GitError } from '../../../src/shared/types'
 
 vi.mock('node:child_process')
+vi.mock('node:fs/promises')
 vi.mock('node:util', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:util')>()
   return {
@@ -29,9 +30,11 @@ vi.mock('node:util', async (importOriginal) => {
 })
 
 import { execFile, spawn } from 'node:child_process'
+import * as fsp from 'node:fs/promises'
 
 const mockExecFile = vi.mocked(execFile)
 const mockSpawn = vi.mocked(spawn)
+const mockRm = vi.mocked(fsp.rm)
 
 type ExecFileCallback = (error: Error | null, stdout?: string, stderr?: string) => void
 
@@ -166,9 +169,30 @@ describe('GitService — Staging', () => {
       )
     })
 
-    it('should throw GitError when file has no changes to discard', async () => {
+    it('should delete an untracked file using rm when git does not know it', async () => {
       mockExecFailure('did not match any file(s) known to git', 1)
-      await expect(git.discardChanges('/repo', 'foo.ts')).rejects.toBeInstanceOf(GitError)
+      mockRm.mockResolvedValue(undefined)
+      await git.discardChanges('/repo', 'untracked.ts')
+      expect(mockRm).toHaveBeenCalledWith(
+        expect.stringContaining('untracked.ts'),
+        expect.objectContaining({ recursive: true, force: true })
+      )
+    })
+
+    it('should delete an untracked directory using rm with recursive when git does not know it', async () => {
+      mockExecFailure('did not match any file(s) known to git', 1)
+      mockRm.mockResolvedValue(undefined)
+      await git.discardChanges('/repo', 'untracked-dir')
+      expect(mockRm).toHaveBeenCalledWith(
+        expect.stringContaining('untracked-dir'),
+        expect.objectContaining({ recursive: true, force: true })
+      )
+    })
+
+    it('should propagate rm error when deletion fails for an untracked path', async () => {
+      mockExecFailure('did not match any file(s) known to git', 1)
+      mockRm.mockRejectedValue(new Error('EPERM: permission denied'))
+      await expect(git.discardChanges('/repo', 'locked.ts')).rejects.toThrow('EPERM')
     })
   })
 

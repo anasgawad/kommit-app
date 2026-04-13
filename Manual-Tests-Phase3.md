@@ -205,14 +205,14 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 - [✅] Double-clicking a local branch checks it out
 - [✅] ActivityBar / StatusBar updates to show new current branch
-- [ ] Commit graph updates to reflect HEAD position
+- [✅] Commit graph updates to reflect HEAD position
 
 ### 5.2 Right-Click Context Menu
 
 **Test:** Right-click a branch in the sidebar
 
-- [ ] Context menu appears with options: Checkout, Merge into current, Rename, Delete
-- [ ] Clicking Checkout checks out the branch
+- [✅] Context menu appears with options: Checkout, Merge into current, Rename, Delete
+- [✅] Clicking Checkout checks out the branch
 - [ ] Clicking Merge into current merges that branch into HEAD
 
 ### 5.3 Rename Branch

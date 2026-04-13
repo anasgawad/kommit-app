@@ -13,11 +13,42 @@ import { useChangesStore } from '../../stores/changes-store'
 
 interface DiscardConfirmDialogProps {
   filePath: string
+  isConflicted?: boolean
+  isUntracked?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
 
-function DiscardConfirmDialog({ filePath, onConfirm, onCancel }: DiscardConfirmDialogProps) {
+function DiscardConfirmDialog({
+  filePath,
+  isConflicted,
+  isUntracked,
+  onConfirm,
+  onCancel
+}: DiscardConfirmDialogProps) {
+  const title = isConflicted
+    ? 'Discard conflict resolution?'
+    : isUntracked
+      ? 'Delete untracked file?'
+      : 'Discard changes?'
+
+  const body = isConflicted ? (
+    <>
+      Conflict resolution in <span className="font-mono text-[var(--color-text)]">{filePath}</span>{' '}
+      will be discarded and the file will be restored to HEAD.
+    </>
+  ) : isUntracked ? (
+    <>
+      <span className="font-mono text-[var(--color-text)]">{filePath}</span> is untracked and will
+      be permanently deleted from disk.
+    </>
+  ) : (
+    <>
+      Changes to <span className="font-mono text-[var(--color-text)]">{filePath}</span> will be
+      permanently lost.
+    </>
+  )
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -28,11 +59,8 @@ function DiscardConfirmDialog({ filePath, onConfirm, onCancel }: DiscardConfirmD
         onClick={(e) => e.stopPropagation()}
       >
         <div>
-          <p className="text-sm font-semibold text-[var(--color-text)] mb-1">Discard changes?</p>
-          <p className="text-xs text-[var(--color-text-muted)] break-all">
-            Changes to <span className="font-mono text-[var(--color-text)]">{filePath}</span> will
-            be permanently lost.
-          </p>
+          <p className="text-sm font-semibold text-[var(--color-text)] mb-1">{title}</p>
+          <p className="text-xs text-[var(--color-text-muted)] break-all">{body}</p>
         </div>
         <div className="flex justify-end gap-2">
           <button
@@ -45,7 +73,7 @@ function DiscardConfirmDialog({ filePath, onConfirm, onCancel }: DiscardConfirmD
             className="px-3 py-1 text-xs rounded bg-red-600 hover:bg-red-700 text-white"
             onClick={onConfirm}
           >
-            Discard
+            {isUntracked ? 'Delete' : 'Discard'}
           </button>
         </div>
       </div>
@@ -60,6 +88,7 @@ interface WorkingTreeProps {
 }
 
 function statusLabel(file: FileStatus): string {
+  if (file.isConflicted) return '!'
   const code = file.isStaged ? file.indexStatus : file.workTreeStatus
   switch (code) {
     case 'A':
@@ -78,6 +107,7 @@ function statusLabel(file: FileStatus): string {
 }
 
 function statusColor(file: FileStatus): string {
+  if (file.isConflicted) return 'text-red-400'
   const code = file.isStaged ? file.indexStatus : file.workTreeStatus
   switch (code) {
     case 'A':
@@ -238,6 +268,8 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
       {pendingDiscard && (
         <DiscardConfirmDialog
           filePath={pendingDiscard.path}
+          isConflicted={pendingDiscard.isConflicted}
+          isUntracked={pendingDiscard.workTreeStatus === '?'}
           onConfirm={confirmDiscard}
           onCancel={cancelDiscard}
         />
