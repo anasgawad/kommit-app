@@ -21,8 +21,14 @@ export type ActiveView = 'history' | 'changes'
 
 export function AppLayout() {
   const { activeRepo, refreshStatus, status } = useRepoStore()
-  const { setRepoPath, loadCommits, selectedCommitHash, commitFileDiff, isCommitDiffLoading } =
-    useGraphStore()
+  const {
+    setRepoPath,
+    loadCommits,
+    selectedCommitHash,
+    selectedCommitFilePath,
+    commitFileDiff,
+    isCommitDiffLoading
+  } = useGraphStore()
   const { selectedFile, selectedIsStaged, clearSelection } = useChangesStore()
   const [activeView, setActiveView] = useState<ActiveView>('history')
 
@@ -154,7 +160,7 @@ export function AppLayout() {
             {selectedCommitHash && (
               <>
                 <CommitDetail />
-                {activeRepo && (
+                {activeRepo && selectedCommitFilePath && (
                   <div className="flex-1 overflow-hidden border-l border-[var(--color-border)]">
                     <DiffViewer
                       repoPath={activeRepo.path}

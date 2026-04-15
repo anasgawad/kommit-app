@@ -217,9 +217,15 @@ export function Sidebar() {
       setCreateTagName('')
       setCreateTagMessage('')
       setShowCreateTag(false)
+      setExpandTags(true)
       await loadData()
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Create tag failed')
+      const raw = err instanceof Error ? err.message : ''
+      if (raw.includes('already exists')) {
+        setActionError(`Tag "${createTagName.trim()}" already exists`)
+      } else {
+        setActionError(raw || 'Create tag failed')
+      }
     }
   }
 

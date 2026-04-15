@@ -254,23 +254,23 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Create a lightweight tag
 
-- [ ] Click + next to "Tags" header — inline form appears with name and message fields
-- [ ] Enter a name only (no message) and confirm — lightweight tag is created
-- [ ] Tag appears in the list with ○ icon and no "A" badge
-- [ ] Error shown if tag name already exists
+- [✅] Click + next to "Tags" header — inline form appears with name and message fields
+- [✅] Enter a name only (no message) and confirm — lightweight tag is created
+- [✅] Tag appears in the list with ○ icon and no "A" badge
+- [✅] Error shown if tag name already exists
 
 **Test:** Create an annotated tag
 
-- [ ] Click + next to "Tags" header — inline form appears
-- [ ] Enter a name and a message, confirm — annotated tag is created
-- [ ] Tag appears in the list with ⊕ icon, "A" badge, and message shown below name
-- [ ] Escape cancels the form without creating a tag
+- [✅] Click + next to "Tags" header — inline form appears
+- [✅] Enter a name and a message, confirm — annotated tag is created
+- [✅] Tag appears in the list with ⊕ icon, "A" badge, and message shown below name
+- [✅] Escape cancels the form without creating a tag
 
 **Test:** Delete a tag
 
-- [ ] Right-click a tag — context menu appears with "Delete" option
-- [ ] Confirm the prompt — tag is deleted and removed from the list
-- [ ] Dismiss the prompt — tag is not deleted
+- [✅] Right-click a tag — context menu appears with "Delete" option
+- [✅] Confirm the prompt — tag is deleted and removed from the list
+- [✅] Dismiss the prompt — tag is not deleted
 
 ---
 
