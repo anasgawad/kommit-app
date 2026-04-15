@@ -19,6 +19,9 @@ interface GraphState {
   selectedCommitHash: string | null
   selectedCommitDetail: CommitDetail | null
 
+  // Pending scroll request — set by scrollToCommit, consumed and cleared by CommitGraph
+  pendingScrollHash: string | null
+
   // Commit file diff (History view)
   selectedCommitFilePath: string | null
   commitFileDiff: DiffFile[]
@@ -48,6 +51,7 @@ interface GraphState {
   clearSelection: () => void
   selectCommitFile: (hash: string, filePath: string) => Promise<void>
   scrollToCommit: (hash: string) => Promise<void>
+  clearPendingScroll: () => void
   setBranchFilter: (branch: string | null) => void
   setAuthorFilter: (author: string | null) => void
   setSearchQuery: (query: string | null) => void
@@ -62,6 +66,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   headCommitHash: null,
   selectedCommitHash: null,
   selectedCommitDetail: null,
+  pendingScrollHash: null,
   selectedCommitFilePath: null,
   commitFileDiff: [],
   isCommitDiffLoading: false,
@@ -219,7 +224,8 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   // Navigate to a specific commit: ensures it is loaded in graphRows, clears filters if needed,
-  // selects the commit (which triggers CommitGraph's scroll effect), then loads its details.
+  // sets pendingScrollHash so CommitGraph can scroll after the virtualizer has updated,
+  // and loads the commit details.
   scrollToCommit: async (hash) => {
     const { repoPath } = get()
     if (!repoPath) return
@@ -256,8 +262,12 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       }
     }
 
-    // Select the commit — this sets selectedCommitHash, which CommitGraph's useEffect
-    // watches to call rowVirtualizer.scrollToIndex
+    // Set pendingScrollHash — CommitGraph watches this and calls scrollToIndex after
+    // the virtualizer has had a chance to process the updated graphRows.
+    // Also force-select even if hash matches current selection (e.g. clicking same tag again).
+    set({ pendingScrollHash: hash })
+
+    // Load commit details (decouple from scroll — details panel updates independently)
     await get().selectCommit(hash)
   },
 
@@ -293,6 +303,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       headCommitHash: null,
       selectedCommitHash: null,
       selectedCommitDetail: null,
+      pendingScrollHash: null,
       selectedCommitFilePath: null,
       commitFileDiff: [],
       isCommitDiffLoading: false,
@@ -303,5 +314,9 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       isLoading: false,
       error: null
     })
+  },
+
+  clearPendingScroll: () => {
+    set({ pendingScrollHash: null })
   }
 }))

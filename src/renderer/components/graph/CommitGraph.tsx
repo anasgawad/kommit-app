@@ -88,6 +88,7 @@ export function CommitGraph() {
     graphRows,
     headCommitHash,
     selectedCommitHash,
+    pendingScrollHash,
     isLoading,
     error,
     hasMore,
@@ -100,7 +101,8 @@ export function CommitGraph() {
     setBranchFilter,
     setAuthorFilter,
     setSearchQuery,
-    clearFilters
+    clearFilters,
+    clearPendingScroll
   } = useGraphStore()
 
   const { activeRepo, refreshStatus } = useRepoStore()
@@ -193,16 +195,21 @@ export function CommitGraph() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [focusedIndex, graphRows, selectCommit, rowVirtualizer])
 
-  // Update focused index and scroll when selection changes externally (e.g. tag click)
+  // Scroll to commit when pendingScrollHash is set (e.g. tag/branch click from sidebar).
+  // Uses requestAnimationFrame to defer until after the virtualizer has processed any
+  // graphRows update (avoids race condition when the commit list was just reloaded).
   useEffect(() => {
-    if (selectedCommitHash) {
-      const index = graphRows.findIndex((row) => row.commit.hash === selectedCommitHash)
-      if (index >= 0) {
-        setFocusedIndex(index)
-        rowVirtualizer.scrollToIndex(index, { align: 'center' })
-      }
-    }
-  }, [selectedCommitHash, graphRows, rowVirtualizer])
+    if (!pendingScrollHash) return
+    const index = graphRows.findIndex((row) => row.commit.hash === pendingScrollHash)
+    if (index < 0) return
+
+    setFocusedIndex(index)
+    const raf = requestAnimationFrame(() => {
+      rowVirtualizer.scrollToIndex(index, { align: 'center' })
+      clearPendingScroll()
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [pendingScrollHash, graphRows])
 
   // Scroll to HEAD commit whenever headCommitHash changes (e.g. after checkout)
   useEffect(() => {

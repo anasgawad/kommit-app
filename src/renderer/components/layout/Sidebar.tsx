@@ -14,6 +14,12 @@ type BranchContextMenu = {
   y: number
 }
 
+type TagContextMenu = {
+  tag: Tag
+  x: number
+  y: number
+}
+
 type BranchAction = 'checkout' | 'create' | 'rename' | 'delete' | 'merge'
 
 export function Sidebar() {
@@ -25,11 +31,16 @@ export function Sidebar() {
   const [expandRemotes, setExpandRemotes] = useState(false)
   const [expandTags, setExpandTags] = useState(false)
   const [contextMenu, setContextMenu] = useState<BranchContextMenu | null>(null)
+  const [tagContextMenu, setTagContextMenu] = useState<TagContextMenu | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [renameTarget, setRenameTarget] = useState<{ branch: Branch; newName: string } | null>(null)
   const [createName, setCreateName] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showCreateTag, setShowCreateTag] = useState(false)
+  const [createTagName, setCreateTagName] = useState('')
+  const [createTagMessage, setCreateTagMessage] = useState('')
   const contextMenuRef = useRef<HTMLDivElement>(null)
+  const tagContextMenuRef = useRef<HTMLDivElement>(null)
 
   const loadData = async () => {
     if (!activeRepo) return
@@ -60,6 +71,18 @@ export function Sidebar() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [contextMenu])
+
+  // Close tag context menu on outside click
+  useEffect(() => {
+    if (!tagContextMenu) return
+    const handler = (e: MouseEvent) => {
+      if (tagContextMenuRef.current && !tagContextMenuRef.current.contains(e.target as Node)) {
+        setTagContextMenu(null)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [tagContextMenu])
 
   const localBranches = branches.filter((b) => !b.isRemote)
   const remoteBranches = branches.filter((b) => b.isRemote)
@@ -165,6 +188,39 @@ export function Sidebar() {
 
   const handleTagClick = (tag: Tag) => {
     if (tag.hash) scrollToCommit(tag.hash)
+  }
+
+  const handleTagContextMenu = (e: React.MouseEvent, tag: Tag) => {
+    e.preventDefault()
+    setTagContextMenu({ tag, x: e.clientX, y: e.clientY })
+    setActionError(null)
+  }
+
+  const handleDeleteTag = async () => {
+    if (!activeRepo || !tagContextMenu) return
+    const { tag } = tagContextMenu
+    setTagContextMenu(null)
+    if (!window.confirm(`Delete tag "${tag.name}"?`)) return
+    try {
+      await window.api.git.deleteTag(activeRepo.path, tag.name)
+      await loadData()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Delete tag failed')
+    }
+  }
+
+  const handleCreateTagSubmit = async () => {
+    if (!activeRepo || !createTagName.trim()) return
+    try {
+      const options = createTagMessage.trim() ? { message: createTagMessage.trim() } : undefined
+      await window.api.git.createTag(activeRepo.path, createTagName.trim(), options)
+      setCreateTagName('')
+      setCreateTagMessage('')
+      setShowCreateTag(false)
+      await loadData()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Create tag failed')
+    }
   }
 
   return (
@@ -319,31 +375,106 @@ export function Sidebar() {
 
         {/* Tags */}
         <div className="p-2 pt-0">
-          <button
-            onClick={() => setExpandTags(!expandTags)}
-            className="flex items-center gap-1 text-xs font-medium text-kommit-text-secondary uppercase tracking-wider py-1 hover:text-kommit-text"
-          >
-            <span className="text-[10px]">{expandTags ? '▼' : '▶'}</span>
-            Tags ({tags.length})
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setExpandTags(!expandTags)}
+              className="flex items-center gap-1 text-xs font-medium text-kommit-text-secondary uppercase tracking-wider py-1 hover:text-kommit-text"
+            >
+              <span className="text-[10px]">{expandTags ? '▼' : '▶'}</span>
+              Tags ({tags.length})
+            </button>
+            <button
+              onClick={() => setShowCreateTag(true)}
+              className="text-xs text-kommit-text-secondary hover:text-kommit-accent px-1"
+              title="New tag"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Create tag inline form */}
+          {showCreateTag && (
+            <div className="mt-1 space-y-1">
+              <input
+                autoFocus
+                type="text"
+                value={createTagName}
+                onChange={(e) => setCreateTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateTagSubmit()
+                  if (e.key === 'Escape') {
+                    setShowCreateTag(false)
+                    setCreateTagName('')
+                    setCreateTagMessage('')
+                  }
+                }}
+                placeholder="Tag name"
+                className="w-full px-1 py-0.5 text-xs rounded border border-kommit-border bg-kommit-bg-tertiary text-kommit-text outline-none"
+              />
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={createTagMessage}
+                  onChange={(e) => setCreateTagMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateTagSubmit()
+                    if (e.key === 'Escape') {
+                      setShowCreateTag(false)
+                      setCreateTagName('')
+                      setCreateTagMessage('')
+                    }
+                  }}
+                  placeholder="Message (optional — annotated)"
+                  className="flex-1 px-1 py-0.5 text-xs rounded border border-kommit-border bg-kommit-bg-tertiary text-kommit-text outline-none"
+                />
+                <button onClick={handleCreateTagSubmit} className="text-xs text-kommit-accent">
+                  ✓
+                </button>
+              </div>
+            </div>
+          )}
+
           {expandTags && (
             <div className="mt-1 space-y-0.5">
               {tags.length === 0 ? (
                 <div className="text-xs text-kommit-text-secondary px-2 py-1">No tags</div>
               ) : (
-                tags.map((tag) => (
-                  <div
-                    key={tag.name}
-                    className="text-sm px-2 py-1 rounded text-kommit-text hover:bg-kommit-bg-tertiary cursor-pointer truncate"
-                    title={`${tag.name}${tag.message ? ` — ${tag.message}` : ''}${tag.isAnnotated ? ' (annotated)' : ''}\nClick to jump to commit`}
-                    onClick={() => handleTagClick(tag)}
-                  >
-                    <span className="text-xs text-kommit-text-secondary mr-1">
-                      {tag.isAnnotated ? '⊕' : '○'}
-                    </span>
-                    {tag.name}
-                  </div>
-                ))
+                tags.map((tag) => {
+                  const shortHash = tag.hash.slice(0, 7)
+                  const shortMessage =
+                    tag.message && tag.message.length > 40
+                      ? tag.message.slice(0, 40) + '…'
+                      : tag.message
+                  return (
+                    <div
+                      key={tag.name}
+                      className="px-2 py-1 rounded text-kommit-text hover:bg-kommit-bg-tertiary cursor-pointer"
+                      title={`${tag.name}${tag.message ? ` — ${tag.message}` : ''}\n${tag.isAnnotated ? 'Annotated tag' : 'Lightweight tag'}\nClick to jump to commit\nRight-click for options`}
+                      onClick={() => handleTagClick(tag)}
+                      onContextMenu={(e) => handleTagContextMenu(e, tag)}
+                    >
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-xs text-kommit-text-secondary shrink-0">
+                          {tag.isAnnotated ? '⊕' : '○'}
+                        </span>
+                        <span className="text-sm truncate">{tag.name}</span>
+                        <span className="text-xs text-kommit-text-secondary font-mono shrink-0">
+                          {shortHash}
+                        </span>
+                        {tag.isAnnotated && (
+                          <span className="text-[10px] text-kommit-accent shrink-0 border border-kommit-accent/40 rounded px-0.5">
+                            A
+                          </span>
+                        )}
+                      </div>
+                      {shortMessage && (
+                        <div className="text-xs text-kommit-text-secondary mt-0.5 truncate pl-4">
+                          {shortMessage}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
               )}
             </div>
           )}
@@ -410,6 +541,22 @@ export function Sidebar() {
               Delete
             </button>
           )}
+        </div>
+      )}
+
+      {/* Tag context menu */}
+      {tagContextMenu && (
+        <div
+          ref={tagContextMenuRef}
+          className="fixed z-50 bg-kommit-bg-secondary border border-kommit-border rounded shadow-lg py-1 min-w-36 text-sm"
+          style={{ left: tagContextMenu.x, top: tagContextMenu.y }}
+        >
+          <button
+            className="w-full text-left px-3 py-1 hover:bg-kommit-bg-tertiary text-red-400"
+            onClick={handleDeleteTag}
+          >
+            Delete
+          </button>
         </div>
       )}
     </div>

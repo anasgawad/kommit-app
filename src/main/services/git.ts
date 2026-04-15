@@ -687,7 +687,7 @@ export class GitService {
       '%(refname:short)', // tag name
       '%(objecttype)', // tag or commit (annotated vs lightweight)
       '%(objectname)', // full hash of the tag object (or commit for lightweight)
-      '*%(objectname)', // dereferenced full commit hash for annotated tags
+      '%(*objectname)', // dereferenced commit hash for annotated tags (empty for lightweight)
       '%(contents:subject)', // tag message subject
       '%(creatordate:iso-strict)' // date
     ].join('%09')
@@ -715,10 +715,11 @@ export class GitService {
 
       const [name, objectType, objectHash, derefHash, message, dateStr] = parts
       const isAnnotated = objectType === 'tag'
-      // For annotated tags, the commit hash is in derefHash (prefixed with *)
+      // For annotated tags, %(*objectname) gives the dereferenced commit hash.
+      // For lightweight tags, %(*objectname) is empty — use objectname directly.
       const hash = isAnnotated
-        ? (derefHash?.replace(/^\*/, '') ?? objectHash ?? '')
-        : (objectHash ?? '')
+        ? derefHash?.trim() || objectHash?.trim() || ''
+        : objectHash?.trim() || ''
 
       tags.push({
         name: name.trim(),

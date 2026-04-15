@@ -62,10 +62,11 @@ function mockExecFailure(stderr: string, exitCode = 1) {
 }
 
 // Tab-delimited for-each-ref output format:
-// name\tobjecttype\tobjecthash\t*derefhash\tmessage\tdate
+// name\tobjecttype\tobjecthash\tderefhash\tmessage\tdate
+// derefhash is empty for lightweight tags, commit hash for annotated tags (%(*objectname))
 const LIGHTWEIGHT_TAG_OUTPUT = 'v1.0.0\tcommit\tabc1234\t\t\t2024-01-15T10:00:00+00:00\n'
 const ANNOTATED_TAG_OUTPUT =
-  'v2.0.0\ttag\ttaghash1\t*commit123\tRelease 2.0\t2024-06-01T12:00:00+00:00\n'
+  'v2.0.0\ttag\ttaghash1\tcommit123\tRelease 2.0\t2024-06-01T12:00:00+00:00\n'
 
 describe('GitService — Tags', () => {
   let git: GitService

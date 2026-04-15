@@ -240,9 +240,9 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 **Test:** Open a repository that has tags
 
 - [✅] Tags section appears in the sidebar, collapsible
-- [ ] Tags show name and abbreviated hash
-- [ ] Annotated tags show their message (if short enough)
-- [ ] Lightweight tags are visually distinct from annotated tags (or labeled)
+- [✅] Tags show name and abbreviated hash
+- [✅] Annotated tags show their message (if short enough)
+- [✅] Lightweight tags are visually distinct from annotated tags (or labeled)
 
 ### 6.2 No Tags State
 
@@ -250,8 +250,28 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 - [✅] Tags section shows "No tags" or is collapsed/hidden cleanly
 
+### 6.3 Tag Management
 
-NOTE: we missed tags management create/delete tag 
+**Test:** Create a lightweight tag
+
+- [ ] Click + next to "Tags" header — inline form appears with name and message fields
+- [ ] Enter a name only (no message) and confirm — lightweight tag is created
+- [ ] Tag appears in the list with ○ icon and no "A" badge
+- [ ] Error shown if tag name already exists
+
+**Test:** Create an annotated tag
+
+- [ ] Click + next to "Tags" header — inline form appears
+- [ ] Enter a name and a message, confirm — annotated tag is created
+- [ ] Tag appears in the list with ⊕ icon, "A" badge, and message shown below name
+- [ ] Escape cancels the form without creating a tag
+
+**Test:** Delete a tag
+
+- [ ] Right-click a tag — context menu appears with "Delete" option
+- [ ] Confirm the prompt — tag is deleted and removed from the list
+- [ ] Dismiss the prompt — tag is not deleted
+
 ---
 
 ## 7. Commit Graph Context Menu Actions
