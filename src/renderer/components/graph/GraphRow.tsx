@@ -65,6 +65,7 @@ export function GraphRow({
       style={{ height: `${ROW_HEIGHT}px` }}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      data-testid={`commit-row-${commit.hash}`}
     >
       {/* Graph column spacer — the SVG overlay draws over this area */}
       <div className="flex-shrink-0" style={{ width: `${graphColumnWidth}px` }} />

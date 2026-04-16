@@ -127,13 +127,14 @@ function statusColor(file: FileStatus): string {
 
 interface FileSectionProps {
   title: string
+  sectionId: string
   files: FileStatus[]
   isStaged: boolean
   repoPath: string
   onRefresh: () => void
 }
 
-function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectionProps) {
+function FileSection({ title, sectionId, files, isStaged, repoPath, onRefresh }: FileSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [pendingDiscard, setPendingDiscard] = useState<FileStatus | null>(null)
   const {
@@ -191,7 +192,7 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
   const cancelDiscard = () => setPendingDiscard(null)
 
   return (
-    <div className="mb-1">
+    <div className="mb-1" data-testid={`section-${sectionId}`}>
       {/* Section header */}
       <div
         className="flex items-center justify-between px-2 py-1 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider cursor-pointer hover:bg-[var(--color-bg-hover)] select-none"
@@ -222,6 +223,7 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
             return (
               <div
                 key={`${isStaged ? 'staged' : 'unstaged'}-${file.path}`}
+                data-testid={`file-row-${file.path}`}
                 className={`group flex items-center gap-1 px-3 py-0.5 cursor-pointer select-none text-xs ${
                   isSelected
                     ? 'bg-[var(--color-accent)] text-white'
@@ -245,6 +247,7 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
                     className="px-1 rounded hover:bg-white/20"
                     onClick={(e) => handleFileAction(e, file)}
                     title={isStaged ? 'Unstage' : 'Stage'}
+                    data-testid={isStaged ? `unstage-btn-${file.path}` : `stage-btn-${file.path}`}
                   >
                     {isStaged ? '−' : '+'}
                   </button>
@@ -253,6 +256,7 @@ function FileSection({ title, files, isStaged, repoPath, onRefresh }: FileSectio
                       className="px-1 rounded hover:bg-white/20 text-red-400"
                       onClick={(e) => handleDiscard(e, file)}
                       title="Discard changes"
+                      data-testid={`discard-btn-${file.path}`}
                     >
                       ✕
                     </button>
@@ -284,6 +288,7 @@ export function WorkingTree({ repoPath, status, onRefresh }: WorkingTreeProps) {
       <div className="flex-1 overflow-y-auto">
         <FileSection
           title="Staged Changes"
+          sectionId="staged"
           files={status.staged}
           isStaged={true}
           repoPath={repoPath}
@@ -291,6 +296,7 @@ export function WorkingTree({ repoPath, status, onRefresh }: WorkingTreeProps) {
         />
         <FileSection
           title="Unstaged Changes"
+          sectionId="unstaged"
           files={status.unstaged}
           isStaged={false}
           repoPath={repoPath}
@@ -298,6 +304,7 @@ export function WorkingTree({ repoPath, status, onRefresh }: WorkingTreeProps) {
         />
         <FileSection
           title="Untracked Files"
+          sectionId="untracked"
           files={status.untracked}
           isStaged={false}
           repoPath={repoPath}
@@ -306,6 +313,7 @@ export function WorkingTree({ repoPath, status, onRefresh }: WorkingTreeProps) {
         {status.conflicted.length > 0 && (
           <FileSection
             title="Conflicted"
+            sectionId="conflicted"
             files={status.conflicted}
             isStaged={false}
             repoPath={repoPath}
@@ -313,7 +321,10 @@ export function WorkingTree({ repoPath, status, onRefresh }: WorkingTreeProps) {
           />
         )}
         {status.isClean && (
-          <div className="px-4 py-8 text-center text-xs text-[var(--color-text-muted)]">
+          <div
+            className="px-4 py-8 text-center text-xs text-[var(--color-text-muted)]"
+            data-testid="working-tree-clean"
+          >
             Working tree clean
           </div>
         )}

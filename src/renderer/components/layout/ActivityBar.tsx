@@ -67,6 +67,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
         onClick={() => onViewChange('history')}
         active={isRepoOpen && activeView === 'history'}
         disabled={!isRepoOpen}
+        data-testid="activity-history"
       >
         {/* Clock/history icon */}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -88,6 +89,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
           onClick={() => onViewChange('changes')}
           active={isRepoOpen && activeView === 'changes'}
           disabled={!isRepoOpen}
+          data-testid="activity-changes"
         >
           {/* File-diff / pencil icon */}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -127,6 +129,7 @@ interface ActivityBarButtonProps {
   onClick: () => void
   disabled?: boolean
   active?: boolean
+  'data-testid'?: string
   children: ReactNode
 }
 
@@ -135,6 +138,7 @@ function ActivityBarButton({
   onClick,
   disabled = false,
   active = false,
+  'data-testid': dataTestId,
   children
 }: ActivityBarButtonProps) {
   return (
@@ -142,6 +146,7 @@ function ActivityBarButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
+      data-testid={dataTestId}
       className={[
         'w-8 h-8 flex items-center justify-center rounded transition-colors',
         disabled

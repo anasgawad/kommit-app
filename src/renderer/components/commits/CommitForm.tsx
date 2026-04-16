@@ -61,6 +61,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
           onChange={(e) => setSubject(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Summary (required)"
+          data-testid="commit-subject-input"
           className={`w-full px-2 py-1 text-sm rounded border bg-[var(--color-bg-input)] text-[var(--color-text)] outline-none focus:ring-1 ${
             subjectTooLong
               ? 'border-yellow-500 focus:ring-yellow-500'
@@ -69,7 +70,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
           maxLength={200}
         />
         {subjectTooLong && (
-          <p className="text-xs text-yellow-500">
+          <p className="text-xs text-yellow-500" data-testid="commit-subject-warning">
             Subject exceeds 72 characters ({subject.length}/72)
           </p>
         )}
@@ -81,6 +82,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
         onChange={(e) => setBody(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Description (optional)"
+        data-testid="commit-body-input"
         rows={3}
         className="w-full px-2 py-1 text-sm rounded border border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-text)] outline-none focus:ring-1 focus:ring-[var(--color-accent)] resize-none"
       />
@@ -91,6 +93,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
           type="checkbox"
           checked={amend}
           onChange={(e) => setAmend(e.target.checked)}
+          data-testid="commit-amend-checkbox"
           className="accent-[var(--color-accent)]"
         />
         Amend last commit
@@ -98,7 +101,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
 
       {/* Error message */}
       {error && (
-        <p className="text-xs text-red-400 truncate" title={error}>
+        <p className="text-xs text-red-400 truncate" data-testid="commit-error" title={error}>
           {error}
         </p>
       )}
@@ -107,6 +110,7 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
       <button
         onClick={handleCommit}
         disabled={!canCommit}
+        data-testid="commit-button"
         className={`py-1.5 rounded text-sm font-medium transition-colors ${
           canCommit
             ? 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white cursor-pointer'
