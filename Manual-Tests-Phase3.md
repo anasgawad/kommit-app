@@ -280,23 +280,23 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Right-click a commit and choose Checkout
 
-- [ ] Checkout puts HEAD in detached-HEAD state at that commit
-- [ ] StatusBar / sidebar update to reflect detached HEAD
+- [✅] Checkout puts HEAD in detached-HEAD state at that commit
+- [✅] StatusBar / sidebar update to reflect detached HEAD
 
 ### 7.2 Cherry-Pick
 
 **Test:** Right-click a commit and choose Cherry-Pick
 
-- [ ] Cherry-pick applies that commit's changes to the current branch
-- [ ] Commit graph refreshes and shows the new cherry-picked commit at HEAD
-- [ ] If conflict, an error banner is shown
+- [✅] Cherry-pick applies that commit's changes to the current branch
+- [✅] Commit graph refreshes and shows the new cherry-picked commit at HEAD
+- [✅] If conflict, an error banner is shown
 
 ### 7.3 Revert
 
 **Test:** Right-click a commit and choose Revert
 
-- [ ] Revert creates a new "Revert" commit undoing the selected commit
-- [ ] Commit graph refreshes and shows the revert commit
+- [✅] Revert creates a new "Revert" commit undoing the selected commit
+- [✅] Commit graph refreshes and shows the revert commit
 
 ### 7.4 Reset
 

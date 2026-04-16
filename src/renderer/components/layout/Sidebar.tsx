@@ -268,7 +268,7 @@ export function Sidebar() {
             </button>
             <button
               onClick={() => setShowCreate(true)}
-              className="text-xs text-kommit-text-secondary hover:text-kommit-accent px-1"
+              className="text-base leading-none text-kommit-text-secondary hover:text-kommit-accent px-1"
               title="New branch"
             >
               +
@@ -391,7 +391,7 @@ export function Sidebar() {
             </button>
             <button
               onClick={() => setShowCreateTag(true)}
-              className="text-xs text-kommit-text-secondary hover:text-kommit-accent px-1"
+              className="text-base leading-none text-kommit-text-secondary hover:text-kommit-accent px-1"
               title="New tag"
             >
               +

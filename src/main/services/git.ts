@@ -614,7 +614,29 @@ export class GitService {
    * Cherry-pick a commit onto the current branch.
    */
   async cherryPick(repoPath: string, hash: string): Promise<void> {
-    await this.exec(['cherry-pick', hash], repoPath)
+    try {
+      await this.exec(['cherry-pick', hash], repoPath)
+    } catch (err) {
+      if (err instanceof GitError) {
+        if (err.stderr.includes('unmerged files')) {
+          throw new GitError(
+            'Cannot cherry-pick: you have unmerged files. Resolve all conflicts first, then stage the resolved files with "git add" before retrying.',
+            err.command,
+            err.exitCode,
+            err.stderr
+          )
+        }
+        if (err.stderr.includes('conflict')) {
+          throw new GitError(
+            `Cherry-pick conflict: the commit could not be applied cleanly. Resolve the conflicts, stage the changes, then run "git cherry-pick --continue".`,
+            err.command,
+            err.exitCode,
+            err.stderr
+          )
+        }
+      }
+      throw err
+    }
   }
 
   /**

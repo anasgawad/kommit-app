@@ -11,6 +11,7 @@ import { useRepoStore } from '../../stores/repo-store'
 import { getMaxColumn } from '../../graph/lane-algorithm'
 import { GraphRow } from './GraphRow'
 import { GraphSvgOverlay, ROW_HEIGHT, LANE_WIDTH } from './GraphSvgOverlay'
+import { useToast } from '../../hooks/useToast'
 
 /**
  * SVG Icons for toolbar and context menu
@@ -113,7 +114,7 @@ export function CommitGraph() {
     y: number
     hash: string
   } | null>(null)
-  const [contextError, setContextError] = useState<string | null>(null)
+  const toast = useToast()
   const [resetMode, setResetMode] = useState<'soft' | 'mixed' | 'hard'>('mixed')
   const [showResetDialog, setShowResetDialog] = useState<string | null>(null) // hash
 
@@ -244,7 +245,6 @@ export function CommitGraph() {
   const handleContextMenuAction = async (action: string, hash: string) => {
     setContextMenu(null)
     if (!activeRepo) return
-    setContextError(null)
 
     try {
       switch (action) {
@@ -257,6 +257,10 @@ export function CommitGraph() {
           await window.api.git.cherryPick(activeRepo.path, hash)
           await refreshStatus()
           await loadCommits()
+          toast.success(
+            'Cherry-pick applied',
+            `Commit ${hash.slice(0, 7)} was applied successfully.`
+          )
           break
         case 'revert':
           await window.api.git.revert(activeRepo.path, hash)
@@ -268,7 +272,14 @@ export function CommitGraph() {
           return
       }
     } catch (err) {
-      setContextError(err instanceof Error ? err.message : `${action} failed`)
+      const message = err instanceof Error ? err.message : `${action} failed`
+      const titles: Record<string, string> = {
+        checkout: 'Checkout failed',
+        'cherry-pick': 'Cherry-pick failed',
+        revert: 'Revert failed',
+        reset: 'Reset failed'
+      }
+      toast.error(titles[action] ?? 'Operation failed', message)
     }
   }
 
@@ -280,7 +291,7 @@ export function CommitGraph() {
       await refreshStatus()
       await loadCommits()
     } catch (err) {
-      setContextError(err instanceof Error ? err.message : 'Reset failed')
+      toast.error('Reset failed', err instanceof Error ? err.message : 'Reset failed')
     }
   }
 
@@ -492,17 +503,6 @@ export function CommitGraph() {
             <ResetIcon />
             <span>Reset to here</span>
           </button>
-        </div>
-      )}
-
-      {/* Context action error banner */}
-      {contextError && (
-        <div
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 text-red-200 text-xs px-4 py-2 rounded shadow-lg cursor-pointer max-w-md"
-          onClick={() => setContextError(null)}
-          title="Click to dismiss"
-        >
-          {contextError}
         </div>
       )}
 
