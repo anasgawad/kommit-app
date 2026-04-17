@@ -302,12 +302,12 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Right-click a commit and choose Reset
 
-- [ ] Reset dialog appears with three options: Soft, Mixed, Hard
-- [ ] Each option has a short description
-- [ ] Clicking Soft reset keeps changes staged
-- [ ] Clicking Mixed reset unstages changes but keeps working tree
-- [ ] Clicking Hard reset discards all changes
-- [ ] After reset, commit graph updates to reflect new HEAD
+- [✅] Reset dialog appears with three options: Soft, Mixed, Hard
+- [✅] Each option has a short description
+- [✅] Clicking Soft reset keeps changes staged
+- [✅] Clicking Mixed reset unstages changes but keeps working tree
+- [✅] Clicking Hard reset discards all changes
+- [✅] After reset, commit graph updates to reflect new HEAD
 
 ### 7.5 Context Error Banner
 
