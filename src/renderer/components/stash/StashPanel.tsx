@@ -5,6 +5,8 @@
 
 import { useEffect, useState } from 'react'
 import { useStashStore } from '../../stores/stash-store'
+import { useResize } from '../../hooks/useResize'
+import { ResizeHandle } from '../layout/ResizeHandle'
 import type { StashEntry } from '@shared/types'
 
 interface StashPanelProps {
@@ -30,6 +32,7 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
 
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [dropConfirmEntry, setDropConfirmEntry] = useState<StashEntry | null>(null)
+  const diffPreview = useResize({ initialSize: 128, min: 60, max: 600, direction: 'vertical', reverse: true })
 
   useEffect(() => {
     loadStashes(repoPath)
@@ -68,7 +71,11 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full" data-testid="stash-panel">
+    <div
+      className="flex flex-col h-full"
+      data-testid="stash-panel"
+      style={{ userSelect: diffPreview.isDragging ? 'none' : undefined }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border)]">
         <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
@@ -121,7 +128,16 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
 
       {/* Diff preview */}
       {selectedIndex !== null && (
-        <div className="h-32 border-t border-[var(--color-border)] overflow-auto bg-kommit-bg-secondary">
+        <>
+          <ResizeHandle
+            onMouseDown={diffPreview.handleMouseDown}
+            isDragging={diffPreview.isDragging}
+            direction="vertical"
+          />
+          <div
+            className="border-t border-[var(--color-border)] overflow-auto bg-kommit-bg-secondary shrink-0"
+            style={{ height: diffPreview.size }}
+          >
           {isDiffLoading ? (
             <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
               Loading diff...
@@ -134,7 +150,8 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
               {stashDiff}
             </pre>
           ) : null}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Drop confirmation */}

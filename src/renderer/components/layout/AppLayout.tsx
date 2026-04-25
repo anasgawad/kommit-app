@@ -39,7 +39,8 @@ export function AppLayout() {
 
   // ── Panel resize state ───────────────────────────────────────
   const sidebar = useResize({ initialSize: 240, min: 160, max: 480 })
-  const commitDetail = useResize({ initialSize: 384, min: 200, max: 600 })
+  const commitDetail = useResize({ initialSize: 384, min: 200, max: 600, reverse: true })
+  const commitDiff = useResize({ initialSize: 480, min: 200, max: 900, reverse: true })
   const changesTree = useResize({ initialSize: 256, min: 160, max: 480 })
 
   // Update graph store when active repo changes
@@ -105,7 +106,7 @@ export function AppLayout() {
       className="h-full flex flex-col bg-kommit-bg"
       style={{
         userSelect:
-          sidebar.isDragging || commitDetail.isDragging || changesTree.isDragging
+          sidebar.isDragging || commitDetail.isDragging || commitDiff.isDragging || changesTree.isDragging
             ? 'none'
             : undefined
       }}
@@ -185,14 +186,23 @@ export function AppLayout() {
                 />
                 <CommitDetail width={commitDetail.size} />
                 {activeRepo && selectedCommitFilePath && (
-                  <div className="flex-1 overflow-hidden border-l border-[var(--color-border)]">
-                    <DiffViewer
-                      repoPath={activeRepo.path}
-                      diff={commitFileDiff}
-                      isLoading={isCommitDiffLoading}
-                      emptyMessage="Select a file to view its diff"
+                  <>
+                    <ResizeHandle
+                      onMouseDown={commitDiff.handleMouseDown}
+                      isDragging={commitDiff.isDragging}
                     />
-                  </div>
+                    <div
+                      className="overflow-hidden border-l border-[var(--color-border)] shrink-0"
+                      style={{ width: commitDiff.size }}
+                    >
+                      <DiffViewer
+                        repoPath={activeRepo.path}
+                        diff={commitFileDiff}
+                        isLoading={isCommitDiffLoading}
+                        emptyMessage="Select a file to view its diff"
+                      />
+                    </div>
+                  </>
                 )}
               </>
             )}

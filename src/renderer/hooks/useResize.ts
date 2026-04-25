@@ -16,6 +16,11 @@ interface UseResizeOptions {
   max?: number
   /** Whether dragging moves along the x-axis (horizontal) or y-axis (vertical) */
   direction?: Direction
+  /**
+   * When true, the delta is negated — dragging left/up grows the panel.
+   * Use this for panels anchored to the right or bottom edge of a splitter.
+   */
+  reverse?: boolean
 }
 
 interface UseResizeReturn {
@@ -28,7 +33,8 @@ export function useResize({
   initialSize,
   min = 120,
   max = 1200,
-  direction = 'horizontal'
+  direction = 'horizontal',
+  reverse = false
 }: UseResizeOptions): UseResizeReturn {
   const [size, setSize] = useState(initialSize)
   const [isDragging, setIsDragging] = useState(false)
@@ -47,7 +53,7 @@ export function useResize({
 
     const onMouseMove = (e: MouseEvent) => {
       const current = direction === 'horizontal' ? e.clientX : e.clientY
-      const delta = current - startPos.current
+      const delta = (current - startPos.current) * (reverse ? -1 : 1)
       const next = Math.min(max, Math.max(min, startSize.current + delta))
       setSize(next)
     }
