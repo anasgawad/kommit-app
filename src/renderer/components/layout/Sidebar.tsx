@@ -22,7 +22,11 @@ type TagContextMenu = {
 
 type BranchAction = 'checkout' | 'create' | 'rename' | 'delete' | 'merge'
 
-export function Sidebar() {
+interface SidebarProps {
+  width?: number
+}
+
+export function Sidebar({ width }: SidebarProps) {
   const { activeRepo, status, openRepo, refreshStatus } = useRepoStore()
   const { loadCommits, scrollToCommit } = useGraphStore()
   const [branches, setBranches] = useState<Branch[]>([])
@@ -230,7 +234,10 @@ export function Sidebar() {
   }
 
   return (
-    <div className="w-60 bg-kommit-bg-secondary border-r border-kommit-border flex flex-col overflow-hidden">
+    <div
+      className="bg-kommit-bg-secondary border-r border-kommit-border flex flex-col overflow-hidden shrink-0"
+      style={{ width: width ?? 240 }}
+    >
       {/* Repository name */}
       <div className="p-3 border-b border-kommit-border">
         <button

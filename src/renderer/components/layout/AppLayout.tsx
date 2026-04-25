@@ -8,9 +8,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
 import { useGraphStore } from '../../stores/graph-store'
 import { useChangesStore } from '../../stores/changes-store'
+import { useResize } from '../../hooks/useResize'
 import { ActivityBar } from './ActivityBar'
 import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
+import { ResizeHandle } from './ResizeHandle'
 import { CommitGraph } from '../graph/CommitGraph'
 import { CommitDetail } from '../commits/CommitDetail'
 import { WorkingTree } from '../commits/WorkingTree'
@@ -34,6 +36,11 @@ export function AppLayout() {
   } = useGraphStore()
   const { selectedFile, selectedIsStaged, clearSelection } = useChangesStore()
   const [activeView, setActiveView] = useState<ActiveView>('history')
+
+  // ── Panel resize state ───────────────────────────────────────
+  const sidebar = useResize({ initialSize: 240, min: 160, max: 480 })
+  const commitDetail = useResize({ initialSize: 384, min: 200, max: 600 })
+  const changesTree = useResize({ initialSize: 256, min: 160, max: 480 })
 
   // Update graph store when active repo changes
   useEffect(() => {
@@ -93,7 +100,16 @@ export function AppLayout() {
   const handleClose = () => window.api.window.close()
 
   return (
-    <div className="h-full flex flex-col bg-kommit-bg">
+    // Suppress text selection while any resize handle is being dragged
+    <div
+      className="h-full flex flex-col bg-kommit-bg"
+      style={{
+        userSelect:
+          sidebar.isDragging || commitDetail.isDragging || changesTree.isDragging
+            ? 'none'
+            : undefined
+      }}
+    >
       {/* Title bar area */}
       <div className="h-8 bg-kommit-bg-secondary border-b border-kommit-border flex items-center px-4 drag-region">
         <div className="flex items-center gap-2 no-drag">
@@ -143,26 +159,31 @@ export function AppLayout() {
 
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Activity bar — passes view switch callback */}
+        {/* Activity bar — fixed, not resizable per spec */}
         <ActivityBar
           onRefresh={handleRefresh}
           activeView={activeView}
           onViewChange={setActiveView}
         />
 
-        {/* Sidebar */}
-        <Sidebar />
+        {/* Sidebar + resize handle */}
+        <Sidebar width={sidebar.size} />
+        <ResizeHandle onMouseDown={sidebar.handleMouseDown} isDragging={sidebar.isDragging} />
 
         {/* Main content — switches between views */}
         {activeView === 'history' ? (
           <>
-            {/* Commit graph */}
+            {/* Commit graph — grows to fill remaining space */}
             <CommitGraph />
 
-            {/* Commit detail panel + diff viewer (conditionally rendered) */}
+            {/* Commit detail panel + resize handle + diff viewer */}
             {selectedCommitHash && (
               <>
-                <CommitDetail />
+                <ResizeHandle
+                  onMouseDown={commitDetail.handleMouseDown}
+                  isDragging={commitDetail.isDragging}
+                />
+                <CommitDetail width={commitDetail.size} />
                 {activeRepo && selectedCommitFilePath && (
                   <div className="flex-1 overflow-hidden border-l border-[var(--color-border)]">
                     <DiffViewer
@@ -177,10 +198,13 @@ export function AppLayout() {
             )}
           </>
         ) : activeView === 'changes' ? (
-          /* Changes view: WorkingTree + DiffViewer + CommitForm */
+          /* Changes view: WorkingTree + resize handle + DiffViewer + CommitForm */
           <div className="flex flex-1 overflow-hidden">
             {/* Left: Working tree file list + commit form */}
-            <div className="w-64 flex flex-col border-r border-[var(--color-border)] overflow-hidden">
+            <div
+              className="flex flex-col border-r border-[var(--color-border)] overflow-hidden shrink-0"
+              style={{ width: changesTree.size }}
+            >
               <div className="flex-1 overflow-hidden">
                 {activeRepo && status ? (
                   <WorkingTree
@@ -196,6 +220,11 @@ export function AppLayout() {
               </div>
               {activeRepo && <CommitForm repoPath={activeRepo.path} onCommit={handleRefresh} />}
             </div>
+
+            <ResizeHandle
+              onMouseDown={changesTree.handleMouseDown}
+              isDragging={changesTree.isDragging}
+            />
 
             {/* Right: Diff viewer */}
             <div className="flex-1 overflow-hidden">

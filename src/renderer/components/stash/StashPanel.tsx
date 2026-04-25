@@ -29,7 +29,7 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
   } = useStashStore()
 
   const [showSaveDialog, setShowSaveDialog] = useState(false)
-  const [dropConfirmIndex, setDropConfirmIndex] = useState<number | null>(null)
+  const [dropConfirmEntry, setDropConfirmEntry] = useState<StashEntry | null>(null)
 
   useEffect(() => {
     loadStashes(repoPath)
@@ -59,7 +59,7 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
   }
 
   const handleDrop = async (index: number) => {
-    setDropConfirmIndex(null)
+    setDropConfirmEntry(null)
     try {
       await stashDrop(repoPath, index)
     } catch {
@@ -113,7 +113,7 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
               onSelect={() => handleSelect(entry)}
               onApply={() => handleApply(entry.index)}
               onPop={() => handlePop(entry.index)}
-              onDrop={() => setDropConfirmIndex(entry.index)}
+              onDrop={() => setDropConfirmEntry(entry)}
             />
           ))
         )}
@@ -138,23 +138,25 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
       )}
 
       {/* Drop confirmation */}
-      {dropConfirmIndex !== null && (
+      {dropConfirmEntry !== null && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
           <div className="bg-kommit-bg-secondary border border-[var(--color-border)] rounded p-4 flex flex-col gap-3 max-w-xs">
             <p className="text-sm text-[var(--color-text)]">
-              Drop stash@{'{'}
-              {dropConfirmIndex}
-              {'}'}? This cannot be undone.
+              Drop{' '}
+              <span className="font-medium">'{dropConfirmEntry.message}'</span>{' '}
+              <span className="text-[var(--color-text-muted)]">(stash@{'{'}
+              {dropConfirmEntry.index}
+              {'}'})</span>? This cannot be undone.
             </p>
             <div className="flex gap-2 justify-end">
               <button
-                onClick={() => setDropConfirmIndex(null)}
+                onClick={() => setDropConfirmEntry(null)}
                 className="text-xs px-3 py-1.5 rounded border border-[var(--color-border)] hover:bg-kommit-bg-tertiary"
               >
                 Cancel
               </button>
               <button
-                onClick={() => handleDrop(dropConfirmIndex)}
+                onClick={() => handleDrop(dropConfirmEntry.index)}
                 className="text-xs px-3 py-1.5 rounded bg-kommit-danger text-white hover:opacity-90"
                 data-testid="drop-confirm-btn"
               >
@@ -167,7 +169,7 @@ export function StashPanel({ repoPath, onRefresh }: StashPanelProps) {
 
       {/* Save dialog */}
       {showSaveDialog && (
-        <StashDialog repoPath={repoPath} onClose={() => setShowSaveDialog(false)} />
+        <StashDialog repoPath={repoPath} onClose={() => setShowSaveDialog(false)} onRefresh={onRefresh} />
       )}
     </div>
   )
@@ -268,9 +270,10 @@ export function StashListItem({
 interface StashDialogProps {
   repoPath: string
   onClose: () => void
+  onRefresh?: () => void
 }
 
-export function StashDialog({ repoPath, onClose }: StashDialogProps) {
+export function StashDialog({ repoPath, onClose, onRefresh }: StashDialogProps) {
   const [message, setMessage] = useState('')
   const [includeUntracked, setIncludeUntracked] = useState(false)
   const [keepIndex, setKeepIndex] = useState(false)
@@ -283,6 +286,7 @@ export function StashDialog({ repoPath, onClose }: StashDialogProps) {
         includeUntracked,
         keepIndex
       })
+      onRefresh?.()
       onClose()
     } catch {
       // error shown via store

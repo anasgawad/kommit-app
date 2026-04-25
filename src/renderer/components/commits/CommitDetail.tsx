@@ -156,13 +156,16 @@ const SectionIcon = ({
   return icons[type]
 }
 
-export function CommitDetail() {
+export function CommitDetail({ width }: { width?: number }) {
   const { selectedCommitDetail, selectedCommitFilePath, clearSelection, selectCommitFile } =
     useGraphStore()
 
   if (!selectedCommitDetail) {
     return (
-      <div className="w-96 border-l border-kommit-border bg-kommit-bg flex flex-col items-center justify-center text-kommit-text-secondary">
+      <div
+        className="border-l border-kommit-border bg-kommit-bg flex flex-col items-center justify-center text-kommit-text-secondary shrink-0"
+        style={{ width: width ?? 384 }}
+      >
         <svg
           width="48"
           height="48"
@@ -180,7 +183,10 @@ export function CommitDetail() {
   const { commit, changedFiles } = selectedCommitDetail
 
   return (
-    <div className="w-96 border-l border-kommit-border bg-kommit-bg flex flex-col overflow-hidden">
+    <div
+      className="border-l border-kommit-border bg-kommit-bg flex flex-col overflow-hidden shrink-0"
+      style={{ width: width ?? 384 }}
+    >
       {/* Header */}
       <div className="h-11 border-b border-kommit-border flex items-center justify-between px-4 bg-kommit-bg-secondary flex-shrink-0">
         <span className="text-sm font-medium text-kommit-text">Commit Details</span>

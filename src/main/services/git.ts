@@ -834,7 +834,7 @@ export class GitService {
    */
   async stashList(repoPath: string): Promise<StashEntry[]> {
     try {
-      const raw = await this.exec(['stash', 'list', '--format=%gd|%H|%gs|%gi'], repoPath)
+      const raw = await this.exec(['stash', 'list', '--format=%gd|%H|%gs|%ci'], repoPath)
       if (!raw || raw.trim().length === 0) return []
       return this.parseStashList(raw)
     } catch {
@@ -937,7 +937,8 @@ export class GitService {
    */
   async stashShow(repoPath: string, index: number): Promise<string> {
     const ref = `stash@{${index}}`
-    return this.exec(['stash', 'show', '-p', ref], repoPath)
+    // -u includes untracked files (stored in a separate commit inside the stash)
+    return this.exec(['stash', 'show', '-p', '-u', ref], repoPath)
   }
 
   // ============================================================
