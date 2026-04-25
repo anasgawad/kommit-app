@@ -20,7 +20,7 @@ import { CommitForm } from '../commits/CommitForm'
 import { DiffViewer } from '../diff/DiffViewer'
 import { StashPanel } from '../stash/StashPanel'
 import { RebasePanel } from '../rebase/RebasePanel'
-import { MergeConflictViewer } from '../merge/MergeConflictViewer'
+import { useRebaseStore } from '../../stores/rebase-store'
 
 export type ActiveView = 'history' | 'changes' | 'stash' | 'rebase' | 'conflicts'
 
@@ -35,6 +35,7 @@ export function AppLayout() {
     isCommitDiffLoading
   } = useGraphStore()
   const { selectedFile, selectedIsStaged, clearSelection } = useChangesStore()
+  const { setBaseHash, setActions } = useRebaseStore()
   const [activeView, setActiveView] = useState<ActiveView>('history')
 
   // ── Panel resize state ───────────────────────────────────────
@@ -99,6 +100,15 @@ export function AppLayout() {
   const handleMinimize = () => window.api.window.minimize()
   const handleMaximize = () => window.api.window.maximize()
   const handleClose = () => window.api.window.close()
+
+  const handleRebaseFromCommit = useCallback(
+    (hash: string, commits: { hash: string; subject: string }[]) => {
+      setBaseHash(hash)
+      setActions(commits.map((c) => ({ action: 'pick', hash: c.hash, subject: c.subject })))
+      setActiveView('rebase')
+    },
+    [setBaseHash, setActions]
+  )
 
   return (
     // Suppress text selection while any resize handle is being dragged
@@ -175,7 +185,7 @@ export function AppLayout() {
         {activeView === 'history' ? (
           <>
             {/* Commit graph — grows to fill remaining space */}
-            <CommitGraph />
+            <CommitGraph onRebaseFromCommit={handleRebaseFromCommit} />
 
             {/* Commit detail panel + resize handle + diff viewer */}
             {selectedCommitHash && (

@@ -84,7 +84,13 @@ const ResetIcon = () => (
   </svg>
 )
 
-export function CommitGraph() {
+const RebaseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 5 6.25v-.878zm3.75 7.378a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm3-8.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0z" />
+  </svg>
+)
+
+export function CommitGraph({ onRebaseFromCommit }: { onRebaseFromCommit?: (hash: string, commits: { hash: string; subject: string }[]) => void }) {
   const {
     graphRows,
     headCommitHash,
@@ -269,6 +275,20 @@ export function CommitGraph() {
           break
         case 'reset':
           setShowResetDialog(hash)
+          return
+        case 'rebase-from':
+          if (onRebaseFromCommit) {
+            // Collect commits between base (exclusive) and HEAD, in oldest-first order
+            // graphRows is newest-first (index 0 = HEAD), so slice then reverse.
+            const baseIndex = graphRows.findIndex((r) => r.commit.hash === hash)
+            const commitsInRange = baseIndex > 0
+              ? graphRows.slice(0, baseIndex).reverse().map((r) => ({
+                  hash: r.commit.hash,
+                  subject: r.commit.subject
+                }))
+              : []
+            onRebaseFromCommit(hash, commitsInRange)
+          }
           return
       }
     } catch (err) {
@@ -495,6 +515,16 @@ export function CommitGraph() {
             <RevertIcon />
             <span>Revert</span>
           </button>
+          <div className="border-t border-kommit-border my-1.5" />
+          {onRebaseFromCommit && (
+            <button
+              className="w-full px-3 py-2 text-left text-sm text-kommit-text hover:bg-kommit-bg-tertiary flex items-center gap-2.5 transition-colors"
+              onClick={() => handleContextMenuAction('rebase-from', contextMenu.hash)}
+            >
+              <RebaseIcon />
+              <span>Interactive Rebase from here</span>
+            </button>
+          )}
           <div className="border-t border-kommit-border my-1.5" />
           <button
             className="w-full px-3 py-2 text-left text-sm text-kommit-danger hover:bg-kommit-danger/10 flex items-center gap-2.5 transition-colors"

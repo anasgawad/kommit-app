@@ -981,7 +981,8 @@ export class GitService {
 
     try {
       await this.execWithEnv(['rebase', '-i', '--autostash', onto], repoPath, {
-        GIT_SEQUENCE_EDITOR: seqEditor
+        GIT_SEQUENCE_EDITOR: seqEditor,
+        GIT_EDITOR: 'true' // prevent any interactive editor (reword/squash message editing)
       })
       // Clean up temp files
       await rm(todoPath, { force: true })
@@ -1143,7 +1144,8 @@ export class GitService {
         currentStep,
         totalSteps,
         currentHash,
-        conflictedFiles
+        conflictedFiles,
+        stoppedForEdit: currentHash.length > 0 && conflictedFiles.length === 0
       }
     } catch {
       return null

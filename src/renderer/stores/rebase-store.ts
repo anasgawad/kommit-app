@@ -7,12 +7,14 @@ import type { RebaseAction, RebaseStatus } from '@shared/types'
 
 interface RebaseState {
   actions: RebaseAction[]
+  baseHash: string
   status: RebaseStatus | null
   isLoading: boolean
   error: string | null
 
   // Actions
   setActions: (actions: RebaseAction[]) => void
+  setBaseHash: (hash: string) => void
   updateAction: (hash: string, action: RebaseAction['action']) => void
   setError: (error: string | null) => void
 
@@ -26,11 +28,13 @@ interface RebaseState {
 
 export const useRebaseStore = create<RebaseState>((set, get) => ({
   actions: [],
+  baseHash: '',
   status: null,
   isLoading: false,
   error: null,
 
   setActions: (actions) => set({ actions }),
+  setBaseHash: (hash) => set({ baseHash: hash }),
 
   updateAction: (hash, action) => {
     const actions = get().actions.map((a) => (a.hash === hash ? { ...a, action } : a))

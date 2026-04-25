@@ -214,6 +214,7 @@ export interface RebaseStatus {
   totalSteps: number // end
   currentHash: string
   conflictedFiles: string[]
+  stoppedForEdit: boolean // paused at an 'edit' action — user must amend then continue
 }
 
 export interface RebaseResult {

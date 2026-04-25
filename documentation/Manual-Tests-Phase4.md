@@ -123,8 +123,8 @@ git checkout -- .
 
 **Test:** Open the Rebase panel
 
-- [ ] Clicking the Rebase icon in the Activity Bar opens the Rebase panel
-- [ ] If no rebase is in progress, the commit list and "Start Rebase" controls are shown
+- [✅] Clicking the Rebase icon in the Activity Bar opens the Rebase panel
+- [✅] If no rebase is in progress, the commit list and "Start Rebase" controls are shown
 
 ---
 
@@ -142,11 +142,11 @@ echo "line4" >> file.txt && git add . && git commit -m "commit 4"
 
 **Test:** Start an interactive rebase and squash commits
 
-- [ ] Opening the Rebase panel and selecting a base commit (e.g. HEAD~3) lists the commits
-- [ ] Each commit has a dropdown action (pick, squash, fixup, reword, drop, edit)
-- [ ] Changing one commit's action to "squash" and clicking "Start Rebase" begins the rebase
-- [ ] If it completes without conflict, the graph updates to show the squashed history
-- [ ] Running `git log --oneline` shows fewer commits
+- [✅] Opening the Rebase panel and selecting a base commit (e.g. HEAD~3) lists the commits
+- [✅] Each commit has a dropdown action (pick, squash, fixup, reword, drop, edit)
+- [✅] Changing one commit's action to "squash" and clicking "Start Rebase" begins the rebase
+- [✅] If it completes without conflict, the graph updates to show the squashed history
+- [✅] Running `git log --oneline` shows fewer commits
 
 ---
 

@@ -3,7 +3,7 @@
 // Interactive rebase: list commits, change actions, start/abort/continue/skip
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRebaseStore } from '../../stores/rebase-store'
 import type { RebaseAction, RebaseActionType } from '@shared/types'
 
@@ -17,10 +17,12 @@ const ACTION_OPTIONS: RebaseActionType[] = ['pick', 'reword', 'edit', 'squash', 
 export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
   const {
     actions,
+    baseHash,
     status,
     isLoading,
     error,
     setActions,
+    setBaseHash,
     updateAction,
     startRebase,
     continueRebase,
@@ -28,8 +30,21 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
     skipRebase
   } = useRebaseStore()
 
-  const [baseHash, setBaseHash] = useState('')
   const [rawCommits, setRawCommits] = useState('')
+
+  // Load rebase status on mount (catches a rebase started outside Kommit or
+  // after an app restart) and poll while a rebase is in progress.
+  useEffect(() => {
+    useRebaseStore.getState().loadStatus(repoPath)
+  }, [repoPath])
+
+  useEffect(() => {
+    if (!status?.inProgress) return
+    const id = setInterval(() => {
+      useRebaseStore.getState().loadStatus(repoPath)
+    }, 2000)
+    return () => clearInterval(id)
+  }, [repoPath, status?.inProgress])
 
   // Parse pasted commit list (format: "hash subject")
   const handleLoadCommits = () => {
@@ -105,6 +120,13 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
         <div className="flex flex-col gap-3 p-3">
           <RebaseProgressBar current={status.currentStep} total={status.totalSteps} />
 
+          {status.stoppedForEdit && (
+            <div className="text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/30 rounded px-2 py-1.5">
+              Paused at <span className="font-mono">{status.currentHash.slice(0, 7)}</span> — amend
+              the commit if needed, then click <strong>Continue</strong>.
+            </div>
+          )}
+
           {status.conflictedFiles.length > 0 && (
             <div className="text-xs text-kommit-danger">
               Conflicts in: {status.conflictedFiles.join(', ')}
@@ -147,8 +169,7 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
             <input
               type="text"
               value={baseHash}
-              onChange={(e) => setBaseHash(e.target.value)}
-              placeholder="e.g. abc1234 or HEAD~3"
+              onChange={(e) => setBaseHash(e.target.value)}              placeholder="e.g. abc1234 or HEAD~3"
               className="text-xs px-2 py-1.5 rounded border border-[var(--color-border)] bg-kommit-bg text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-kommit-accent font-mono"
               data-testid="rebase-base-hash"
             />
