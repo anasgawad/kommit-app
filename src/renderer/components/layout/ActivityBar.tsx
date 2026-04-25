@@ -120,6 +120,91 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
           </span>
         )}
       </div>
+
+      {/* Stash view */}
+      <ActivityBarButton
+        title="Stash"
+        onClick={() => onViewChange('stash')}
+        active={isRepoOpen && activeView === 'stash'}
+        disabled={!isRepoOpen}
+        data-testid="activity-stash"
+      >
+        {/* Inbox / box icon */}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect
+            x="2"
+            y="5"
+            width="12"
+            height="8"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            fill="none"
+          />
+          <path
+            d="M2 9h3l1.5 2h3L11 9h3"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            fill="none"
+          />
+          <path
+            d="M5 5V3.5A1.5 1.5 0 0 1 6.5 2h3A1.5 1.5 0 0 1 11 3.5V5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </ActivityBarButton>
+
+      {/* Rebase view */}
+      <ActivityBarButton
+        title="Interactive Rebase"
+        onClick={() => onViewChange('rebase')}
+        active={isRepoOpen && activeView === 'rebase'}
+        disabled={!isRepoOpen}
+        data-testid="activity-rebase"
+      >
+        {/* Stacked lines / reorder icon */}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M3 4h10M3 8h10M3 12h6"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M11 10l2 2-2 2"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </ActivityBarButton>
+
+      {/* Conflicts view */}
+      <ActivityBarButton
+        title="Merge Conflicts"
+        onClick={() => onViewChange('conflicts')}
+        active={isRepoOpen && activeView === 'conflicts'}
+        disabled={!isRepoOpen}
+        data-testid="activity-conflicts"
+      >
+        {/* Warning / merge conflict icon */}
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M8 2L2 13h12L8 2z"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+            fill="none"
+          />
+          <path d="M8 6v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          <circle cx="8" cy="11.5" r="0.7" fill="currentColor" />
+        </svg>
+      </ActivityBarButton>
     </div>
   )
 }

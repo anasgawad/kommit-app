@@ -5,7 +5,7 @@
 
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc-channels'
-import { LogOptions, TagOptions, ResetMode } from '@shared/types'
+import { LogOptions, TagOptions, ResetMode, StashOptions, RebaseAction } from '@shared/types'
 import { gitService } from '../services/git'
 
 export function registerGitHandlers(): void {
@@ -201,6 +201,129 @@ export function registerGitHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.REPO_CLONE, async (_event, url: string, parentDir: string) => {
     return gitService.clone(url, parentDir)
   })
+
+  // --- Stash operations (Phase 4) ---
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_STASH_SAVE,
+    async (_event, repoPath: string, options?: StashOptions) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.stashSave(repoPath, options)
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STASH_LIST, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stashList(repoPath)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STASH_APPLY, async (_event, repoPath: string, index?: number) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stashApply(repoPath, index)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STASH_POP, async (_event, repoPath: string, index?: number) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stashPop(repoPath, index)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STASH_DROP, async (_event, repoPath: string, index: number) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stashDrop(repoPath, index)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_STASH_SHOW, async (_event, repoPath: string, index: number) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.stashShow(repoPath, index)
+  })
+
+  // --- Rebase operations (Phase 4) ---
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_REBASE_INTERACTIVE,
+    async (_event, repoPath: string, onto: string, actions: RebaseAction[]) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.rebaseInteractive(repoPath, onto, actions)
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.GIT_REBASE_CONTINUE, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.rebaseContinue(repoPath)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_REBASE_ABORT, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.rebaseAbort(repoPath)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_REBASE_SKIP, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.rebaseSkip(repoPath)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GIT_REBASE_STATUS, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.getRebaseStatus(repoPath)
+  })
+
+  // --- Conflict resolution (Phase 4) ---
+  ipcMain.handle(IPC_CHANNELS.GIT_GET_CONFLICTED_FILES, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.getConflictedFiles(repoPath)
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_GET_CONFLICT_CONTENT,
+    async (_event, repoPath: string, filePath: string) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.getConflictFileContent(repoPath, filePath)
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_MARK_RESOLVED,
+    async (_event, repoPath: string, filePath: string) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.markResolved(repoPath, filePath)
+    }
+  )
+
+  ipcMain.handle(
+    IPC_CHANNELS.GIT_WRITE_RESOLVED,
+    async (_event, repoPath: string, filePath: string, content: string) => {
+      if (typeof repoPath !== 'string' || repoPath.length === 0) {
+        throw new Error('repoPath must be a non-empty string')
+      }
+      return gitService.writeResolvedFile(repoPath, filePath, content)
+    }
+  )
 
   // --- Dialog helpers ---
   ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async () => {

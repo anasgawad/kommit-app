@@ -6,7 +6,7 @@
 import { execFile, spawn, ChildProcess } from 'node:child_process'
 import { promisify } from 'node:util'
 import { join } from 'node:path'
-import { rm } from 'node:fs/promises'
+import { rm, readFile, writeFile, access } from 'node:fs/promises'
 import {
   GitStatus,
   Commit,
@@ -18,6 +18,13 @@ import {
   ResetMode,
   TagOptions,
   Tag,
+  StashEntry,
+  StashOptions,
+  RebaseAction,
+  RebaseStatus,
+  RebaseResult,
+  ConflictFile,
+  ConflictFileContent,
   GitError,
   GitNotFoundError,
   NotARepositoryError
@@ -780,6 +787,461 @@ export class GitService {
     if (remote) {
       await this.exec(['push', remote, '--delete', name], repoPath)
     }
+  }
+
+  // ============================================================
+  // Phase 4.1 — Stash Management
+  // ============================================================
+
+  /**
+   * Save current changes to the stash.
+   */
+  async stashSave(repoPath: string, options?: StashOptions): Promise<void> {
+    const args = ['stash', 'push']
+    if (options?.includeUntracked) {
+      args.push('--include-untracked')
+    }
+    if (options?.keepIndex) {
+      args.push('--keep-index')
+    }
+    if (options?.message) {
+      args.push('-m', options.message)
+    }
+    try {
+      const output = await this.exec(args, repoPath)
+      if (output.includes('No local changes to save')) {
+        throw new GitError(
+          'No local changes to save',
+          `git ${args.join(' ')}`,
+          0,
+          'No local changes to save'
+        )
+      }
+    } catch (error) {
+      if (error instanceof GitError && error.stderr.includes('No local changes to save')) {
+        throw error
+      }
+      if (error instanceof GitError && error.message.includes('No local changes to save')) {
+        throw error
+      }
+      throw error
+    }
+  }
+
+  /**
+   * List all stash entries.
+   * Format: <index>|<hash>|<message>|<branch>|<date>
+   */
+  async stashList(repoPath: string): Promise<StashEntry[]> {
+    try {
+      const raw = await this.exec(['stash', 'list', '--format=%gd|%H|%gs|%gi'], repoPath)
+      if (!raw || raw.trim().length === 0) return []
+      return this.parseStashList(raw)
+    } catch {
+      return []
+    }
+  }
+
+  private parseStashList(raw: string): StashEntry[] {
+    const entries: StashEntry[] = []
+    const lines = raw
+      .trim()
+      .split('\n')
+      .filter((l) => l.trim().length > 0)
+
+    for (const line of lines) {
+      // Format: stash@{0}|<hash>|On branch: <msg>|<isodate>
+      const parts = line.split('|')
+      if (parts.length < 4) continue
+
+      const ref = parts[0].trim() // e.g. stash@{0}
+      const hash = parts[1].trim()
+      const subject = parts[2].trim() // e.g. "On main: my message" or "WIP on main: abc123 subject"
+      const dateStr = parts[3].trim()
+
+      // Extract index from stash@{N}
+      const indexMatch = ref.match(/stash@\{(\d+)\}/)
+      const index = indexMatch ? parseInt(indexMatch[1], 10) : 0
+
+      // Extract branch and message from subject
+      // Subject formats:
+      //   "On main: my message"
+      //   "WIP on main: abc123 commit subject"
+      let branch = ''
+      let message = subject
+      const onMatch = subject.match(/^(?:WIP )?[Oo]n ([^:]+):\s*(.*)$/)
+      if (onMatch) {
+        branch = onMatch[1].trim()
+        message = onMatch[2].trim()
+      }
+
+      const date = dateStr ? new Date(dateStr) : new Date()
+
+      entries.push({ index, hash, message, branch, date })
+    }
+
+    return entries
+  }
+
+  /**
+   * Apply a stash entry (keeps it in the list).
+   */
+  async stashApply(repoPath: string, index?: number): Promise<void> {
+    const ref = index !== undefined ? `stash@{${index}}` : 'stash@{0}'
+    try {
+      await this.exec(['stash', 'apply', ref], repoPath)
+    } catch (error) {
+      if (error instanceof GitError && error.stderr.includes('conflict')) {
+        throw new GitError(
+          `Stash apply resulted in conflicts. Resolve conflicts and then stage the files.`,
+          `git stash apply ${ref}`,
+          error.exitCode,
+          error.stderr
+        )
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Pop a stash entry (apply and remove from list).
+   * If conflicts occur, the stash is kept in the list.
+   */
+  async stashPop(repoPath: string, index?: number): Promise<void> {
+    const ref = index !== undefined ? `stash@{${index}}` : 'stash@{0}'
+    try {
+      await this.exec(['stash', 'pop', ref], repoPath)
+    } catch (error) {
+      if (error instanceof GitError && error.stderr.includes('conflict')) {
+        throw new GitError(
+          `Stash pop resulted in conflicts. The stash was kept. Resolve conflicts and then stage the files.`,
+          `git stash pop ${ref}`,
+          error.exitCode,
+          error.stderr
+        )
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Drop a stash entry.
+   */
+  async stashDrop(repoPath: string, index: number): Promise<void> {
+    const ref = `stash@{${index}}`
+    await this.exec(['stash', 'drop', ref], repoPath)
+  }
+
+  /**
+   * Show the diff of a stash entry.
+   */
+  async stashShow(repoPath: string, index: number): Promise<string> {
+    const ref = `stash@{${index}}`
+    return this.exec(['stash', 'show', '-p', ref], repoPath)
+  }
+
+  // ============================================================
+  // Phase 4.2 — Interactive Rebase
+  // ============================================================
+
+  /**
+   * Start an interactive rebase with the given actions.
+   * Writes the rebase todo list and executes the rebase non-interactively.
+   */
+  async rebaseInteractive(
+    repoPath: string,
+    onto: string,
+    actions: RebaseAction[]
+  ): Promise<RebaseResult> {
+    // Serialize actions to todo format
+    const todo = actions.map((a) => `${a.action} ${a.hash} ${a.subject}`).join('\n')
+
+    // Write todo to a temp file in the repo's git dir
+    const gitDir = await this.getGitDir(repoPath)
+    const todoPath = join(gitDir, 'kommit-rebase-todo')
+    await writeFile(todoPath, todo + '\n', 'utf8')
+
+    // Use a sequence editor that simply copies our pre-written todo
+    const seqEditorScript =
+      process.platform === 'win32'
+        ? `@echo off && copy /y "${todoPath}" %1`
+        : `cp "${todoPath}" "$1"`
+
+    // Write the sequence editor script
+    const seqEditorPath = join(gitDir, 'kommit-seq-editor')
+    const scriptContent =
+      process.platform === 'win32'
+        ? `@echo off\ncopy /y "${todoPath.replace(/\//g, '\\')}" %1`
+        : `#!/bin/sh\ncp "${todoPath}" "$1"`
+    await writeFile(seqEditorPath, scriptContent, { mode: 0o755 })
+
+    const seqEditor =
+      process.platform === 'win32' ? `cmd /c "${seqEditorPath}"` : `sh "${seqEditorPath}"`
+
+    try {
+      await this.execWithEnv(['rebase', '-i', '--autostash', onto], repoPath, {
+        GIT_SEQUENCE_EDITOR: seqEditor
+      })
+      // Clean up temp files
+      await rm(todoPath, { force: true })
+      await rm(seqEditorPath, { force: true })
+      return { success: true, needsContinue: false, conflictedFiles: [] }
+    } catch (error) {
+      // Clean up temp files (best effort)
+      await rm(todoPath, { force: true }).catch(() => {})
+      await rm(seqEditorPath, { force: true }).catch(() => {})
+
+      if (error instanceof GitError) {
+        // Check if rebase stopped for conflicts or reword/edit
+        const status = await this.status(repoPath)
+        const conflictedFiles = status.conflicted.map((f) => f.path)
+        if (conflictedFiles.length > 0) {
+          return { success: false, needsContinue: true, conflictedFiles }
+        }
+        // Check if stopped for editing
+        const rebaseStatus = await this.getRebaseStatus(repoPath)
+        if (rebaseStatus?.inProgress) {
+          return { success: false, needsContinue: true, conflictedFiles: [] }
+        }
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Get the git directory path (.git or submodule gitdir).
+   */
+  private async getGitDir(repoPath: string): Promise<string> {
+    const raw = await this.exec(['rev-parse', '--git-dir'], repoPath)
+    const gitDir = raw.trim()
+    // If absolute, use as-is; otherwise resolve relative to repoPath
+    if (gitDir.startsWith('/') || gitDir.match(/^[A-Za-z]:\\/)) {
+      return gitDir
+    }
+    return join(repoPath, gitDir)
+  }
+
+  /**
+   * Execute git command with additional environment variables.
+   */
+  private async execWithEnv(
+    args: string[],
+    cwd: string,
+    extraEnv: Record<string, string>
+  ): Promise<string> {
+    try {
+      const { stdout } = await execFileAsync(this.gitPath, args, {
+        cwd,
+        maxBuffer: 10 * 1024 * 1024,
+        env: {
+          ...process.env,
+          GIT_TERMINAL_PROMPT: '0',
+          GIT_ASKPASS: '',
+          LANG: 'en_US.UTF-8',
+          ...extraEnv
+        },
+        windowsHide: true
+      })
+      return stdout
+    } catch (error: unknown) {
+      const err = error as { code?: string; exitCode?: number; stderr?: string; message?: string }
+      if (err.code === 'ENOENT') throw new GitNotFoundError()
+      const stderr = err.stderr ?? ''
+      const exitCode = err.exitCode ?? 1
+      if (stderr.includes('not a git repository')) throw new NotARepositoryError(cwd)
+      throw new GitError(
+        `Git command failed: git ${args.join(' ')}\n${stderr}`,
+        `git ${args.join(' ')}`,
+        exitCode,
+        stderr
+      )
+    }
+  }
+
+  /**
+   * Continue a rebase after resolving conflicts.
+   */
+  async rebaseContinue(repoPath: string): Promise<void> {
+    // Verify no unresolved conflicts remain
+    const status = await this.status(repoPath)
+    if (status.conflicted.length > 0) {
+      throw new GitError(
+        `Cannot continue rebase: ${status.conflicted.length} file(s) still have conflicts`,
+        'git rebase --continue',
+        1,
+        'You must resolve all conflicts first'
+      )
+    }
+    await this.execWithEnv(['rebase', '--continue'], repoPath, {
+      GIT_EDITOR: 'true' // prevent editor opening for reword
+    })
+  }
+
+  /**
+   * Abort the current rebase and restore the original branch state.
+   */
+  async rebaseAbort(repoPath: string): Promise<void> {
+    await this.exec(['rebase', '--abort'], repoPath)
+  }
+
+  /**
+   * Skip the current commit during a rebase.
+   */
+  async rebaseSkip(repoPath: string): Promise<void> {
+    await this.exec(['rebase', '--skip'], repoPath)
+  }
+
+  /**
+   * Get the current rebase status by inspecting .git/rebase-merge/.
+   * Returns null if no rebase is in progress.
+   */
+  async getRebaseStatus(repoPath: string): Promise<RebaseStatus | null> {
+    try {
+      const gitDir = await this.getGitDir(repoPath)
+      const rebaseMergeDir = join(gitDir, 'rebase-merge')
+
+      // Check if rebase-merge directory exists
+      try {
+        await access(rebaseMergeDir)
+      } catch {
+        return null
+      }
+
+      // Read current step and total steps
+      let currentStep = 0
+      let totalSteps = 0
+      let currentHash = ''
+
+      try {
+        const msgnum = await readFile(join(rebaseMergeDir, 'msgnum'), 'utf8')
+        currentStep = parseInt(msgnum.trim(), 10)
+      } catch {
+        /* file may not exist yet */
+      }
+
+      try {
+        const end = await readFile(join(rebaseMergeDir, 'end'), 'utf8')
+        totalSteps = parseInt(end.trim(), 10)
+      } catch {
+        /* file may not exist yet */
+      }
+
+      try {
+        const stopped = await readFile(join(rebaseMergeDir, 'stopped-sha'), 'utf8')
+        currentHash = stopped.trim()
+      } catch {
+        /* may not exist if not stopped */
+      }
+
+      // Get conflicted files from status
+      const status = await this.status(repoPath)
+      const conflictedFiles = status.conflicted.map((f) => f.path)
+
+      return {
+        inProgress: true,
+        currentStep,
+        totalSteps,
+        currentHash,
+        conflictedFiles
+      }
+    } catch {
+      return null
+    }
+  }
+
+  // ============================================================
+  // Phase 4.3 — Conflict Resolution
+  // ============================================================
+
+  /**
+   * Get list of files with merge conflicts.
+   * Uses git ls-files -u which lists all unmerged (conflicted) files.
+   */
+  async getConflictedFiles(repoPath: string): Promise<ConflictFile[]> {
+    try {
+      const raw = await this.exec(['ls-files', '-u', '--format=%(path)'], repoPath)
+      if (!raw || raw.trim().length === 0) return []
+
+      // Deduplicate paths (each conflicted file appears 2-3 times for stages 1/2/3)
+      const paths = new Set<string>()
+      for (const line of raw.trim().split('\n')) {
+        const path = line.trim()
+        if (path) paths.add(path)
+      }
+
+      // Count conflict markers per file
+      const result: ConflictFile[] = []
+      for (const path of paths) {
+        let conflictCount = 1
+        try {
+          const content = await readFile(join(repoPath, path), 'utf8')
+          const matches = content.match(/^<{7} /gm)
+          conflictCount = matches ? matches.length : 1
+        } catch {
+          /* keep default */
+        }
+        result.push({ path, conflictCount })
+      }
+      return result
+    } catch {
+      return []
+    }
+  }
+
+  /**
+   * Get the three-way content for a conflicted file.
+   * Returns base (stage 1), ours (stage 2), theirs (stage 3), and current working tree.
+   */
+  async getConflictFileContent(repoPath: string, filePath: string): Promise<ConflictFileContent> {
+    const getStage = async (stage: number): Promise<string> => {
+      try {
+        return await this.exec(['show', `:${stage}:${filePath}`], repoPath)
+      } catch {
+        return ''
+      }
+    }
+
+    const [base, ours, theirs] = await Promise.all([getStage(1), getStage(2), getStage(3)])
+
+    let result = ''
+    try {
+      result = await readFile(join(repoPath, filePath), 'utf8')
+    } catch {
+      /* file may not exist */
+    }
+
+    return { base, ours, theirs, result }
+  }
+
+  /**
+   * Mark a file as resolved by staging it.
+   * Throws if the file still contains conflict markers.
+   */
+  async markResolved(repoPath: string, filePath: string): Promise<void> {
+    // Check for remaining conflict markers
+    try {
+      const content = await readFile(join(repoPath, filePath), 'utf8')
+      if (/^<{7} |^={7}$|^>{7} /m.test(content)) {
+        throw new GitError(
+          `File "${filePath}" still contains conflict markers. Resolve all conflicts before marking as resolved.`,
+          `git add ${filePath}`,
+          1,
+          'conflict markers detected'
+        )
+      }
+    } catch (error) {
+      if (error instanceof GitError) throw error
+      // File read error — let git add proceed and it will catch issues
+    }
+    await this.exec(['add', '--', filePath], repoPath)
+  }
+
+  /**
+   * Write resolved content to a file.
+   * Used by the conflict resolution UI to save the merged result.
+   */
+  async writeResolvedFile(repoPath: string, filePath: string, content: string): Promise<void> {
+    await writeFile(join(repoPath, filePath), content, 'utf8')
   }
 }
 

@@ -60,6 +60,20 @@ export const IPC_CHANNELS = {
   GIT_STASH_APPLY: 'git:stash-apply',
   GIT_STASH_POP: 'git:stash-pop',
   GIT_STASH_DROP: 'git:stash-drop',
+  GIT_STASH_SHOW: 'git:stash-show',
+
+  // Rebase operations (Phase 4)
+  GIT_REBASE_INTERACTIVE: 'git:rebase-interactive',
+  GIT_REBASE_CONTINUE: 'git:rebase-continue',
+  GIT_REBASE_ABORT: 'git:rebase-abort',
+  GIT_REBASE_SKIP: 'git:rebase-skip',
+  GIT_REBASE_STATUS: 'git:rebase-status',
+
+  // Conflict resolution (Phase 4)
+  GIT_GET_CONFLICTED_FILES: 'git:get-conflicted-files',
+  GIT_GET_CONFLICT_CONTENT: 'git:get-conflict-content',
+  GIT_MARK_RESOLVED: 'git:mark-resolved',
+  GIT_WRITE_RESOLVED: 'git:write-resolved',
 
   // Dialog helpers
   DIALOG_OPEN_DIRECTORY: 'dialog:open-directory',

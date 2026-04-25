@@ -313,8 +313,8 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** Trigger an error (e.g., cherry-pick with conflict)
 
-- [ ] A dismissible error banner appears at the top of the commit graph
-- [ ] The error message is readable
+- [✅] A dismissible error banner appears at the top of the commit graph
+- [✅] The error message is readable
 
 ---
 

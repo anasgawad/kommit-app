@@ -16,8 +16,11 @@ import { CommitDetail } from '../commits/CommitDetail'
 import { WorkingTree } from '../commits/WorkingTree'
 import { CommitForm } from '../commits/CommitForm'
 import { DiffViewer } from '../diff/DiffViewer'
+import { StashPanel } from '../stash/StashPanel'
+import { RebasePanel } from '../rebase/RebasePanel'
+import { MergeConflictViewer } from '../merge/MergeConflictViewer'
 
-export type ActiveView = 'history' | 'changes'
+export type ActiveView = 'history' | 'changes' | 'stash' | 'rebase' | 'conflicts'
 
 export function AppLayout() {
   const { activeRepo, refreshStatus, status } = useRepoStore()
@@ -150,7 +153,7 @@ export function AppLayout() {
         {/* Sidebar */}
         <Sidebar />
 
-        {/* Main content — switches between History and Changes views */}
+        {/* Main content — switches between views */}
         {activeView === 'history' ? (
           <>
             {/* Commit graph */}
@@ -173,7 +176,7 @@ export function AppLayout() {
               </>
             )}
           </>
-        ) : (
+        ) : activeView === 'changes' ? (
           /* Changes view: WorkingTree + DiffViewer + CommitForm */
           <div className="flex flex-1 overflow-hidden">
             {/* Left: Working tree file list + commit form */}
@@ -205,7 +208,37 @@ export function AppLayout() {
               )}
             </div>
           </div>
-        )}
+        ) : activeView === 'stash' ? (
+          <div className="flex-1 overflow-hidden relative">
+            {activeRepo ? (
+              <StashPanel repoPath={activeRepo.path} onRefresh={handleRefresh} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
+                No repository
+              </div>
+            )}
+          </div>
+        ) : activeView === 'rebase' ? (
+          <div className="flex-1 overflow-hidden">
+            {activeRepo ? (
+              <RebasePanel repoPath={activeRepo.path} onRefresh={handleRefresh} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
+                No repository
+              </div>
+            )}
+          </div>
+        ) : activeView === 'conflicts' ? (
+          <div className="flex-1 overflow-hidden">
+            {activeRepo ? (
+              <MergeConflictViewer repoPath={activeRepo.path} onRefresh={handleRefresh} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
+                No repository
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Status bar */}

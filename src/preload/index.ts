@@ -16,7 +16,14 @@ import type {
   TagOptions,
   MergeResult,
   ResetMode,
-  DiffFile
+  DiffFile,
+  StashEntry,
+  StashOptions,
+  RebaseAction,
+  RebaseStatus,
+  RebaseResult,
+  ConflictFile,
+  ConflictFileContent
 } from '@shared/types'
 import { parseDiff as _parseDiff } from '@shared/diff-parser'
 
@@ -101,7 +108,59 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.GIT_STAGE_HUNK, repoPath, patch),
 
     // Client-side diff parsing (no IPC needed)
-    parseDiff: (raw: string): DiffFile[] => _parseDiff(raw)
+    parseDiff: (raw: string): DiffFile[] => _parseDiff(raw),
+
+    // Stash operations (Phase 4)
+    stashSave: (repoPath: string, options?: StashOptions): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_SAVE, repoPath, options),
+
+    stashList: (repoPath: string): Promise<StashEntry[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_LIST, repoPath),
+
+    stashApply: (repoPath: string, index?: number): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_APPLY, repoPath, index),
+
+    stashPop: (repoPath: string, index?: number): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_POP, repoPath, index),
+
+    stashDrop: (repoPath: string, index: number): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_DROP, repoPath, index),
+
+    stashShow: (repoPath: string, index: number): Promise<string> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_STASH_SHOW, repoPath, index),
+
+    // Rebase operations (Phase 4)
+    rebaseInteractive: (
+      repoPath: string,
+      onto: string,
+      actions: RebaseAction[]
+    ): Promise<RebaseResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REBASE_INTERACTIVE, repoPath, onto, actions),
+
+    rebaseContinue: (repoPath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REBASE_CONTINUE, repoPath),
+
+    rebaseAbort: (repoPath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REBASE_ABORT, repoPath),
+
+    rebaseSkip: (repoPath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REBASE_SKIP, repoPath),
+
+    rebaseStatus: (repoPath: string): Promise<RebaseStatus | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_REBASE_STATUS, repoPath),
+
+    // Conflict resolution (Phase 4)
+    getConflictedFiles: (repoPath: string): Promise<ConflictFile[]> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_GET_CONFLICTED_FILES, repoPath),
+
+    getConflictFileContent: (repoPath: string, filePath: string): Promise<ConflictFileContent> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_GET_CONFLICT_CONTENT, repoPath, filePath),
+
+    markResolved: (repoPath: string, filePath: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_MARK_RESOLVED, repoPath, filePath),
+
+    writeResolvedFile: (repoPath: string, filePath: string, content: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_WRITE_RESOLVED, repoPath, filePath, content)
   },
 
   repo: {

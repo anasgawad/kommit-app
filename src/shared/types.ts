@@ -182,7 +182,7 @@ export interface RepoInfo {
   lastOpened: number // timestamp
 }
 
-// --- Stash Types (Phase 4, defined early for planning) ---
+// --- Stash Types (Phase 4) ---
 
 export interface StashEntry {
   index: number
@@ -190,6 +190,58 @@ export interface StashEntry {
   branch: string
   date: Date
   hash: string
+}
+
+export interface StashOptions {
+  message?: string
+  includeUntracked?: boolean // -u flag
+  keepIndex?: boolean // --keep-index flag
+}
+
+// --- Rebase Types (Phase 4) ---
+
+export type RebaseActionType = 'pick' | 'reword' | 'edit' | 'squash' | 'fixup' | 'drop'
+
+export interface RebaseAction {
+  action: RebaseActionType
+  hash: string
+  subject: string
+}
+
+export interface RebaseStatus {
+  inProgress: boolean
+  currentStep: number // msgnum
+  totalSteps: number // end
+  currentHash: string
+  conflictedFiles: string[]
+}
+
+export interface RebaseResult {
+  success: boolean
+  needsContinue: boolean // stopped for reword/edit
+  conflictedFiles: string[]
+}
+
+// --- Conflict Types (Phase 4) ---
+
+export interface ConflictRegion {
+  startLine: number
+  endLine: number
+  oursLines: string[]
+  baseLines: string[] // may be empty (2-way merge)
+  theirsLines: string[]
+}
+
+export interface ConflictFile {
+  path: string
+  conflictCount: number
+}
+
+export interface ConflictFileContent {
+  ours: string // git show :2:path
+  base: string // git show :1:path
+  theirs: string // git show :3:path
+  result: string // current working tree (with markers)
 }
 
 // --- Remote Types (Phase 5, defined early for planning) ---
