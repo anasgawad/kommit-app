@@ -3,16 +3,17 @@
 // 3-pane conflict viewer: ours | base | theirs + result pane
 // ============================================================
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useConflictStore } from '../../stores/conflict-store'
 import type { ConflictFile } from '@shared/types'
 
 interface MergeConflictViewerProps {
   repoPath: string
   onRefresh?: () => void
+  onGoToChanges?: () => void
 }
 
-export function MergeConflictViewer({ repoPath, onRefresh }: MergeConflictViewerProps) {
+export function MergeConflictViewer({ repoPath, onRefresh, onGoToChanges }: MergeConflictViewerProps) {
   const {
     conflictedFiles,
     selectedFile,
@@ -28,7 +29,14 @@ export function MergeConflictViewer({ repoPath, onRefresh }: MergeConflictViewer
     markResolved
   } = useConflictStore()
 
+  // Track whether a merge was in progress when we loaded (to distinguish
+  // "no conflicts because fully resolved" from "no merge at all")
+  const [mergeInProgress, setMergeInProgress] = useState(false)
+
   useEffect(() => {
+    window.api.git.getMergeMessage(repoPath).then((msg) => {
+      setMergeInProgress(msg !== null)
+    })
     loadConflictedFiles(repoPath)
   }, [repoPath, loadConflictedFiles])
 
@@ -56,6 +64,9 @@ export function MergeConflictViewer({ repoPath, onRefresh }: MergeConflictViewer
     if (!selectedFile) return
     try {
       await markResolved(repoPath, selectedFile.path)
+      // Re-check if merge is still in progress after resolving
+      const msg = await window.api.git.getMergeMessage(repoPath)
+      setMergeInProgress(msg !== null)
       onRefresh?.()
     } catch {
       // error shown via store
@@ -92,10 +103,27 @@ export function MergeConflictViewer({ repoPath, onRefresh }: MergeConflictViewer
         </div>
       ) : conflictedFiles.length === 0 ? (
         <div
-          className="flex items-center justify-center flex-1 text-xs text-[var(--color-text-muted)]"
+          className="flex flex-col items-center justify-center flex-1 gap-3 text-xs text-[var(--color-text-muted)]"
           data-testid="no-conflicts"
         >
-          No conflicts
+          {mergeInProgress ? (
+            <>
+              <span className="text-kommit-success font-medium">All conflicts resolved</span>
+              <span className="text-center px-4">
+                Go to Changes to commit and complete the merge.
+              </span>
+              {onGoToChanges && (
+                <button
+                  onClick={onGoToChanges}
+                  className="text-xs px-3 py-1 rounded bg-kommit-accent text-kommit-bg hover:opacity-90"
+                >
+                  Go to Changes
+                </button>
+              )}
+            </>
+          ) : (
+            <span>No conflicts</span>
+          )}
         </div>
       ) : (
         <div className="flex flex-1 overflow-hidden">

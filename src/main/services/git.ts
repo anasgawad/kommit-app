@@ -1252,6 +1252,25 @@ export class GitService {
   async writeResolvedFile(repoPath: string, filePath: string, content: string): Promise<void> {
     await writeFile(join(repoPath, filePath), content, 'utf8')
   }
+
+  /**
+   * Read .git/MERGE_MSG if a merge is in progress.
+   * Returns the message with comment lines stripped, or null if no merge is active.
+   */
+  async getMergeMessage(repoPath: string): Promise<string | null> {
+    try {
+      const raw = await readFile(join(repoPath, '.git', 'MERGE_MSG'), 'utf8')
+      // Strip comment lines (lines starting with #)
+      const msg = raw
+        .split('\n')
+        .filter((line) => !line.startsWith('#'))
+        .join('\n')
+        .trim()
+      return msg.length > 0 ? msg : null
+    } catch {
+      return null
+    }
+  }
 }
 
 // Export singleton instance

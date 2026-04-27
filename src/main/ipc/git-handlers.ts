@@ -325,6 +325,13 @@ export function registerGitHandlers(): void {
     }
   )
 
+  ipcMain.handle(IPC_CHANNELS.GIT_MERGE_MSG, async (_event, repoPath: string) => {
+    if (typeof repoPath !== 'string' || repoPath.length === 0) {
+      throw new Error('repoPath must be a non-empty string')
+    }
+    return gitService.getMergeMessage(repoPath)
+  })
+
   // --- Dialog helpers ---
   ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async () => {
     const window = BrowserWindow.getFocusedWindow()

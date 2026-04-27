@@ -160,7 +160,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.GIT_MARK_RESOLVED, repoPath, filePath),
 
     writeResolvedFile: (repoPath: string, filePath: string, content: string): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GIT_WRITE_RESOLVED, repoPath, filePath, content)
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_WRITE_RESOLVED, repoPath, filePath, content),
+
+    getMergeMessage: (repoPath: string): Promise<string | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.GIT_MERGE_MSG, repoPath)
   },
 
   repo: {

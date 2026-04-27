@@ -3,7 +3,7 @@
 // Subject/body input, amend toggle, and commit button
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRepoStore } from '../../stores/repo-store'
 
 interface CommitFormProps {
@@ -19,6 +19,20 @@ export function CommitForm({ repoPath, onCommit }: CommitFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   const { status, refreshStatus } = useRepoStore()
+
+  // Pre-populate with MERGE_MSG when a merge is in progress
+  useEffect(() => {
+    window.api.git.getMergeMessage(repoPath).then((msg) => {
+      if (!msg) return
+      const newlineIdx = msg.indexOf('\n\n')
+      if (newlineIdx !== -1) {
+        setSubject(msg.slice(0, newlineIdx).trim())
+        setBody(msg.slice(newlineIdx + 2).trim())
+      } else {
+        setSubject(msg.trim())
+      }
+    })
+  }, [repoPath])
 
   const hasStagedChanges = (status?.staged?.length ?? 0) > 0
   const canCommit =

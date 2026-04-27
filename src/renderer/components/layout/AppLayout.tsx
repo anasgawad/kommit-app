@@ -281,7 +281,11 @@ export function AppLayout() {
         ) : activeView === 'conflicts' ? (
           <div className="flex-1 overflow-hidden">
             {activeRepo ? (
-              <MergeConflictViewer repoPath={activeRepo.path} onRefresh={handleRefresh} />
+              <MergeConflictViewer
+                repoPath={activeRepo.path}
+                onRefresh={handleRefresh}
+                onGoToChanges={() => setActiveView('changes')}
+              />
             ) : (
               <div className="flex items-center justify-center h-full text-xs text-[var(--color-text-muted)]">
                 No repository

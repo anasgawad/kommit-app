@@ -74,6 +74,7 @@ export const IPC_CHANNELS = {
   GIT_GET_CONFLICT_CONTENT: 'git:get-conflict-content',
   GIT_MARK_RESOLVED: 'git:mark-resolved',
   GIT_WRITE_RESOLVED: 'git:write-resolved',
+  GIT_MERGE_MSG: 'git:merge-msg',
 
   // Dialog helpers
   DIALOG_OPEN_DIRECTORY: 'dialog:open-directory',
