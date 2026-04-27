@@ -324,10 +324,10 @@ Phase 3 implements core Git operations: staging & committing, diff viewer with S
 
 **Test:** After every operation, verify the UI refreshes
 
-- [ ] After commit: working tree panel shows no staged files; graph shows new commit
-- [ ] After branch checkout: sidebar updates current branch highlight
-- [ ] After reset: graph and working tree both update
-- [ ] F5 / Ctrl+R manually triggers full refresh of graph + status
+- [✅] After commit: working tree panel shows no staged files; graph shows new commit
+- [✅] After branch checkout: sidebar updates current branch highlight
+- [✅] After reset: graph and working tree both update
+- [✅] F5 / Ctrl+R manually triggers full refresh of graph + status
 
 ---
 

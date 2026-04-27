@@ -115,10 +115,12 @@ export function CommitGraph({ onRebaseFromCommit }: { onRebaseFromCommit?: (hash
   const { activeRepo, refreshStatus } = useRepoStore()
 
   const parentRef = useRef<HTMLDivElement>(null)
+  const [remoteNames, setRemoteNames] = useState<Set<string>>(new Set())
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
     hash: string
+    ref?: { name: string; isRemote: boolean }
   } | null>(null)
   const toast = useToast()
   const [resetMode, setResetMode] = useState<'soft' | 'mixed' | 'hard'>('mixed')
@@ -227,6 +229,19 @@ export function CommitGraph({ onRebaseFromCommit }: { onRebaseFromCommit?: (hash
     }
   }, [headCommitHash, graphRows, rowVirtualizer])
 
+  // Load remote names so GraphRow can reliably detect remote-tracking branch badges
+  useEffect(() => {
+    if (!activeRepo) return
+    window.api.git.branches(activeRepo.path).then((branches) => {
+      const names = new Set(
+        branches.filter((b) => b.isRemote).map((b) => b.name.split('/')[0])
+      )
+      setRemoteNames(names)
+    }).catch(() => {
+      // Non-fatal: fall back to empty set (remote badge detection may be imprecise)
+    })
+  }, [activeRepo])
+
   // Close context menu on click outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null)
@@ -240,22 +255,37 @@ export function CommitGraph({ onRebaseFromCommit }: { onRebaseFromCommit?: (hash
     selectCommit(hash)
   }
 
-  const handleContextMenu = (hash: string, event: React.MouseEvent) => {
+  const handleContextMenu = (hash: string, event: React.MouseEvent, ref?: { name: string; isRemote: boolean }) => {
     setContextMenu({
       x: event.clientX,
       y: event.clientY,
-      hash
+      hash,
+      ref
     })
   }
 
   const handleContextMenuAction = async (action: string, hash: string) => {
+    const ref = contextMenu?.ref
     setContextMenu(null)
     if (!activeRepo) return
 
     try {
       switch (action) {
         case 'checkout':
-          await window.api.git.checkout(activeRepo.path, hash)
+          if (ref?.isRemote) {
+            // Create a local branch tracking the remote branch
+            const localName = ref.name.slice(ref.name.indexOf('/') + 1)
+            await window.api.git.checkout(activeRepo.path, localName, {
+              createBranch: true,
+              startPoint: ref.name
+            })
+          } else if (ref) {
+            // Checkout existing local branch by name
+            await window.api.git.checkout(activeRepo.path, ref.name)
+          } else {
+            // No branch badge — detached HEAD at commit hash
+            await window.api.git.checkout(activeRepo.path, hash)
+          }
           await refreshStatus()
           await loadCommits()
           break
@@ -478,6 +508,7 @@ export function CommitGraph({ onRebaseFromCommit }: { onRebaseFromCommit?: (hash
                     graphColumnWidth={graphColumnWidth}
                     onSelect={handleSelect}
                     onContextMenu={handleContextMenu}
+                    remoteNames={remoteNames}
                   />
                 </div>
               )

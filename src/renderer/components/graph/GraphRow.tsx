@@ -19,7 +19,8 @@ interface GraphRowProps {
   isSelected: boolean
   graphColumnWidth: number
   onSelect: (hash: string) => void
-  onContextMenu: (hash: string, event: React.MouseEvent) => void
+  onContextMenu: (hash: string, event: React.MouseEvent, ref?: { name: string; isRemote: boolean }) => void
+  remoteNames?: Set<string>
 }
 
 /**
@@ -42,7 +43,8 @@ export function GraphRow({
   isSelected,
   graphColumnWidth,
   onSelect,
-  onContextMenu
+  onContextMenu,
+  remoteNames = new Set()
 }: GraphRowProps) {
   const { commit } = graphRow
 
@@ -127,13 +129,15 @@ export function GraphRow({
                   const isTag = trimmed.startsWith('tag:')
                   const isBranch = !isTag
 
-                  // Detect remote-tracking branches (e.g., "origin/main", "upstream/dev")
-                  const knownRemotes = ['origin', 'upstream', 'fork', 'remote']
+                  // Detect remote-tracking branches using actual remote names from the repo.
+                  // Falls back to a heuristic (contains '/') if remoteNames is not yet loaded.
                   const firstSlash = trimmed.indexOf('/')
                   const isRemote =
                     isBranch &&
                     firstSlash !== -1 &&
-                    knownRemotes.includes(trimmed.slice(0, firstSlash))
+                    (remoteNames.size > 0
+                      ? remoteNames.has(trimmed.slice(0, firstSlash))
+                      : false)
 
                   const label = isTag ? trimmed.replace('tag: ', '') : trimmed
 
@@ -162,6 +166,15 @@ export function GraphRow({
                               }
                       }
                       title={trimmed}
+                      onContextMenu={
+                        !isTag
+                          ? (e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              onContextMenu(commit.hash, e, { name: trimmed, isRemote })
+                            }
+                          : undefined
+                      }
                     >
                       {isTag ? <TagIcon /> : <BranchIcon />}
                       <span className="truncate max-w-24">{label}</span>

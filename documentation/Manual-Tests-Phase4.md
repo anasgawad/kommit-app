@@ -158,11 +158,11 @@ echo "line4" >> file.txt && git add . && git commit -m "commit 4"
 
 **Test:** Abort an in-progress rebase
 
-- [ ] While a rebase is in progress, the Rebase panel shows a progress bar (e.g. "Step 1 of 3")
-- [ ] Abort, Continue, and Skip buttons are visible
-- [ ] Clicking "Abort" aborts the rebase
-- [ ] `git status` shows a clean state at the pre-rebase HEAD
-- [ ] The `.git/rebase-merge` directory no longer exists
+- [✅] While a rebase is in progress, the Rebase panel shows a progress bar (e.g. "Step 1 of 3")
+- [✅] Abort, Continue, and Skip buttons are visible
+- [✅] Clicking "Abort" aborts the rebase
+- [✅] `git status` shows a clean state at the pre-rebase HEAD
+- [✅] The `.git/rebase-merge` directory no longer exists
 
 ---
 
@@ -178,8 +178,8 @@ git add .
 
 **Test:** Continue an in-progress rebase
 
-- [ ] Clicking "Continue" in the Rebase panel advances the rebase to the next step (or completes it)
-- [ ] The progress bar updates accordingly
+- [✅] Clicking "Continue" in the Rebase panel advances the rebase to the next step (or completes it)
+- [✅] The progress bar updates accordingly
 
 ---
 

@@ -502,13 +502,16 @@ export class GitService {
   async checkout(
     repoPath: string,
     ref: string,
-    options?: { createBranch?: boolean }
+    options?: { createBranch?: boolean; startPoint?: string }
   ): Promise<void> {
     const args = ['checkout']
     if (options?.createBranch) {
       args.push('-b')
     }
     args.push(ref)
+    if (options?.startPoint) {
+      args.push(options.startPoint)
+    }
     await this.exec(args, repoPath)
   }
 

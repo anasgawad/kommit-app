@@ -55,7 +55,7 @@ const api = {
     checkout: (
       repoPath: string,
       ref: string,
-      options?: { createBranch?: boolean }
+      options?: { createBranch?: boolean; startPoint?: string }
     ): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.GIT_CHECKOUT, repoPath, ref, options),
 
     stage: (repoPath: string, filePath: string): Promise<void> =>
