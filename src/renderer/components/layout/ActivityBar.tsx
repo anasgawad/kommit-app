@@ -21,11 +21,11 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
   const stagedCount = status ? status.staged.length : 0
 
   return (
-    <div className="w-10 bg-kommit-bg-secondary border-r border-kommit-border flex flex-col items-center py-1 gap-1 shrink-0">
+    <div className="w-12 bg-kommit-bg-secondary border-r border-kommit-border flex flex-col items-center py-1 gap-1 shrink-0">
       {/* Home — go back to Welcome Screen */}
       <ActivityBarButton title="Home (close repository)" onClick={closeRepo} disabled={!isRepoOpen}>
         {/* House icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <path
             d="M8 2L1 8h2v6h4v-4h2v4h4V8h2L8 2z"
             stroke="currentColor"
@@ -39,7 +39,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
       {/* Refresh — reload graph + status */}
       <ActivityBarButton title="Refresh (F5 / Ctrl+R)" onClick={onRefresh} disabled={!isRepoOpen}>
         {/* Circular arrow icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <path
             d="M13.5 8A5.5 5.5 0 1 1 8 2.5c1.8 0 3.4.87 4.4 2.2"
             stroke="currentColor"
@@ -70,7 +70,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
         data-testid="activity-history"
       >
         {/* Clock/history icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2" />
           <path
             d="M8 5v3.5l2 1.5"
@@ -92,7 +92,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
           data-testid="activity-changes"
         >
           {/* File-diff / pencil icon */}
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
             <rect
               x="2"
               y="1"
@@ -130,7 +130,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
         data-testid="activity-stash"
       >
         {/* Inbox / box icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <rect
             x="2"
             y="5"
@@ -167,7 +167,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
         data-testid="activity-rebase"
       >
         {/* Stacked lines / reorder icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <path
             d="M3 4h10M3 8h10M3 12h6"
             stroke="currentColor"
@@ -193,7 +193,7 @@ export function ActivityBar({ onRefresh, activeView, onViewChange }: ActivityBar
         data-testid="activity-conflicts"
       >
         {/* Warning / merge conflict icon */}
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
           <path
             d="M8 2L2 13h12L8 2z"
             stroke="currentColor"
@@ -233,7 +233,7 @@ function ActivityBarButton({
       title={title}
       data-testid={dataTestId}
       className={[
-        'w-8 h-8 flex items-center justify-center rounded transition-colors',
+        'w-10 h-10 flex items-center justify-center rounded transition-colors',
         disabled
           ? 'text-kommit-text-secondary opacity-30 cursor-default'
           : active
