@@ -190,11 +190,11 @@ git add .
 **Setup:** Create a merge conflict:
 
 ```bash
-cd /tmp/kommit-test
+cd ~/Tests/kommit-test
 git checkout -b feature
 echo "feature line" > conflict.txt
 git add . && git commit -m "feature change"
-git checkout main
+git checkout master
 echo "main line" > conflict.txt
 git add . && git commit -m "main change"
 git merge feature   # This will conflict
@@ -202,8 +202,8 @@ git merge feature   # This will conflict
 
 **Test:** Open the Conflicts panel
 
-- [ ] Clicking the Conflicts icon in the Activity Bar opens the Conflicts panel
-- [ ] `conflict.txt` appears in the conflicted files list
+- [✅] Clicking the Conflicts icon in the Activity Bar opens the Conflicts panel
+- [✅] `conflict.txt` appears in the conflicted files list
 
 ---
 
@@ -213,10 +213,10 @@ git merge feature   # This will conflict
 
 **Test:** View a conflicted file in the 3-way viewer
 
-- [ ] Clicking on `conflict.txt` in the conflict file list opens the 3-way viewer
-- [ ] Three panes are shown: **Ours** (main branch), **Base** (common ancestor), **Theirs** (feature branch)
-- [ ] A **Result** pane is shown for editing the resolution
-- [ ] Conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) are NOT shown in the individual panes
+- [✅] Clicking on `conflict.txt` in the conflict file list opens the 3-way viewer
+- [✅] Three panes are shown: **Ours** (main branch), **Base** (common ancestor), **Theirs** (feature branch)
+- [✅] A **Result** pane is shown for editing the resolution
+- [✅] Conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) are NOT shown in the individual panes
 
 ---
 
@@ -226,7 +226,7 @@ git merge feature   # This will conflict
 
 **Test:** Resolve a conflict by accepting the current branch version
 
-- [ ] Clicking "Accept Ours" fills the Result pane with the "ours" (main) content: `main line`
+- [✅] Clicking "Accept Ours" fills the Result pane with the "ours" (main) content: `main line`
 
 ---
 
@@ -236,7 +236,7 @@ git merge feature   # This will conflict
 
 **Test:** Resolve a conflict by accepting the incoming branch version
 
-- [ ] Clicking "Accept Theirs" fills the Result pane with the "theirs" (feature) content: `feature line`
+- [✅] Clicking "Accept Theirs" fills the Result pane with the "theirs" (feature) content: `feature line`
 
 ---
 
@@ -248,9 +248,9 @@ git merge feature   # This will conflict
 
 **Test:** Mark a conflict as resolved
 
-- [ ] Clicking "Mark Resolved" stages the file (`git add conflict.txt` equivalent)
-- [ ] `conflict.txt` is removed from the conflicts list
-- [ ] Running `git status` shows `conflict.txt` as "modified" (staged), no longer conflicted
+- [✅] Clicking "Mark Resolved" stages the file (`git add conflict.txt` equivalent)
+- [✅] `conflict.txt` is removed from the conflicts list
+- [✅] Running `git status` shows `conflict.txt` as "modified" (staged), no longer conflicted
 
 ---
 

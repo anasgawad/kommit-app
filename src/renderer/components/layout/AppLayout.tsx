@@ -20,6 +20,7 @@ import { CommitForm } from '../commits/CommitForm'
 import { DiffViewer } from '../diff/DiffViewer'
 import { StashPanel } from '../stash/StashPanel'
 import { RebasePanel } from '../rebase/RebasePanel'
+import { MergeConflictViewer } from '../merge/MergeConflictViewer'
 import { useRebaseStore } from '../../stores/rebase-store'
 
 export type ActiveView = 'history' | 'changes' | 'stash' | 'rebase' | 'conflicts'

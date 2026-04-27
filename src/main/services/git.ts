@@ -1165,13 +1165,16 @@ export class GitService {
    */
   async getConflictedFiles(repoPath: string): Promise<ConflictFile[]> {
     try {
-      const raw = await this.exec(['ls-files', '-u', '--format=%(path)'], repoPath)
+      const raw = await this.exec(['ls-files', '-u', '-z'], repoPath)
       if (!raw || raw.trim().length === 0) return []
 
+      // Output is NUL-terminated: "<mode> <sha> <stage>\t<path>\0..."
       // Deduplicate paths (each conflicted file appears 2-3 times for stages 1/2/3)
       const paths = new Set<string>()
-      for (const line of raw.trim().split('\n')) {
-        const path = line.trim()
+      for (const entry of raw.split('\0')) {
+        const tabIdx = entry.indexOf('\t')
+        if (tabIdx === -1) continue
+        const path = entry.slice(tabIdx + 1).trim()
         if (path) paths.add(path)
       }
 
