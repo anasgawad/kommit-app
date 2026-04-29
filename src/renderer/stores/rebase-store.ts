@@ -17,6 +17,7 @@ interface RebaseState {
   setBaseHash: (hash: string) => void
   updateAction: (hash: string, action: RebaseAction['action']) => void
   setError: (error: string | null) => void
+  resetSetup: () => void
 
   // Async actions
   loadStatus: (repoPath: string) => Promise<void>
@@ -43,6 +44,8 @@ export const useRebaseStore = create<RebaseState>((set, get) => ({
 
   setError: (error) => set({ error }),
 
+  resetSetup: () => set({ actions: [], baseHash: '' }),
+
   loadStatus: async (repoPath) => {
     try {
       const status = await window.api.git.rebaseStatus(repoPath)
@@ -57,7 +60,13 @@ export const useRebaseStore = create<RebaseState>((set, get) => ({
     try {
       await window.api.git.rebaseInteractive(repoPath, baseHash, actions)
       const status = await window.api.git.rebaseStatus(repoPath)
-      set({ status, isLoading: false })
+      // On clean completion (not paused) clear the setup fields so the panel
+      // reflects the finished state rather than appearing unchanged.
+      if (!status?.inProgress) {
+        set({ status, isLoading: false, actions: [], baseHash: '' })
+      } else {
+        set({ status, isLoading: false })
+      }
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Failed to start rebase',

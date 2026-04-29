@@ -30,6 +30,8 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
     skipRebase
   } = useRebaseStore()
 
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
   const [rawCommits, setRawCommits] = useState('')
 
   // Load rebase status on mount (catches a rebase started outside Kommit or
@@ -65,7 +67,13 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
 
   const handleStart = async () => {
     try {
+      setSuccessMsg(null)
       await startRebase(repoPath, baseHash, actions)
+      // If the store cleared actions it means rebase completed without pausing
+      const storeActions = useRebaseStore.getState().actions
+      if (storeActions.length === 0) {
+        setSuccessMsg('Rebase completed successfully.')
+      }
       onRefresh?.()
     } catch {
       // error shown via store
@@ -74,7 +82,11 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
 
   const handleContinue = async () => {
     try {
+      setSuccessMsg(null)
       await continueRebase(repoPath)
+      if (!useRebaseStore.getState().status?.inProgress) {
+        setSuccessMsg('Rebase completed successfully.')
+      }
       onRefresh?.()
     } catch {
       // error shown via store
@@ -112,6 +124,13 @@ export function RebasePanel({ repoPath, onRefresh }: RebasePanelProps) {
       {error && (
         <div className="px-3 py-1.5 bg-kommit-danger/20 text-kommit-danger text-xs border-b border-[var(--color-border)]">
           {error}
+        </div>
+      )}
+
+      {/* Success banner */}
+      {successMsg && (
+        <div className="px-3 py-1.5 bg-green-500/15 text-green-400 text-xs border-b border-[var(--color-border)]">
+          {successMsg}
         </div>
       )}
 

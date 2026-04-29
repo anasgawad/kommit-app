@@ -73,14 +73,21 @@ export class GitService {
       }
 
       const stderr = err.stderr ?? ''
+      // Some git commands (e.g. stash pop with conflicts) write diagnostic info
+      // to stdout and exit non-zero with an empty stderr. Capture both so we
+      // never lose the real message.
+      const stdout = (err as { stdout?: string }).stdout ?? ''
       const exitCode = err.exitCode ?? 1
 
       if (stderr.includes('not a git repository')) {
         throw new NotARepositoryError(cwd)
       }
 
+      // Combine stdout + stderr for the human-readable message; keep stderr
+      // alone as the structured field (callers that inspect it expect stderr).
+      const combined = [stderr, stdout].filter(Boolean).join('\n')
       throw new GitError(
-        `Git command failed: git ${args.join(' ')}\n${stderr}`,
+        `Git command failed: git ${args.join(' ')}\n${combined}`,
         `git ${args.join(' ')}`,
         exitCode,
         stderr
@@ -915,7 +922,12 @@ export class GitService {
     try {
       await this.exec(['stash', 'pop', ref], repoPath)
     } catch (error) {
-      if (error instanceof GitError && error.stderr.includes('conflict')) {
+      if (
+        error instanceof GitError &&
+        // git stash pop writes conflict info to stdout (empty stderr), so check
+        // the full error message which combines both stdout and stderr.
+        (error.stderr.includes('conflict') || error.message.includes('CONFLICT'))
+      ) {
         throw new GitError(
           `Stash pop resulted in conflicts. The stash was kept. Resolve conflicts and then stage the files.`,
           `git stash pop ${ref}`,
@@ -965,22 +977,29 @@ export class GitService {
     const todoPath = join(gitDir, 'kommit-rebase-todo')
     await writeFile(todoPath, todo + '\n', 'utf8')
 
-    // Use a sequence editor that simply copies our pre-written todo
-    const seqEditorScript =
-      process.platform === 'win32'
-        ? `@echo off && copy /y "${todoPath}" %1`
-        : `cp "${todoPath}" "$1"`
+    // Write a sequence editor shell script that copies our pre-written todo file.
+    // We always use a POSIX .sh script (even on Windows) because git for Windows
+    // always invokes GIT_SEQUENCE_EDITOR via its bundled sh.exe — it never uses
+    // cmd.exe. Git also passes the todo path as a POSIX-style path (e.g.
+    // /d/repo/.git/rebase-merge/git-rebase-todo), so we must use POSIX paths
+    // inside the script. The script simply overwrites git's todo file with our
+    // pre-written one.
+    const isWindows = process.platform === 'win32'
+    const seqEditorPath = join(gitDir, 'kommit-seq-editor.sh')
 
-    // Write the sequence editor script
-    const seqEditorPath = join(gitDir, 'kommit-seq-editor')
-    const scriptContent =
-      process.platform === 'win32'
-        ? `@echo off\ncopy /y "${todoPath.replace(/\//g, '\\')}" %1`
-        : `#!/bin/sh\ncp "${todoPath}" "$1"`
-    await writeFile(seqEditorPath, scriptContent, { mode: 0o755 })
+    // Convert a Windows absolute path (e.g. D:\foo\bar) to a POSIX path
+    // (e.g. /d/foo/bar) understood by git's bundled sh.exe.
+    const toPosix = (p: string): string =>
+      isWindows
+        ? p.replace(/\\/g, '/').replace(/^([A-Za-z]):/, (_m, d) => `/${d.toLowerCase()}`)
+        : p
 
-    const seqEditor =
-      process.platform === 'win32' ? `cmd /c "${seqEditorPath}"` : `sh "${seqEditorPath}"`
+    const scriptContent = `#!/bin/sh\ncp "${toPosix(todoPath)}" "$1"\n`
+    await writeFile(seqEditorPath, scriptContent, { encoding: 'utf8', mode: 0o755 })
+
+    // Always invoke with `sh` — use the POSIX path to the script on Windows so
+    // git's sh.exe can locate it correctly.
+    const seqEditor = `sh "${toPosix(seqEditorPath)}"`
 
     try {
       await this.execWithEnv(['rebase', '-i', '--autostash', onto], repoPath, {
@@ -992,7 +1011,7 @@ export class GitService {
       await rm(seqEditorPath, { force: true })
       return { success: true, needsContinue: false, conflictedFiles: [] }
     } catch (error) {
-      // Clean up temp files (best effort)
+      // Clean up temp files (best effort — ignore errors so the real error propagates)
       await rm(todoPath, { force: true }).catch(() => {})
       await rm(seqEditorPath, { force: true }).catch(() => {})
 

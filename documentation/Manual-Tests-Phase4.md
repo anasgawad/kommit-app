@@ -262,9 +262,9 @@ git merge feature   # This will conflict
 
 **Test:** Verify the conflict count decreases as files are resolved
 
-- [ ] The Conflicts panel shows the count of conflicted files
-- [ ] As files are resolved, the count decreases
-- [ ] When all files are resolved, an empty state or "All conflicts resolved" message is shown
+- [✅] The Conflicts panel shows the count of conflicted files
+- [✅] As files are resolved, the count decreases
+- [✅] When all files are resolved, an empty state or "All conflicts resolved" message is shown
 
 ---
 
@@ -276,8 +276,8 @@ git merge feature   # This will conflict
 
 **Test:** Pop a stash that conflicts with the working tree
 
-- [ ] Clicking "Pop" on the stash shows an error message in the UI (e.g. "Stash pop failed: conflict")
-- [ ] The working tree is not corrupted
+- [✅] Clicking "Pop" on the stash shows an error message in the UI (e.g. "Stash pop failed: conflict")
+- [✅] The working tree is not corrupted
 
 ---
 
@@ -287,10 +287,10 @@ git merge feature   # This will conflict
 
 **Test:** Verify stash and rebase work independently
 
-- [ ] Making uncommitted changes and stashing them via the Stash panel cleans the working tree
-- [ ] Starting an interactive rebase via the Rebase panel completes successfully
-- [ ] Popping the stash after rebase re-applies the stashed changes on top of the rebased history
-- [ ] All operations work independently without interfering with each other
+- [✅] Making uncommitted changes and stashing them via the Stash panel cleans the working tree
+- [✅] Starting an interactive rebase via the Rebase panel completes successfully
+- [✅] Popping the stash after rebase re-applies the stashed changes on top of the rebased history
+- [✅] All operations work independently without interfering with each other
 
 ---
 
